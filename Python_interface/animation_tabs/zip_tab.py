@@ -75,6 +75,6 @@ class ZipArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_message("zip", self.LED_array_id, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
+        self.arduino_int.send_command("zip", self.LED_array_id, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
 
 

@@ -1,19 +1,11 @@
 from typing import Union, Dict, Tuple, List
-import serial
+from serial import Serial
 from numpy.random import randint
 
 
 class ArduinoInterface():
     """Class that deals with interfacing with the arduino."""
-
-    try:
-        arduino = serial.Serial(port='COM3', baudrate=9600, timeout=100)
-        """The arduino connection port."""
-    except:
-        #raise RuntimeError("Connection error! Check that that the port is correct!")
-        print("Connection error! Check that that the port is correct!")
-        arduino = None
-
+    
     init_values_strobe: List[Union[int, Tuple]] = [20, 60, (255, 255, 255)]
     """Parameter init values for the strobe animation. {time_on, time_off, (R, G, B)}"""
 
@@ -89,8 +81,19 @@ class ArduinoInterface():
     # Send bytes representing the animation code
     # If bytes long then with parameters else just change animation
 
-    def __init__(self):
-        """"""
+    def __init__(self) -> None:
+        """Constructor for arduino interface."""
+
+        try:
+            self.arduino = Serial(port='COM3', baudrate=9600, timeout=20000)
+            """The arduino connection port."""
+        except:
+            #raise RuntimeError("Connection error! Check that that the port is correct!")
+            print("Connection error! Check that that the port is correct!")
+            self.arduino = None
+
+        #self.arduino = arduino
+
         self.param_values_strobe: Dict[int, Tuple[int]] = {label : value for label, value in zip(self.init_labels_strobe, self.init_values_strobe)}
         """Parameter values for the strobe animation."""
 
@@ -115,7 +118,7 @@ class ArduinoInterface():
         self.param_values_rainbow_circle: Dict[int] = {label : value for label, value in zip(self.init_labels_rainbow_wheel, self.init_values_rainbow_circle)}
         """Parameter values for the rainbow circle animation."""
  
-    def send_message(self, 
+    def send_command(self, 
                      animation: str, 
                      LED_array_id: int,
                      values: Union[Tuple[Union[str, int, float, bytes, bool]], List[Union[str, int, float, bytes, bool]]]) -> None:
@@ -127,7 +130,17 @@ class ArduinoInterface():
             - values (tuple, list): A list or tuple of parameter values to pass to the animation function.
         """
         params = ",".join([str(v) for v in values])
-        message = f"{self.animation_codes[animation]}:{LED_array_id}:{params}"
+        message = f"{LED_array_id}:{self.animation_codes[animation]}:{params}"
+        print(message)
+        try:
+            self.arduino.write(bytes(message, 'utf-8'))
+        except AttributeError:
+            print("No connection to arduino.")
+        finally:
+            print("Can't send message.")
+
+    def send_message(self, message: str) -> None:
+        """Sends the provided text to the arduino."""
         print(message)
         try:
             self.arduino.write(bytes(message, 'utf-8'))
@@ -137,16 +150,16 @@ class ArduinoInterface():
             print("Can't send message.")
 
     def read_str(self) -> str:
-        """Reads the string sent the arduino.
+        """Reads the string sent from the arduino.
 
         ### Returns:
             - str: The string being sent from the arduino.
         """
         try:
             return str(self.arduino.readline(),"utf-8").strip("'\r\n")[2:]
-        finally:
+        except AttributeError:
             print("No connection to arduino. Can't send message.")
-            return "ERROR!"
+            return "Arduino connection error!"
         
     def try_to_connect(self) -> str:
         """Attempt to connect to the arduino port.
@@ -155,7 +168,7 @@ class ArduinoInterface():
             - str: User message on connection status.
         """
         try:
-            self.arduino = serial.Serial(port='COM3', baudrate=9600, timeout=100)
+            self.arduino = Serial(port='COM3', baudrate=9600, timeout=100)
             return "Connection to arduino established."
         except:
             return "Failed to connect to arduino! Check that that the port is correct!"

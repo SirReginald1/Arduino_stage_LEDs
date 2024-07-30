@@ -4,8 +4,6 @@
 #include <FastLED.h>
 #include <Arduino.h>
 
-#define MAX_NB_PARAM 10
-
 //class Animation {
   //public:
   /*

@@ -37,6 +37,6 @@ class VolumeBarArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_message("volume_bar", self.LED_array_id, [])
+        self.arduino_int.send_command("volume_bar", self.LED_array_id, [])
 
 

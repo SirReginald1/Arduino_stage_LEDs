@@ -57,4 +57,4 @@ class StrobeArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_message("strobe", self.LED_array_id, [self.time_on, self.time_off, self.color[0], self.color[1], self.color[2]])
+        self.arduino_int.send_command("strobe", self.LED_array_id, [self.time_on, self.time_off, self.color[0], self.color[1], self.color[2]])

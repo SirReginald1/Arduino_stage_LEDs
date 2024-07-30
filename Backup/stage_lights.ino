@@ -1,6 +1,5 @@
 #include "Microphone.h"
 #include "Animation.h"
-#include "Com_interface.h"
 #include <TimerOne.h>
 #include <FastLED.h>
 
@@ -118,7 +117,6 @@ void disolve_to_black(CRGB* leds, int speed){
 
 }
 
-
 void setup() {
   // #########################################################
   // ###################### HARDWARE #########################
@@ -140,7 +138,7 @@ void setup() {
   //TimerOne.attachInterrupt(software_interrupt);
   // ################ IN OUT CONSOLE ##################
   // Setting up console output.
-  Serial.begin(2000000);//9600
+  Serial.begin(9600);//2000000
   // Setting the time the program will wait for input.
   Serial.setTimeout(0);
   // #########################################################
@@ -163,6 +161,8 @@ void setup() {
 
 
 void loop() {
+  //console_reader = Serial.parseInt();
+  
   millisecs = millis();
   
   // ####################### MIC CODE #########################
@@ -172,10 +172,13 @@ void loop() {
   //Serial.println(get_amplitude());
   
   // ############# LED CODE ##############
-  if(Serial.available() > 0){
-    //animation = Serial.parseInt();
-    read_input();
-    Serial.print("Switch to: ");Serial.println(animation);
+  //console_reader = Serial.parseInt();
+  
+  //if(console_reader != 0){
+  if(Serial.available() > 0){}
+    //animation = console_reader;
+    animation = Serial.parseInt();
+    //Serial.print("Switch to: ");Serial.println(animation);
     FastLED.clear();
   }
   //min(1, amplitude/max_amp_in_interval)*NUM_LEDS

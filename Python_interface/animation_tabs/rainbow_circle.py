@@ -44,5 +44,5 @@ class RainbowCircleArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_message("rainbow_circle", self.LED_array_id, [self.delay])
+        self.arduino_int.send_command("rainbow_circle", self.LED_array_id, [self.delay])
 

@@ -1,3 +1,4 @@
+from serial import Serial
 from tkinter import *
 import ttkbootstrap as ttk
 from typing import Tuple
@@ -14,12 +15,11 @@ from animation_tabs.fire_tab import FireArrayFrame
 from animation_tabs.volume_bar_tab import VolumeBarArrayFrame
 from animation_tabs.tab import Tab
 
+
 label_font = ("Helvetica", 18)
 
 class MainPanel(ttk.Window):
     """"""
-
-    arduino_interface = ArduinoInterface()
 
     tab_font: Tuple[str, int] = ("Helvetica", 12)
     """Tab Font. Tuple containing (font_style, font_size)"""
@@ -33,6 +33,8 @@ class MainPanel(ttk.Window):
         #self.menu_test = Menu(self.menu_bar, tearoff=0)
         #self.menu_test.add_command(label="test", command=lambda : 10)
         #self.config(menu=self.menu_bar)
+
+        self.arduino_interface = ArduinoInterface()
 
         self.title("The title")
         #self.iconbitmap()
@@ -122,9 +124,19 @@ class MainPanel(ttk.Window):
         ttk.Style().configure("TNotebook.Tab", font=self.tab_font, anchor=CENTER)
 
         ##################### Side Panel ######################
-        self.side_bar_menu = SlidePanel(self, 1.0, 0.7)
-        self.button = Button(self.tab_pane, text = 'toggle sidebar', command = self.side_bar_menu.animate)
-        self.button.pack(pady=0, padx=20, expand=False, fill="none")
+        #self.side_bar_menu = SlidePanel(self, 1.0, 0.7, self.arduino_interface)
+        #self.button = Button(self.tab_pane, text = 'toggle sidebar', command = self.side_bar_menu.animate)
+        #self.button.pack(pady=0, padx=20, expand=False, fill="none")
+
+        ##################### Backup Console #####################
+        self.txtin_console = Entry(self, textvariable=StringVar(value=str("")))
+        self.txtin_console.place(x=1000, y=200)
+        self.txtin_console.bind("<Return>", self.enter_key_press)
+
+    def enter_key_press(self, message: str):
+        """"""
+        self.arduino_interface.send_message(self.txtin_console.get())
+        self.txtin_console.delete(0,END)
 
     def update_all_animations(self) -> None:
         """Updates all parameter values for all animations."""
@@ -137,6 +149,14 @@ class MainPanel(ttk.Window):
         # '.4299842480.4300630784'
         # nb.index(nb.select())
 
+    def update_console(self):
+        """Methode that is periodically called to update the console window."""
+        #print("Calling update!")
+        self.side_bar_menu.update_console_window(self.arduino_interface.read_str())
+        self.after(20, main_panel.update_console)
+        
+
 if __name__ == '__main__':
     main_panel = MainPanel((2500,1300), 4)
+    #main_panel.after(20, main_panel.update_console)
     main_panel.mainloop()

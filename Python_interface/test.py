@@ -7,7 +7,7 @@ import ttkbootstrap as ttk
 # /dev/cu.usbmodem14101
 # /dev/ttyACM0
 try:
-    arduino = serial.Serial(port='COM3', baudrate=9600, timeout=0)
+    arduino = serial.Serial(port='COM3', baudrate=9600, timeout=2000)
 except:
     print("Connection error! Check that that the port is correct.")
 

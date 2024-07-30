@@ -70,6 +70,6 @@ class FireArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_message("fire", self.LED_array_id, [self.flame_height, self.sparks, self.delay, self.intensity])
+        self.arduino_int.send_command("fire", self.LED_array_id, [self.flame_height, self.sparks, self.delay, self.intensity])
 
 

@@ -1,7 +1,8 @@
-#include "Animation.h"
+#include "Animation_multi.h"
 #include <FastLED.h>
 
 #define NUM_LEDS 122
+#define NB_ARRAYS 4
 
   // FlameHeight - Use larger value for shorter flames, default=50.
   // Sparks - Use larger value for more ignitions and a more active fire (between 0 to 255), default=100.
@@ -255,22 +256,25 @@
     }
   }
 
-// Make zip right and zip left then function that can alternate the 2
-unsigned long zip_animation_prev_mills = 0;
+  unsigned long zip_animation_prev_mills = 0;
 int zip_animation_pos_counter = 0;
-void zip_animation(CRGB* leds, int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, CRGB color){
+void zip_animation(CRGB** leds, int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, CRGB color){
   int start_pos, end_pos;
   if(current_time - zip_animation_prev_mills > speed){
     // This is the start of the strip
     start_pos = zip_animation_pos_counter + start;
     if(start_pos <= NUM_LEDS && start_pos < end){
-      leds[start_pos] = color;
+      for(int i=0; i<NB_ARRAYS; i++){
+        leds[i][start_pos] = color;
+      }
     }
 
     // This is the end of the strip
     end_pos = zip_animation_pos_counter + start - size;
     if(end_pos >= 0 && end_pos <= NUM_LEDS){
-      leds[end_pos] = CRGB::Black;
+      for(int i=0; i<NB_ARRAYS; i++){
+        leds[i][end_pos] = CRGB::Black;
+      }
     }
     FastLED.show();
     zip_animation_pos_counter = ++zip_animation_pos_counter % (end - start + size);
@@ -279,7 +283,10 @@ void zip_animation(CRGB* leds, int size, int start, int end, int delay, unsigned
   
 }
 
-  void Sparkle(CRGB* leds, int red, int green, int blue, int delayDuration) {
+void Sparkle(CRGB** leds, int *arrays, int red, int green, int blue, int delayDuration) {
+  for(int array : arrays){
+    
+  }
   int pixel = random(NUM_LEDS);
   leds[pixel].setRGB(red, green, blue);
   FastLED.show();
@@ -319,33 +326,4 @@ void electromagneticSpectrum(int transitionSpeed) {
   }
 }*/
 
-/*
-void back_and_forth(CRGB* leds, int size, int start, int end, int speed, unsigned long current_time, CRGB color){
-  int start_pos, end_pos;
-  switch (zip_animation_pos_counter < end) {
-    case true:
-      if(current_time - zip_animation_prev_mills > speed){
-        // This is the start of the strip
-        start_pos = zip_animation_pos_counter + start;
-        if(start_pos <= NUM_LEDS && start_pos < end){
-          leds[start_pos] = color;
-        }
-
-        // This is the end of the strip
-        end_pos = zip_animation_pos_counter + start - size;
-        if(end_pos >= 0 && end_pos <= NUM_LEDS){
-          leds[end_pos] = CRGB::Black;
-        }
-        FastLED.show(zip_animation_pos_counter);
-        if(true){
-          zip_animation_pos_counter = ++zip_animation_pos_counter % (end - start + size);
-        }
-        zip_animation_prev_mills = current_time;
-      }
-      break;
-    case false:
-      // Run in reverse.
-  }
-}
-*/
 
