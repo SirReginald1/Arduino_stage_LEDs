@@ -1,8 +1,17 @@
 #include <FastLED.h>
 #include "Globals.h"
+#ifdef USE_INTERFACE
+#include "Com_interface.h"
+#endif
 
 class Animations{
   public:
+// #########################################################################
+// ############################ Run animations #############################
+// #########################################################################
+
+    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], unsigned long millisecs);
+
 // #########################################################################
 // ####################### Rainbow Cycle animation #########################
 // #########################################################################
@@ -237,6 +246,67 @@ class Animations{
 // ############################################### STATIC DEFINITIONS ########################################################
 // ###########################################################################################################################
 
+void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], unsigned long millisecs){
+  //Serial.print("Animation: ");Serial.println(ComInterface::getAnimation());
+   #ifdef USE_INTERFACE
+  switch (ComInterface::getAnimation()) {
+  #endif
+  #ifndef USE_INTERFACE
+  switch (animation) {
+  #endif
+    case 1:
+      Animations::rainbowCycle(ledArrays, 2000, millisecs);
+      //Test::test();
+      break;
+    case 2:
+      for(int i=0;i<NB_ARRAYS;i++){
+        Animations::fadeInAndOut(ledArrays[i], random(255), random(255), random(255));
+      }
+      //Animations::fadeInAndOut(ledArrays[1], random(&animations[1][0]), random(&animations[1][1]), random(&animations[1][2]));
+      break;
+    case 3:
+      Animations::sparkle(ledArrays, 255, 100, 100, 0, millisecs);
+      break;
+    case 4:
+      for(int i=0;i<NB_ARRAYS;i++){
+        Animations::Fire(ledArrays[i], 50, 50, 0, 1.);
+      }
+      break;
+    case 5:
+      for(int i=0;i<NB_ARRAYS;i++){
+        Animations::shootingStar(ledArrays[i], 150, 0, 150, 20, 10, 2000, 1, millisecs);
+      }
+      break;
+    case 6:
+      Animations::twinklePixels(ledArrays[0], 200, 50, 50, 20, 100);
+      break;
+    /*case 7:
+      #ifdef USE_MIC
+        volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
+      #endif
+      #ifndef USE_MIC
+        Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
+      #endif
+      break;*/
+    case 8:
+      Animations::strobe(ledArrays, 20, 55, CRGB(255, 255, 255));
+      break;
+    case 9:
+      Animations::zip(ledArrays, 2, 10, NUM_LEDS-15, 0, 20, millisecs, CRGB(0,0,255));
+      break;
+    default:
+      //Serial.println("Animation code not recognized!");
+
+      #ifndef USE_INTERFACE
+      animation = 1;
+      #endif
+
+      #ifdef USE_INTERFACE
+      ComInterface::setAnimation(1);
+      #endif
+  }
+}
+
 
 // #########################################################################
 // ####################### Rainbow Cycle animation #########################
@@ -244,7 +314,7 @@ class Animations{
 
 void Animations::rainbowCycle(CRGB* leds, int DelayDuration, int millisecs){
   static unsigned long rainbowCyclePreviousMillis = 0;
-  static uint16_t rainbowCycleAnimCount = 0;
+  static uint64_t rainbowCycleAnimCount = 0;
   byte *c;
   uint16_t i, j;
   if(millisecs - rainbowCyclePreviousMillis >= DelayDuration){

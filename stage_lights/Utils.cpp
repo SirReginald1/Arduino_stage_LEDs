@@ -107,3 +107,8 @@ unsigned long outputAndReplace(int rows, int cols, int depth, unsigned long arra
 
   return oldValue;
 }
+
+template<typename Base, typename T>
+inline bool instanceof(const T *ptr) {
+    return dynamic_cast<const Base*>(ptr) != nullptr;
+}

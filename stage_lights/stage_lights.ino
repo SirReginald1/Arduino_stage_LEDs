@@ -1,27 +1,19 @@
 //#include "Microphone.h"
 #include "Animations.h"
-//#include "Com_interface.h"
+#include "Com_interface.h"
 //#include <TimerOne.h>
 #include <FastLED.h>
 #include "Globals.h"
 #include <Arduino.h>
 
-#define FASTLED_INTERNAL //remove annoying pragma messages
-#define USE_INTERFACE
-// Animation varaibels
-/*The number of LEDs per array*/
-//#define NUM_LEDS 122
-/*The number of arrays hooked up to the arduino*/
-//#define NB_ARRAYS 4
-/*The maiximum number of parameters present in an animation function*/
-//#define NB_PARAMS 10
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
-//#define USE_INTERFACE true
+//#define USE_INTERFACE
 /*Indecates if the the microphone should be used*/
-//#define USE_MIC true
+//#define USE_MIC
+
 // Setting LED pins
 #define LED1_PIN 4//4
-#define LED2_PIN 18//7
+#define LED2_PIN 7//7
 #define LED3_PIN 8
 #define LED4_PIN 12
 // Setting button pins
@@ -32,40 +24,23 @@
   const int mic_pin2 = A1;
 #endif
 
-// Define led strips
-//CRGB leds1[NUM_LEDS];
-//CRGB leds2[NUM_LEDS];
-//CRGB leds3[NUM_LEDS];
-//CRGB leds4[NUM_LEDS];
-
+// Define LED arrays
 CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
 
 // ########################## Console com variables ##########################
+/*
 #ifdef USE_INTERFACE
   // The value that indicates which animation to run.
-  extern int animation;
+  //extern int animation;
   // The index of the array currently being manipulated
   extern int current_array;
 #endif
-
+*/
 #ifndef USE_INTERFACE
   // The value that indicates which animation to run.
   int animation;
   // The index of the array currently being manipulated
   //int current_array;
-  /*
-  int animations[9][10] = {
-    {2000, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // rainbow circle {delay}
-    {255, 255, 255, -1, -1, -1, -1, -1, -1, -1}, // faide {red, green, blue}
-    {0, 255, 100, 0, -1, -1, -1, -1, -1, -1}, // sparkle {red, green, blue, delay}
-    {50, 50, 0, 1, -1, -1, -1, -1, -1, -1}, // fire {flame_height, sparks, delay, fire_intensity}
-    {41, 42, 43, 44, 45, 46, 47, 48, 49, 50},
-    {51, 52, 53, 54, 55, 56, 57, 58, 59, 60},
-    {61, 62, 63, 64, 65, 66, 67, 68, 69, 70},
-    {71, 72, 73, 74, 75, 76, 77, 78, 79, 80},
-    {81, 82, 83, 84, 85, 86, 87, 88, 89, 90}
-  };
-  */
 #endif
 
 
@@ -204,8 +179,13 @@ void setup() {
   // ################## Set variables ########################
   // #########################################################
   // Set starting animation choice
+  #ifndef USE_INTERFACE
   animation = 1;
   //current_array = 0;
+  #endif
+  #ifdef USE_INTERFACE
+  ComInterface::setAnimation(1);
+  #endif
 }
 
 
@@ -222,28 +202,26 @@ void loop() {
   
   // ############# LED CODE ##############
   if(Serial.available() > 0){
-    /*
-    recvWithStartEndMarkers();
-    if (newData == true) {
-        strcpy(tempChars, receivedChars);
-            // this temporary copy is necessary to protect the original data
-            //   because strtok() used in parseData() replaces the commas with \0
-        parseData();
-        showParsedData();
-        newData = false;
-    }
-    */
+
+    #ifdef USE_INTERFACE
+    ComInterface::readInput();
+    #endif
+
+    #ifndef USE_INTERFACE
     animation = Serial.parseInt();
-    //animations[2][0] = Serial.parseInt();
-    //Serial.print("Anim param: ");Serial.println(animations[2][0]);
-    ////read_input();
-    //Serial.print("Switch to: ");Serial.println(animation);
-    ////serialFlush();
+    #endif
+
     FastLED.clear();
   }
-  //min(1, amplitude/max_amp_in_interval)*NUM_LEDS
-  //float(amplitude)/(float(max_amp_in_interval)*2)
+
+  Animations::runAnimations(led_arrays, millisecs);
+  /*
+  #ifdef USE_INTERFACE
+  switch (ComInterface::getAnimation()) {
+  #endif
+  #ifndef USE_INTERFACE
   switch (animation) {
+  #endif
     case 1:
       Animations::rainbowCycle(led_arrays, 2000, millisecs);
       //Test::test();
@@ -277,7 +255,7 @@ void loop() {
       #ifndef USE_MIC
         Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
       #endif
-      break;*/
+      break;*//*
     case 8:
       Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
       break;
@@ -286,7 +264,14 @@ void loop() {
       break;
     default:
       Serial.println("Animation code not recognized!");
+
+      #ifndef USE_INTERFACE
       animation = 1;
+      #endif
+
+      #ifdef USE_INTERFACE
+      ComInterface::setAnimation(1);
+      #endif
   }
-  
+  */
 }
