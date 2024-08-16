@@ -1,5 +1,5 @@
 //#include "Microphone.h"
-#include "Animations.h"
+#include "Animation.h"
 //#include "Com_interface.h"
 //#include <TimerOne.h>
 #include <FastLED.h>
@@ -7,7 +7,6 @@
 #include <Arduino.h>
 
 #define FASTLED_INTERNAL //remove annoying pragma messages
-#define USE_INTERFACE
 // Animation varaibels
 /*The number of LEDs per array*/
 //#define NUM_LEDS 122
@@ -20,7 +19,7 @@
 /*Indecates if the the microphone should be used*/
 //#define USE_MIC true
 // Setting LED pins
-#define LED1_PIN 4//4
+#define LED1_PIN 19//4
 #define LED2_PIN 18//7
 #define LED3_PIN 8
 #define LED4_PIN 12
@@ -211,6 +210,7 @@ void setup() {
 
 void loop() {
   millisecs = millis();
+  //Serial.println(millisecs);
   
   // ####################### MIC CODE #########################
   #ifdef USE_MIC
@@ -245,47 +245,46 @@ void loop() {
   //float(amplitude)/(float(max_amp_in_interval)*2)
   switch (animation) {
     case 1:
-      Animations::rainbowCycle(led_arrays, 2000, millisecs);
-      //Test::test();
+      rainbowCycle(led_arrays, 2000, millisecs);
       break;
     case 2:
       for(int i=0;i<NB_ARRAYS;i++){
-        Animations::fadeInAndOut(led_arrays[i], random(255), random(255), random(255));
+        fadeAnimation(led_arrays[i], random(255), random(255), random(255));
       }
-      //Animations::fadeInAndOut(led_arrays[1], random(&animations[1][0]), random(&animations[1][1]), random(&animations[1][2]));
+      //fadeAnimation(led_arrays[1], random(&animations[1][0]), random(&animations[1][1]), random(&animations[1][2]));
       break;
     case 3:
-      Animations::sparkle(led_arrays, 255, 100, 100, 0, millisecs);
+      Sparkle(led_arrays, 0, 255, 0, 0, millisecs);
       break;
     case 4:
       for(int i=0;i<NB_ARRAYS;i++){
-        Animations::Fire(led_arrays[i], 50, 50, 0, 1.);
+        Fire(led_arrays[i], 50, 50, 0, 1);
       }
       break;
     case 5:
       for(int i=0;i<NB_ARRAYS;i++){
-        Animations::shootingStar(led_arrays[i], 150, 0, 150, 20, 10, 2000, 1, millisecs);
+        shootingStarAnimation(led_arrays[i], 150, 0, 150, 20, 10, 2000, 1, millisecs);
       }
       break;
     case 6:
-      Animations::twinklePixels(led_arrays[0], 200, 50, 50, 20, 100);
+      TwinklePixels(led_arrays[0], 200, 50, 50, 20, 100);
       break;
     /*case 7:
       #ifdef USE_MIC
         volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
       #endif
       #ifndef USE_MIC
-        Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
+        strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
       #endif
       break;*/
     case 8:
-      Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
+      strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
       break;
     case 9:
-      Animations::zip(led_arrays, 2, 10, NUM_LEDS-15, 0, 20, millisecs, CRGB(0,0,255));
+      //zip_animation(led_arrays, 2, 10, NUM_LEDS-15, 0, 20, millisecs, CRGB(0,0,255));
       break;
     default:
-      Serial.println("Animation code not recognized!");
+      //Serial.println("Animation code not recognized!");
       animation = 1;
   }
   

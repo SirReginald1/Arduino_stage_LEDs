@@ -1,8 +1,10 @@
 #ifndef Microphone_h
 #define Microphone_h
 
+#include "Globals.h"
 #include <FastLED.h>
 #include <Arduino.h>
+
 /*
 // Baseline amplitude
 const int basline_amp;

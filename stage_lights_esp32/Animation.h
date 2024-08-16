@@ -3,8 +3,11 @@
 
 #include <FastLED.h>
 #include <Arduino.h>
+#include "Globals.h"
 
-#define MAX_NB_PARAM 10
+//#define NUM_LEDS 122
+//#define NB_ARRAYS 4
+//#define MAX_NB_PARAM 10
 
 //class Animation {
   //public:
@@ -71,14 +74,18 @@
   */
   void clear_sequential(CRGB* leds, int direction, int speed);
 
-  void strobe(CRGB* leds, int speed, CRGB color);
+  void strobe(CRGB* leds, int time_on, int time_off, CRGB color);
+  void strobe(CRGB leds[NB_ARRAYS][NUM_LEDS], int time_on, int time_off, CRGB color);
 
   void Sparkle(CRGB* leds, int red, int green, int blue, int delayDuration);
+  void Sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], int red, int green, int blue, int delayDuration, unsigned long millisecs);
 
   void fadeAnimation(CRGB* leds, int red, int green, int blue);
 
   void rainbowCycle(CRGB* leds, int DelayDuration, int millisecs);
+  void rainbowCycle(CRGB leds[NB_ARRAYS][NUM_LEDS], int DelayDuration, int millisecs);
 
   void zip_animation(CRGB* leds, int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, CRGB color);
+  void zip_animation(CRGB leds[NB_ARRAYS][NUM_LEDS], int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, CRGB color);
 //}
 #endif

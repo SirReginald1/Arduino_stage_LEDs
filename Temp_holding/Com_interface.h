@@ -3,7 +3,6 @@
 
 #include <string.h>
 #include <Arduino.h>
-#include "Globals.h"
 
 /*Reads the contense of the serial buffer and sets all the appropriate variables.*/
 void read_input();

@@ -1,7 +1,9 @@
 #include "Animation.h"
 #include <FastLED.h>
+#include "Globals.h"
 
-#define NUM_LEDS 122
+//#define NUM_LEDS 122
+//#define NB_ARRAYS 2
 
   // FlameHeight - Use larger value for shorter flames, default=50.
   // Sparks - Use larger value for more ignitions and a more active fire (between 0 to 255), default=100.
@@ -178,13 +180,65 @@
 
   }
 
-  void strobe(CRGB* leds, int speed, CRGB color){
-    fill_solid(leds, NUM_LEDS, color);
-    FastLED.show();
-    FastLED.clear();
-    FastLED.show();
-    delay(speed);
+  void strobe(CRGB* leds, int time_on, int time_off, CRGB color){
+      fill_solid(leds, NUM_LEDS, color);
+      FastLED.show();
+      delay(time_on);
+      FastLED.clear();
+      FastLED.show();
+      delay(time_off);
   }
+
+  void strobe(CRGB leds[NB_ARRAYS][NUM_LEDS], int time_on, int time_off, CRGB color){
+      for(int i=0;i<NB_ARRAYS;i++){
+        fill_solid(leds[i], NUM_LEDS, color);
+      }
+      FastLED.show();
+      delay(time_on);
+      FastLED.clear();
+      FastLED.show();
+      delay(time_off);
+  }
+  /*
+  //unsigned long fadePreviousMillis = 0;
+  int fadeInAnimCounter = 0;
+  int fadeOutAnimCounter = 0;
+  void fadeAnimation(CRGB* leds, int red, int green, int blue){
+    float r, g, b;
+
+    // FADE IN
+    //for(int i = 0; i <= 255; i++) {
+    if(fadeInAnimCounter <= 255){
+      //r = (fadeInAnimCounter/*i*///256.0)*red;
+      //g = (fadeInAnimCounter/*i*//256.0)*green;
+      //b = (fadeInAnimCounter/*i*//256.0)*blue;
+    /*  fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
+      FastLED.show();
+      delay(2);
+      fadeInAnimCounter++;
+      if(fadeInAnimCounter == 255){
+        fadeOutAnimCounter = 255;
+      }
+    }*/
+
+    // FADE OUT
+    //for(int i = 255; i >= 0; i--) {
+    //if(fadeOutAnimCounter > 0){
+      //r = (fadeOutAnimCounter/*i*//256.0)*red;
+      //g = (fadeOutAnimCounter/*i*//256.0)*green;
+      //b = (fadeOutAnimCounter/*i*//256.0)*blue;
+      /*for(int i=0; i<NUM_LEDS;i++){
+        leds[i].setRGB(r, g, b);// = CRGB(r,g,b);
+      }
+      //fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
+      FastLED.show();
+      delay(2);
+      fadeOutAnimCounter--;
+      if(fadeOutAnimCounter == 0){
+        fadeInAnimCounter = 0;
+      }
+    }
+  }*/
 
 
   void fadeAnimation(CRGB* leds, int red, int green, int blue){
@@ -213,6 +267,10 @@
       delay(2);
     }
   }
+  
+// #########################################################################
+// ####################### Rainbow Cycle animation #########################
+// #########################################################################
 
   byte *Wheel(byte WheelPosition) {
     static byte c[3];
@@ -238,26 +296,55 @@
     return c;
   }
 
-  unsigned long rainbowCyclePreviousMillis = 0;  
+  unsigned long rainbowCyclePreviousMillis = 0;
+  /*The counter that is incremented to make the animation play*/
+  uint16_t rainbowCycleAnimCount = 0;
 
   void rainbowCycle(CRGB* leds, int DelayDuration, int millisecs) {
     byte *c;
     uint16_t i, j;
     if(millisecs - rainbowCyclePreviousMillis >= DelayDuration){
-      for(j=0; j < 256; j++) {
-        for(i=0; i < NUM_LEDS; i++) {
-          c = Wheel(((i * 256 / NUM_LEDS) + j) & 255);
+      if(rainbowCycleAnimCount >256){
+        rainbowCycleAnimCount = 0;
+      }
+      //for(j=0; j < 256; j++) {
+        for(i=0; i < NUM_LEDS; i++) { // This makes sure all LEDs on strip are updated
+          c = Wheel(((i * 256 / NUM_LEDS) + /*j*/ rainbowCycleAnimCount) & 255);
           leds[NUM_LEDS - 1 - i].setRGB(*c, *(c+1), *(c+2));
         }
         FastLED.show();
         //delay(DelayDuration);
-      }
+        rainbowCycleAnimCount++;
+      //}
     }
   }
+
+  void rainbowCycle(CRGB leds[NB_ARRAYS][NUM_LEDS], int DelayDuration, int millisecs) {
+    byte *c;
+    uint16_t i, j;
+    if(millisecs - rainbowCyclePreviousMillis >= DelayDuration){
+      if(rainbowCycleAnimCount >256){
+        rainbowCycleAnimCount = 0;
+      }
+      for(i=0; i < NUM_LEDS; i++) { // This makes sure all LEDs on strip are updated
+        c = Wheel(((i * 256 / NUM_LEDS) + /*j*/ rainbowCycleAnimCount) & 255);
+        for(j=0;j<NB_ARRAYS;j++){
+          leds[j][NUM_LEDS - 1 - i].setRGB(*c, *(c+1), *(c+2));
+        }
+      }
+      FastLED.show();
+      rainbowCycleAnimCount++;
+    }
+  }
+
+// #########################################################################
+// ####################### Zip animation ###############################
+// #########################################################################
 
 // Make zip right and zip left then function that can alternate the 2
 unsigned long zip_animation_prev_mills = 0;
 int zip_animation_pos_counter = 0;
+
 void zip_animation(CRGB* leds, int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, CRGB color){
   int start_pos, end_pos;
   if(current_time - zip_animation_prev_mills > speed){
@@ -279,12 +366,57 @@ void zip_animation(CRGB* leds, int size, int start, int end, int delay, unsigned
   
 }
 
-  void Sparkle(CRGB* leds, int red, int green, int blue, int delayDuration) {
+void zip_animation(CRGB leds[NB_ARRAYS][NUM_LEDS], int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, CRGB color){
+  int start_pos, end_pos;
+  if(current_time - zip_animation_prev_mills > speed){
+    // This is the start of the strip
+    start_pos = zip_animation_pos_counter + start;
+    if(start_pos <= NUM_LEDS && start_pos < end){
+      for(int i=0;i<NB_ARRAYS;i++){
+        leds[i][start_pos] = color;
+      }
+    }
+
+    // This is the end of the strip
+    end_pos = zip_animation_pos_counter + start - size;
+    if(end_pos >= 0 && end_pos <= NUM_LEDS){
+      for(int i=0;i<NB_ARRAYS;i++){
+        leds[i][end_pos] = CRGB::Black;
+      }
+    }
+    FastLED.show();
+    zip_animation_pos_counter = ++zip_animation_pos_counter % (end - start + size);
+    zip_animation_prev_mills = current_time;
+  }
+  
+}
+// #########################################################################
+// ####################### Sparkle animation ###############################
+// #########################################################################
+
+unsigned long SparklePreviousMillis = 0;
+
+void Sparkle(CRGB* leds, int red, int green, int blue, int delayDuration) {
   int pixel = random(NUM_LEDS);
   leds[pixel].setRGB(red, green, blue);
   FastLED.show();
   delay(delayDuration);
   leds[pixel].setRGB(0, 0, 0);
+}
+
+void Sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], int red, int green, int blue, int delayDuration, unsigned long millisecs) {
+  int pixel[NB_ARRAYS];
+  for(int i=0;i<NB_ARRAYS;i++){
+    pixel[i] = random(NUM_LEDS);
+    leds[i][pixel[i]].setRGB(red, green, blue);
+  }
+  if(millisecs - SparklePreviousMillis >= delayDuration){
+    FastLED.show();
+  }
+  for(int i=0;i<NB_ARRAYS;i++){
+    leds[i][pixel[i]].setRGB(0, 0, 0);
+  }
+    SparklePreviousMillis = millisecs;
 }
 /*
 void electromagneticSpectrum(int transitionSpeed) {

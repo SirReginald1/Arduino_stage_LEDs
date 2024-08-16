@@ -2,13 +2,15 @@
 #include "Utils.h"
 #include <string.h>
 #include <Arduino.h>
-#include "Animations.h"
+#include "Animation.h"
 #include <math.h>
 #include <stdio.h>
-#include "Globals.h"
 // #include <map> For future reference dicts implementation
-// ################### Compilation options ####################
 
+#define NUM_LEDS 122
+#define NB_ARRAYS 4
+#define NB_ANIMATIONS 9
+#define NB_MAX_PARAMS 10
 
 // ################## Comunication variables ##################
 // The value that indicates which animation to run.
@@ -16,11 +18,11 @@ int animation;
 // The index of the array currently being manipulated
 int current_array;
 // List of integer parameters parameters
-//int parameters_int[10];
+int parameters_int[10];
 // List of float parameters parameters
-//float parameters_float[10];
+float parameters_float[10];
 // List of unsigned long parameters parameters
-//unsigned long parameters_unsigned_long[10];
+unsigned long parameters_unsigned_long[10];
 //extern int *parameters;
 // The number of interger parameters that are being used by each array
 int param_count_int[NB_ARRAYS];
@@ -76,41 +78,41 @@ void initParametersArray(int paramArray[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS]
 
   // int parrameter array each LED array will be set to
   int paramInitInt[9][10] = {
-    {2000, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // rainbow circle {int delay}
-    {255, 255, 255, -1, -1, -1, -1, -1, -1, -1}, // faide {int red, int green, int blue}
-    {255, 255, 100, 0, -1, -1, -1, -1, -1, -1}, // sparkle {int red, int green, int blue, int delay}
-    {50, 50, 0, -1, -1, -1, -1, -1, -1, -1}, // fire {int flame_height, int sparks, int delay, float fire_intensity}
-    {150, 0, 150, 20, 10, 2000, 1, -1, -1, -1}, // Shooting Star {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
-    {200, 50, 50, 20, 100,  -1, -1, -1, -1, -1}, // Twinkle Pixels {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
-    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // volum_bar_animation {???}
-    {20, 55, 255, 255, 255, -1, -1, -1, -1, -1}, // strobe {int time_on, int time_off, int R, int G, int B}
-    {2, 10, NUM_LEDS-5, 0, -1, -1, 0, 0, 255, -1} // zip_animation {int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, int R, int G, int B}
+    {2000, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // rainbow circle {delay}
+    {255, 255, 255, -1, -1, -1, -1, -1, -1, -1}, // faide {red, green, blue}
+    {255, 255, 100, 0, -1, -1, -1, -1, -1, -1}, // sparkle {red, green, blue, delay}
+    {50, 50, 0, -1, -1, -1, -1, -1, -1, -1}, // fire {flame_height, sparks, delay, fire_intensity}
+    {41, 42, 43, 44, 45, 46, 47, 48, 49, 50},
+    {51, 52, 53, 54, 55, 56, 57, 58, 59, 60},
+    {61, 62, 63, 64, 65, 66, 67, 68, 69, 70},
+    {71, 72, 73, 74, 75, 76, 77, 78, 79, 80},
+    {81, 82, 83, 84, 85, 86, 87, 88, 89, 90}
   };
 
   // flaot parrameter array each LED array will be set to
   float paramInitFloat[9][10] = {
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // rainbow circle {int delay}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // faide {int red, int green, int blue}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // sparkle {int red, int green, int blue, int delay}
-    {-1., -1., -1., 1., -1., -1., -1., -1., -1., -1.}, // fire {int flame_height, int sparks, int delay, float fire_intensity}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // Shooting Star {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // Twinkle Pixels {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // volum_bar_animation {???}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // strobe {int time_on, int time_off, int R, int G, int B}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.} // zip_animation {int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, int R, int G, int B}
+    {2000, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // rainbow circle {delay}
+    {255, 255, 255, -1, -1, -1, -1, -1, -1, -1}, // faide {red, green, blue}
+    {255, 255, 100, 0, -1, -1, -1, -1, -1, -1}, // sparkle {red, green, blue, delay}
+    {50, 50, 0, -1, -1, -1, -1, -1, -1, -1}, // fire {flame_height, sparks, delay, fire_intensity}
+    {41, 42, 43, 44, 45, 46, 47, 48, 49, 50},
+    {51, 52, 53, 54, 55, 56, 57, 58, 59, 60},
+    {61, 62, 63, 64, 65, 66, 67, 68, 69, 70},
+    {71, 72, 73, 74, 75, 76, 77, 78, 79, 80},
+    {81, 82, 83, 84, 85, 86, 87, 88, 89, 90}
   };
 
     // flaot parrameter array each LED array will be set to
   unsigned long paramInitUnsignedLong[9][10] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // rainbow circle {int delay}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // faide {int red, int green, int blue}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // sparkle {int red, int green, int blue, int delay}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // fire {int flame_height, int sparks, int delay, float fire_intensity}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // Shooting Star {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // Twinkle Pixels {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // volum_bar_animation {???}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // strobe {int time_on, int time_off, int R, int G, int B}
-    {0, 0, 0, 0, 20, 0, 0, 0, 0, 0} // zip_animation {int size, int start, int end, int delay, unsigned long speed, int R, int G, int B}
+    {2000, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // rainbow circle {delay}
+    {255, 255, 255, -1, -1, -1, -1, -1, -1, -1}, // faide {red, green, blue}
+    {255, 255, 100, 0, -1, -1, -1, -1, -1, -1}, // sparkle {red, green, blue, delay}
+    {50, 50, 0, -1, -1, -1, -1, -1, -1, -1}, // fire {flame_height, sparks, delay, fire_intensity}
+    {41, 42, 43, 44, 45, 46, 47, 48, 49, 50},
+    {51, 52, 53, 54, 55, 56, 57, 58, 59, 60},
+    {61, 62, 63, 64, 65, 66, 67, 68, 69, 70},
+    {71, 72, 73, 74, 75, 76, 77, 78, 79, 80},
+    {81, 82, 83, 84, 85, 86, 87, 88, 89, 90}
   };
 
   for(int i=0;i<NB_ARRAYS;i++){
