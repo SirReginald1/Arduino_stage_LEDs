@@ -5,6 +5,7 @@
 #define NUM_LEDS 60 //122
 /*The number of arrays hooked up to the arduino*/
 #define NB_ARRAYS 1 // 4
+/*The total number of animations*/
 #define NB_ANIMATIONS 9
 /*The maiximum number of parameters present in an animation function*/
 #define NB_MAX_PARAMS 10

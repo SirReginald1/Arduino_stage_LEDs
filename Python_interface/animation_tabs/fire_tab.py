@@ -62,7 +62,7 @@ class FireArrayFrame(ArrayFrame):
         ### Args:
             - event (Event): The key pess event.
         """
-        self.delay_duration = self.txtin_delay.get()
+        self.delay = self.txtin_delay.get()
         self.flame_height = self.txtin_flame_height.get()
         self.sparks = self.txtin_sparks.get()
         self.intensity = self.txtin_intensity.get()

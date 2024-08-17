@@ -36,13 +36,13 @@ class Tab(Frame):
         #################### Setting up array boxes #################### 
         self.nb_cols: int = 1
         self.nb_rows: int = nb_of_arrays
-        self.strobe_array_frames: List[array_frame_type] = []
+        self.animation_array_frames: List[array_frame_type] = []
         for i in range(self.nb_rows):
-            strobe_array_frame = array_frame_type(self.frame, i+1,f"LED array {i+1}", arduino_int)
-            strobe_array_frame.grid(row=i, column=0, pady=10)
-            self.strobe_array_frames.append(strobe_array_frame)
+            animation_array_frame = array_frame_type(self.frame, i,f"LED array {i+1}", arduino_int)
+            animation_array_frame.grid(row=i, column=0, pady=10)
+            self.animation_array_frames.append(animation_array_frame)
         
     def set_all_arrays(self) -> None:
         """Updates all the parameter values for the all the arrays for the current animation."""
-        for array_frame in self.strobe_array_frames:
+        for array_frame in self.animation_array_frames:
             array_frame.send_update()

@@ -1,12 +1,9 @@
-//#include "HardwareSerial.h" //????????
-#include "Utils.h"
-#include <string.h>
 #include <Arduino.h>
-#include "Animations.h"
-#include <math.h>
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
 #include "Globals.h"
-// #include <map> For future reference dicts implementation
+#include "Animations.h"
 
 // ################### Compilation options ####################
 #define START_MARKER '<'
@@ -20,13 +17,6 @@ class ComInterface{
     static int animation;
     // The index of the array currently being manipulated
     static int currentArray;
-    // List of integer parameters parameters
-    //int parameters_int[10];
-    // List of float parameters parameters
-    //float parameters_float[10];
-    // List of unsigned long parameters parameters
-    //unsigned long parameters_unsigned_long[10];
-    //extern int *parameters;
     // The number of interger parameters that are being used by each array
     static int paramCountInt[NB_ARRAYS];
     // The number of float parameters that are being used by each array
@@ -34,34 +24,8 @@ class ComInterface{
     // The number of unsigned long parameters that are being used by each array
     static unsigned long paramCountUnsignedLong[NB_ARRAYS];
 
-    // ##################### Animation variables #############################
-    /*
-    * Refference for all integer array parameter values. parameters_int[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS].
-    * The led array specification, current millisecond value, Total number of LEDs or any other parameter not related to the animation it self are not counted in the number of parameters.
-    * - NB_ARRAYS: The LED array in question.
-    * - NB_ANIMATIONS: The animation in question.
-    * - NB_MAX_PARAMS: The parameter in question. Parameters are ordered in order of specification in animation function signiture.
-    * All values that are not int in function signiature or that do not exist in function signiture are set to -1. 
-    */
-    static int parametersInt[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS];
-    /*
-    * Refference for all float array parameter values. parameters_float[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS].
-    * The led array specification, current millisecond value, Total number of LEDs or any other parameter not related to the animation it self are not counted in the number of parameters.
-    * - NB_ARRAYS: The LED array in question.
-    * - NB_ANIMATIONS: The animation in question.
-    * - NB_MAX_PARAMS: The parameter in question. Parameters are ordered in order of specification in animation function signiture.
-    * All values that are not int in function signiature or that do not exist in function signiture are set to -1. 
-    */
-    static float parametersFloat[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS];
-    /*
-    * Refference for all unsigned long array parameter values. parameters_unsigned long[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS].
-    * The led array specification, current millisecond value, Total number of LEDs or any other parameter not related to the animation it self are not counted in the number of parameters.
-    * - NB_ARRAYS: The LED array in question.
-    * - NB_ANIMATIONS: The animation in question.
-    * - NB_MAX_PARAMS: The parameter in question. Parameters are ordered in order of specification in animation function signiture.
-    * All values that are not int in function signiature or that do not exist in function signiture are set to -1. 
-    */
-    static unsigned long parametersUnsignedLong[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS];
+    /** The array of structs that contain*/
+    //static animParamRef animParamRefs[NB_ARRAYS];
 
     // ################### Reading data code ##################
     /*The maximum number of bytes that the buffer can recive.*/
@@ -73,12 +37,10 @@ class ComInterface{
     /*Temporary array for use when parsing*/
     static char tempChars[numChars];        
 
-    /*Variable that holds a string present in the message.*/
-    //static char messageFromPC[numChars] = {0};
-
-    /*Boolean indicating if there is data being proccesed.
-    If true will not read and parse from the buffer. Is set back to false once all data reved 
-    hase been delt with.*/
+    /**
+    -Boolean indicating if there is data being proccesed.
+    If true will not read and parse from the buffer. Is set back to false once all data reved data hase been delt with.
+    */
     static boolean newData;
 
     // ###################### Getter an setter functions ######################################
@@ -134,20 +96,14 @@ int ComInterface::animation = 1;
 
 int ComInterface::currentArray = 0;
 
+//animParamRef ComInterface::animParamRefs[NB_ARRAYS];
+
 // The number of interger parameters that are being used by each array
 int ComInterface::paramCountInt[NB_ARRAYS] = {0};
 // The number of float parameters that are being used by each array
 float ComInterface::paramCountFloat[NB_ARRAYS] = {0};
 // The number of unsigned long parameters that are being used by each array
 unsigned long ComInterface::paramCountUnsignedLong[NB_ARRAYS] = {0};
-
-
-int ComInterface::parametersInt[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS] = {0};
-
-float ComInterface::parametersFloat[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS] = {0};
-
-unsigned long ComInterface::parametersUnsignedLong[NB_ARRAYS][NB_ANIMATIONS][NB_MAX_PARAMS] = {0};
-
 
 /*The buffer in which receved strings stored. Has a terminating character (\0).*/
 char ComInterface::receivedChars[numChars] = {0};
@@ -178,55 +134,6 @@ int ComInterface::getCurrentArray(){
 // #########################################################################################################################
 // ############################################# STATIC FUNCTION DEFINITION ################################################
 // #########################################################################################################################
-
-void ComInterface::initParametersArray(){
-    
-  // int parrameter array each LED array will be set to
-  int paramInitInt[9][10] = {
-    {2000, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // rainbow circle {int delay}
-    {255, 255, 255, -1, -1, -1, -1, -1, -1, -1}, // faide {int red, int green, int blue}
-    {255, 255, 100, 0, -1, -1, -1, -1, -1, -1}, // sparkle {int red, int green, int blue, int delay}
-    {50, 50, 0, -1, -1, -1, -1, -1, -1, -1}, // fire {int flame_height, int sparks, int delay, float fire_intensity}
-    {150, 0, 150, 20, 10, 2000, 1, -1, -1, -1}, // Shooting Star {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
-    {200, 50, 50, 20, 100,  -1, -1, -1, -1, -1}, // Twinkle Pixels {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
-    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, // volum_bar_animation {???}
-    {20, 55, 255, 255, 255, -1, -1, -1, -1, -1}, // strobe {int time_on, int time_off, int R, int G, int B}
-    {2, 10, NUM_LEDS-5, 0, -1, -1, 0, 0, 255, -1} // zip_animation {int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, int R, int G, int B}
-  };
-
-  // flaot parrameter array each LED array will be set to
-  float paramInitFloat[9][10] = {
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // rainbow circle {int delay}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // faide {int red, int green, int blue}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // sparkle {int red, int green, int blue, int delay}
-    {-1., -1., -1., 1., -1., -1., -1., -1., -1., -1.}, // fire {int flame_height, int sparks, int delay, float fire_intensity}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // Shooting Star {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // Twinkle Pixels {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // volum_bar_animation {???}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.}, // strobe {int time_on, int time_off, int R, int G, int B}
-    {-1., -1., -1., -1., -1., -1., -1., -1., -1., -1.} // zip_animation {int size, int start, int end, int delay, unsigned long speed, unsigned long current_time, int R, int G, int B}
-  };
-
-    // flaot parrameter array each LED array will be set to
-  unsigned long paramInitUnsignedLong[9][10] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // rainbow circle {int delay}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // faide {int red, int green, int blue}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // sparkle {int red, int green, int blue, int delay}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // fire {int flame_height, int sparks, int delay, float fire_intensity}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // Shooting Star {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // Twinkle Pixels {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // volum_bar_animation {???}
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // strobe {int time_on, int time_off, int R, int G, int B}
-    {0, 0, 0, 0, 20, 0, 0, 0, 0, 0} // zip_animation {int size, int start, int end, int delay, unsigned long speed, int R, int G, int B}
-  };
-
-  for(int i=0;i<NB_ARRAYS;i++){
-    copy2DTo3D(NB_ANIMATIONS, NB_MAX_PARAMS, NB_ANIMATIONS, paramInitInt, parametersInt, i);
-    copy2DTo3D(NB_ANIMATIONS, NB_MAX_PARAMS, NB_ANIMATIONS, paramInitFloat, parametersFloat, i);
-    copy2DTo3D(NB_ANIMATIONS, NB_MAX_PARAMS, NB_ANIMATIONS, paramInitUnsignedLong, parametersUnsignedLong, i);
-  }
-}
-
 /**
   * Function that takes the animation number and the number of the current parameter for that animation function and returns the code for the type of that variable.
   * !!!!!!! Any parameter that is not directly related to the changing how the annimation runs such as current millis value or total number of LEDs in array is not 
@@ -345,6 +252,7 @@ void ComInterface::recvWithStartEndMarkers() {
 
 /*This function parses the data that hase been receved*/
 void ComInterface::parseData() {      // split the data into its parts
+        extern animParamRef animParamRefs[NB_ARRAYS];
   /*Value extracted from buffer*/
   char * strtokIndx;
   /*Counts the number of parameters after the anomation value in current data parsing.*/
@@ -388,15 +296,18 @@ void ComInterface::parseData() {      // split the data into its parts
     switch (type_indicator) {
       case 1:
         parameter_value_float = atof(strtokIndx);
-        outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersFloat, currentArray, animation, param_buffer_count, parameter_value_float);
+        //outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersFloat, currentArray, animation, param_buffer_count, parameter_value_float);
+        Animations::setParametersFloat(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_float);
         break;
       case 2:
         parameter_value_unsigned_long  = (unsigned long)atoi(strtokIndx);
-        outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersUnsignedLong, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
+        //outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersUnsignedLong, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
+        Animations::setParametersUnsignedLong(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
         break;
       default:
         parameter_value_int  = atoi(strtokIndx);
-        outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersInt, currentArray, animation, param_buffer_count, parameter_value_int);
+        //outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersInt, currentArray, animation, param_buffer_count, parameter_value_int);
+        Animations::setParametersInt(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_int);
     }
 
 

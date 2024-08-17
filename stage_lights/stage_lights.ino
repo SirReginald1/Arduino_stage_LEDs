@@ -1,21 +1,21 @@
-//#include "Microphone.h"
+#include <Arduino.h>
+#include <FastLED.h>
+//#include <TimerOne.h>
+#include "Globals.h"
 #include "Animations.h"
 #include "Com_interface.h"
-//#include <TimerOne.h>
-#include <FastLED.h>
-#include "Globals.h"
-#include <Arduino.h>
+//#include "Microphone.h"
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
 //#define USE_INTERFACE
 /*Indecates if the the microphone should be used*/
 //#define USE_MIC
-
 // Setting LED pins
-#define LED1_PIN 4//4
-#define LED2_PIN 7//7
-#define LED3_PIN 8
-#define LED4_PIN 12
+#define LED_PIN_0 4//4
+#define LED_PIN_1 7//7
+#define LED_PIN_2 8
+#define LED_PIN_3 12
+
 // Setting button pins
 #define BTN_PIN 2
 
@@ -24,8 +24,11 @@
   const int mic_pin2 = A1;
 #endif
 
-// Define LED arrays
+/* Array of all LED arrays. */
 CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
+
+/** The array of structs that contain*/
+animParamRef animParamRefs[NB_ARRAYS];
 
 // ########################## Console com variables ##########################
 /*
@@ -164,13 +167,13 @@ void setup() {
   // #########################################################
   // ######################### LED ###########################
   // #########################################################
-  // Setup all the led
-  //for(int i=0;i<NUM_LEDS;i++){
-  //}
-  FastLED.addLeds<WS2812B, LED1_PIN, RGB>(led_arrays[0], NUM_LEDS);
-  //FastLED.addLeds<WS2812B, LED2_PIN, RGB>(led_arrays[1], NUM_LEDS);
-  //FastLED.addLeds<WS2812B, LED3_PIN, RGB>(led_arrays[2], NUM_LEDS);
-  //FastLED.addLeds<WS2812B, LED4_PIN, RGB>(led_arrays[3], NUM_LEDS);
+
+  // Initialising led arrays
+  FastLED.addLeds<WS2812B, LED_PIN_0, RGB>(led_arrays[0], NUM_LEDS);
+  //FastLED.addLeds<WS2812B, LED_PIN_1, RGB>(led_arrays[1], NUM_LEDS);
+  //FastLED.addLeds<WS2812B, LED_PIN_2, RGB>(led_arrays[2], NUM_LEDS);
+  //FastLED.addLeds<WS2812B, LED_PIN_3, RGB>(led_arrays[3], NUM_LEDS);
+
   // Set power limit of LED strip to 5V, 1500mA
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);
   // Make sure all lights are off
@@ -214,64 +217,5 @@ void loop() {
     FastLED.clear();
   }
 
-  Animations::runAnimations(led_arrays, millisecs);
-  /*
-  #ifdef USE_INTERFACE
-  switch (ComInterface::getAnimation()) {
-  #endif
-  #ifndef USE_INTERFACE
-  switch (animation) {
-  #endif
-    case 1:
-      Animations::rainbowCycle(led_arrays, 2000, millisecs);
-      //Test::test();
-      break;
-    case 2:
-      for(int i=0;i<NB_ARRAYS;i++){
-        Animations::fadeInAndOut(led_arrays[i], random(255), random(255), random(255));
-      }
-      //Animations::fadeInAndOut(led_arrays[1], random(&animations[1][0]), random(&animations[1][1]), random(&animations[1][2]));
-      break;
-    case 3:
-      Animations::sparkle(led_arrays, 255, 100, 100, 0, millisecs);
-      break;
-    case 4:
-      for(int i=0;i<NB_ARRAYS;i++){
-        Animations::Fire(led_arrays[i], 50, 50, 0, 1.);
-      }
-      break;
-    case 5:
-      for(int i=0;i<NB_ARRAYS;i++){
-        Animations::shootingStar(led_arrays[i], 150, 0, 150, 20, 10, 2000, 1, millisecs);
-      }
-      break;
-    case 6:
-      Animations::twinklePixels(led_arrays[0], 200, 50, 50, 20, 100);
-      break;
-    /*case 7:
-      #ifdef USE_MIC
-        volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
-      #endif
-      #ifndef USE_MIC
-        Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
-      #endif
-      break;*//*
-    case 8:
-      Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
-      break;
-    case 9:
-      Animations::zip(led_arrays, 2, 10, NUM_LEDS-15, 0, 20, millisecs, CRGB(0,0,255));
-      break;
-    default:
-      Serial.println("Animation code not recognized!");
-
-      #ifndef USE_INTERFACE
-      animation = 1;
-      #endif
-
-      #ifdef USE_INTERFACE
-      ComInterface::setAnimation(1);
-      #endif
-  }
-  */
+  Animations::runAnimations(led_arrays, animParamRefs, millisecs);
 }

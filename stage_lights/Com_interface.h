@@ -5,9 +5,15 @@
 #include <Arduino.h>
 #include "Globals.h"
 
+// Declaring that this exists here instread of including to avoide circular imports
+struct animParamRef;
+
+
 class ComInterface{
   public:
-    int animation;
+    static int animation;
+
+    //static animParamRef animParamRefs[NB_ARRAYS];
 
     /*Reads the contense of the serial buffer and sets all the appropriate variables.*/
     static void readInput();
@@ -18,7 +24,7 @@ class ComInterface{
 
     static int getAnimation();
 
-    static void initParametersArray();
+    /*static void initParametersArray();*/
 
     //void showParsedData();
 

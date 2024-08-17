@@ -39,7 +39,7 @@ class RainbowCircleArrayFrame(ArrayFrame):
         ### Args:
             - event (Event): The key pess event.
         """
-        self.delay_duration = self.txtin_delay.get()
+        self.delay = self.txtin_delay.get()
         self.send_update()
 
     def send_update(self) -> None:
