@@ -1,8 +1,104 @@
+#include "Arduino.h"
 #include <FastLED.h>
 #include "Globals.h"
+#include "Com_interface.h"
+
+
+/**Struct that contains all the references to the aniamtion parameters*/
+struct animParamRef{
+  int rainbowCycleParamInt[1] = {2000}; // {int delay}
+
+  int fadeInAndOutParamInt[3] = {255, 255, 255}; // {int red, int green, int blue}
+
+  int sparkleParamInt[4] = {200, 0, 100, 0}; // {int red, int green, int blue, int delay}
+
+  int fireParamInt[3] = {50, 50, 0}; // {int flame_height, int sparks, int delay}
+  float fireParamFloat[1] = {1.}; // {float fire_intensity}
+
+  int shootingStarParamInt[7] = {150, 0, 150, 20, 10, 2000, 1}; // {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
+
+  int twinklePixelsParamInt[5] = {200, 50, 50, 20, 100}; // {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
+
+  int strobeParamInt[5] = {20, 55, 255, 255, 255}; // {int time_on, int time_off, int R, int G, int B}
+
+  int zipParamInt[7] = {2, 10, NUM_LEDS-5, 0, 0, 0, 255}; // {int size, int start, int end, int delay, int R, int G, int B}
+  unsigned long zipParamUnsignedLong[1] = {20}; // {unsigned long speed, unsigned long current_time}
+};
+
 
 class Animations{
   public:
+// #########################################################################
+// ##################### Animation Parameter References ####################
+// #########################################################################
+    //template <typesname T> T getParameters(int animationCode, animParamRef animationStruct);
+
+    /**
+      * Returns the array of integer parameters for specified animation.
+      *
+      * @param animationCode The code for the animation the integer parameters of which are to be retreved.
+      * @param animationStruct The struct that references the integer parameter values for a particular LED array.
+      * @return The array of integer parameters for the specified animation in order of specification in function signiature.
+    */
+    static int* getParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode);
+
+    /**
+      * Returns the array of float parameters for specified animation.
+      *
+      * @param animationCode The code for the animation the float parameters of which are to be retreved.
+      * @param animationStruct The struct that references the float parameter values for a particular LED array.
+      * @return The array of float parameters for the specified animation in order of specification in function signiature.
+    */
+    static float* getParametersFloat(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode);
+
+    /**
+      * Returns the array of unsigned long parameters for specified animation.
+      *
+      * @param animationCode The code for the animation the unsigned long parameters of which are to be retreved.
+      * @param animationStruct The struct that references the unsigned long parameter values for a particular LED array.
+      * @return The array of unsigned long parameters for the specified animation in order of specification in function signiature.
+    */
+    static unsigned long* getParametersUnsignedLong(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode);
+
+    /**
+      * Sets the value of a parameter in the parameter struct array to the given value.
+      *
+      * @param animationStruct The parameter struc array to be modified.
+      * @param arrayIdx The index indicating which arrays struct is to be modified.
+      * @param animationCode The code representing the animation to ba changed.
+      * @param paramIdx The index indicating which integer parameter is to be changed. The parameter are in order of specification in function signiature.
+      * @param paramValue The value the parameter is to be switched to.
+    */
+    static void setParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, int paramValue);
+
+    /**
+      * Sets the value of a parameter in the parameter struct array to the given value.
+      *
+      * @param animationStruct The parameter struc array to be modified.
+      * @param arrayIdx The index indicating which arrays struct is to be modified.
+      * @param animationCode The code representing the animation to ba changed.
+      * @param paramIdx The index indicating which integer parameter is to be changed. The parameter are in order of specification in function signiature.
+      * @param paramValue The value the parameter is to be switched to.
+    */
+    static void setParametersFloat(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, float paramValue);
+
+    /**
+      * Sets the value of a parameter in the parameter struct array to the given value.
+      *
+      * @param animationStruct The parameter struc array to be modified.
+      * @param arrayIdx The index indicating which arrays struct is to be modified.
+      * @param animationCode The code representing the animation to ba changed.
+      * @param paramIdx The index indicating which integer parameter is to be changed. The parameter are in order of specification in function signiature.
+      * @param paramValue The value the parameter is to be switched to.
+    */
+    static void setParametersUnsignedLong(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, unsigned long paramValue);
+
+// #########################################################################
+// ############################ Run animations #############################
+// #########################################################################
+
+    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs);
+
 // #########################################################################
 // ####################### Rainbow Cycle animation #########################
 // #########################################################################
@@ -237,6 +333,223 @@ class Animations{
 // ############################################### STATIC DEFINITIONS ########################################################
 // ###########################################################################################################################
 
+void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs){
+  int i;
+  // Run animations with com interface
+  #ifdef USE_INTERFACE
+    switch (ComInterface::getAnimation()) {
+  #endif
+  #ifndef USE_INTERFACE
+    switch (animation) {
+  #endif
+    case 1:
+      for(i=0;i<NB_ARRAYS;i++){
+        //Serial.print("Val param: ");Serial.println(animParamRefArray[i].rainbowCycleParamInt[0]);
+        Animations::rainbowCycle(ledArrays[i], animParamRefArray[i].rainbowCycleParamInt[0], millisecs);
+      }
+      //Test::test();
+      break;
+    case 2:
+      for(i=0;i<NB_ARRAYS;i++){
+        Animations::fadeInAndOut(ledArrays[i], random(255), random(255), random(255));
+      }
+      //Animations::fadeInAndOut(ledArrays[1], random(&animations[1][0]), random(&animations[1][1]), random(&animations[1][2]));
+      break;
+    case 3:
+      for(i=0;i<NB_ARRAYS;i++){
+        Animations::sparkle(ledArrays, 
+                            animParamRefArray[i].sparkleParamInt[1], // Red and Green are reversed in FastLED
+                            animParamRefArray[i].sparkleParamInt[0], 
+                            animParamRefArray[i].sparkleParamInt[2], 
+                            animParamRefArray[i].sparkleParamInt[3], 
+                            millisecs);
+      }
+      break;
+    case 4:
+      for(i=0;i<NB_ARRAYS;i++){
+        Animations::Fire(ledArrays[i], 
+                        animParamRefArray[i].fireParamInt[0], 
+                        animParamRefArray[i].fireParamInt[1], 
+                        animParamRefArray[i].fireParamInt[2], 
+                        animParamRefArray[i].fireParamFloat[0]);
+      }
+      break;
+    case 5:
+      for(i=0;i<NB_ARRAYS;i++){
+        Animations::shootingStar(ledArrays[i], 
+                                animParamRefArray[i].shootingStarParamInt[1], 
+                                animParamRefArray[i].shootingStarParamInt[0], 
+                                animParamRefArray[i].shootingStarParamInt[2], 
+                                animParamRefArray[i].shootingStarParamInt[3], 
+                                animParamRefArray[i].shootingStarParamInt[4], 
+                                animParamRefArray[i].shootingStarParamInt[5], 
+                                animParamRefArray[i].shootingStarParamInt[6], 
+                                millisecs);
+      }
+      break;
+    case 6:
+      for(i=0;i<NB_ARRAYS;i++){
+        Animations::twinklePixels(ledArrays[i], 
+                                  animParamRefArray[i].twinklePixelsParamInt[0], 
+                                  animParamRefArray[i].twinklePixelsParamInt[1], 
+                                  animParamRefArray[i].twinklePixelsParamInt[2], 
+                                  animParamRefArray[i].twinklePixelsParamInt[3], 
+                                  animParamRefArray[i].twinklePixelsParamInt[4]);
+      }
+      break;
+    /*case 7:
+      #ifdef USE_MIC
+        volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
+      #endif
+      #ifndef USE_MIC
+        Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
+      #endif
+      break;*/
+    case 8:
+      Animations::strobe(ledArrays, 
+                        animParamRefArray[i].strobeParamInt[0], 
+                        animParamRefArray[i].strobeParamInt[1], 
+                        CRGB(animParamRefArray[i].strobeParamInt[3], 
+                            animParamRefArray[i].strobeParamInt[2], 
+                            animParamRefArray[i].strobeParamInt[4])
+                        );
+      break;
+    case 9:
+      for(i=0;i<NB_ARRAYS;i++){
+        Animations::zip(ledArrays, 
+                        animParamRefArray[i].zipParamInt[0], 
+                        animParamRefArray[i].zipParamInt[1], 
+                        animParamRefArray[i].zipParamInt[2], 
+                        animParamRefArray[i].zipParamInt[3], 
+                        animParamRefArray[i].zipParamUnsignedLong[0], 
+                        millisecs, 
+                        CRGB(animParamRefArray[i].zipParamInt[4],
+                            animParamRefArray[i].zipParamInt[5],
+                            animParamRefArray[i].zipParamInt[6])
+                        );
+      }
+      break;
+    default:
+      //Serial.println("Animation code not recognized!");
+      #ifdef USE_INTERFACE
+        ComInterface::setAnimation(1);
+      #endif
+      #ifndef USE_INTERFACE
+        extern animation = 1;
+      #endif
+  }
+}
+
+
+// #########################################################################
+// ##################### Animation Parameter References ####################
+// #########################################################################
+
+    int* Animations::getParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode){
+      switch (animationCode) {
+        case 1:
+          return animationStruct[arrayIdx].rainbowCycleParamInt;
+          break;
+        case 2:
+          return animationStruct[arrayIdx].fadeInAndOutParamInt;
+          break;
+        case 3:
+          return animationStruct[arrayIdx].sparkleParamInt;
+          break;
+        case 4:
+          return animationStruct[arrayIdx].fireParamInt;
+          break;
+        case 5:
+          return animationStruct[arrayIdx].shootingStarParamInt;
+          break;
+        case 6:
+          return animationStruct[arrayIdx].twinklePixelsParamInt;
+          break;
+        /*case 7:
+          #ifdef USE_MIC
+            volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
+          #endif
+          #ifndef USE_MIC
+            Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
+          #endif
+          break;*/
+        case 8:
+          return animationStruct[arrayIdx].strobeParamInt;
+          break;
+        case 9:
+          return animationStruct[arrayIdx].zipParamInt;
+          break;
+      }
+    }
+
+    float* Animations::getParametersFloat(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode){
+      switch (animationCode) {
+        case 4:
+          return animationStruct[arrayIdx].fireParamFloat;
+          break;
+      }
+    }
+
+    unsigned long* Animations::getParametersUnsignedLong(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode){
+      switch (animationCode) {
+        case 9:
+          return animationStruct[arrayIdx].zipParamUnsignedLong;
+          break;
+      }
+    }
+
+    void Animations::setParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, int paramValue){
+      switch (animationCode){
+        case 1:
+          animationStruct[arrayIdx].rainbowCycleParamInt[paramIdx] = paramValue;
+          break;
+        case 2:
+          animationStruct[arrayIdx].fadeInAndOutParamInt[paramIdx] = paramValue;
+          break;
+        case 3:
+          animationStruct[arrayIdx].sparkleParamInt[paramIdx] = paramValue;
+          break;
+        case 4:
+          animationStruct[arrayIdx].fireParamInt[paramIdx] = paramValue;
+          break;
+        case 5:
+          animationStruct[arrayIdx].shootingStarParamInt[paramIdx] = paramValue;
+          break;
+        case 6:
+          animationStruct[arrayIdx].twinklePixelsParamInt[paramIdx] = paramValue;
+          break;
+        /*case 7:
+          #ifdef USE_MIC
+            
+          #endif
+          #ifndef USE_MIC
+            
+          #endif
+          break;*/
+        case 8:
+          animationStruct[arrayIdx].strobeParamInt[paramIdx] = paramValue;
+          break;
+        case 9:
+          animationStruct[arrayIdx].zipParamInt[paramIdx] = paramValue;
+          break;
+      }
+    }
+
+    void Animations::setParametersFloat(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, float paramValue){
+      switch (animationCode){
+        case 4:
+          animationStruct[arrayIdx].fireParamFloat[paramIdx] = paramValue;
+          break;
+      }
+    }
+
+    void Animations::setParametersUnsignedLong(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, unsigned long paramValue){
+      switch (animationCode){
+        case 9:
+          animationStruct[arrayIdx].zipParamUnsignedLong[paramIdx] = paramValue;
+          break;
+      }
+    }
 
 // #########################################################################
 // ####################### Rainbow Cycle animation #########################
@@ -244,7 +557,7 @@ class Animations{
 
 void Animations::rainbowCycle(CRGB* leds, int DelayDuration, int millisecs){
   static unsigned long rainbowCyclePreviousMillis = 0;
-  static uint16_t rainbowCycleAnimCount = 0;
+  static uint64_t rainbowCycleAnimCount = 0;
   byte *c;
   uint16_t i, j;
   if(millisecs - rainbowCyclePreviousMillis >= DelayDuration){
@@ -263,6 +576,9 @@ void Animations::rainbowCycle(CRGB* leds, int DelayDuration, int millisecs){
   }
 }
 
+/**
+  * Rainbow Circle animation that is ment to run with an array of LED arrays. All arrays ars synced.
+*/
 void Animations::rainbowCycle(CRGB leds[NB_ARRAYS][NUM_LEDS], int DelayDuration, int millisecs) {
   static unsigned long rainbowCyclePreviousMillis;
   static uint16_t rainbowCycleAnimCount;
@@ -287,7 +603,7 @@ void Animations::rainbowCycle(CRGB leds[NB_ARRAYS][NUM_LEDS], int DelayDuration,
 // ############################ Fade animation #############################
 // #########################################################################
 
-void Animations::fadeInAndOut(CRGB* leds, int red, int green, int blue){
+void Animations::fadeInAndOut(CRGB* leds, int red, int green, int blue){//, int randomColors){
   float r, g, b;
   // FADE IN
   for(int i = 0; i <= 255; i++) {
@@ -383,7 +699,7 @@ void Animations::Fire(CRGB* leds, int FlameHeight, int Sparks, int DelayDuration
 // ######################## Shooting Star animation ########################
 // #########################################################################
 
-/* 
+/** 
  *  ========== Shooting Star Animation ==========
  *  red, green, blue - Choose a color with RGB values (0 to 255).
  *  tail_length - A larger value results in shorter tail.
@@ -428,7 +744,7 @@ void Animations::shootingStar(CRGB* leds, int red, int green, int blue, int tail
 // ######################## Twinkle Pixels animation #######################
 // #########################################################################
 
-/*
+/**
   *  ========== Twinkle_Pixels_Animation ==========
   *  PARAMETERS:
   *   leds - The array of leds to make twinkle
@@ -456,7 +772,7 @@ void Animations::shootingStar(CRGB* leds, int red, int green, int blue, int tail
   *      TwinklePixels(255, 0, 100, 120, 0);    // White color with low pixel volume and max speed
 */
 void Animations::twinklePixels(CRGB* leds, int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration) {
-  for (int i = 0; i < 122; i++) {
+  for (int i = 0; i < NUM_LEDS; i++) {
     // Draw twinkling pixels
     if (random(PixelVolume) < 2) {     // Chance for pixel to twinkle
       uint8_t intensity = random(100, 255);     // Configure random intensity
@@ -545,6 +861,3 @@ void Animations::zip(CRGB leds[NB_ARRAYS][NUM_LEDS], int size, int start, int en
     zip_animation_prev_mills = current_time;
   }
 } 
-
-//unsigned long Animations::rainbowCyclePreviousMillis = 0;
-//uint16_t Animations::rainbowCycleAnimCount = 0;

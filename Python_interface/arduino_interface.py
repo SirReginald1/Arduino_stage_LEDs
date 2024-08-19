@@ -5,6 +5,9 @@ from numpy.random import randint
 
 class ArduinoInterface():
     """Class that deals with interfacing with the arduino."""
+
+    baudrate: int = 115200
+    """The baudrate. (Comunication speed with the arduino.)"""
     
     init_values_strobe: List[Union[int, Tuple]] = [20, 60, (255, 255, 255)]
     """Parameter init values for the strobe animation. {time_on, time_off, (R, G, B)}"""
@@ -60,8 +63,8 @@ class ArduinoInterface():
                        "strobe" : 8, 
                        "volume_bar" : 8, 
                        "twinkle_pixel" : 6, 
-                       "fire" : 5, 
-                       "shooting_star" : 4, 
+                       "shooting_star" : 5, 
+                       "fire" : 4, 
                        "sparkle" : 3, 
                        "fade" : 2, 
                        "rainbow_circle" : 1}
@@ -71,8 +74,8 @@ class ArduinoInterface():
                        "strobe", 
                        "volume_bar", 
                        "twinkle_pixel", 
-                       "fire", 
                        "shooting_star", 
+                       "fire", 
                        "sparkle", 
                        "fade", 
                        "rainbow_circle"]
@@ -85,7 +88,7 @@ class ArduinoInterface():
         """Constructor for arduino interface."""
 
         try:
-            self.arduino = Serial(port='COM3', baudrate=9600, timeout=20000)
+            self.arduino = Serial(port='COM3', baudrate=self.baudrate, timeout=20000)
             """The arduino connection port."""
         except:
             #raise RuntimeError("Connection error! Check that that the port is correct!")
@@ -130,14 +133,14 @@ class ArduinoInterface():
             - values (tuple, list): A list or tuple of parameter values to pass to the animation function.
         """
         params = ",".join([str(v) for v in values])
-        message = f"{LED_array_id}:{self.animation_codes[animation]}:{params}"
+        message = f"<{LED_array_id},{self.animation_codes[animation]},{params}>"
         print(message)
         try:
             self.arduino.write(bytes(message, 'utf-8'))
         except AttributeError:
             print("No connection to arduino.")
-        finally:
-            print("Can't send message.")
+        ##finally:
+        ##    print("Can't send message.")
 
     def send_message(self, message: str) -> None:
         """Sends the provided text to the arduino."""
@@ -146,8 +149,8 @@ class ArduinoInterface():
             self.arduino.write(bytes(message, 'utf-8'))
         except AttributeError:
             print("No connection to arduino.")
-        finally:
-            print("Can't send message.")
+        ##finally:
+        ##    print("Can't send message.")
 
     def read_str(self) -> str:
         """Reads the string sent from the arduino.
@@ -168,7 +171,7 @@ class ArduinoInterface():
             - str: User message on connection status.
         """
         try:
-            self.arduino = Serial(port='COM3', baudrate=9600, timeout=100)
+            self.arduino = Serial(port='COM3', baudrate=self.baudrate, timeout=100)
             return "Connection to arduino established."
         except:
             return "Failed to connect to arduino! Check that that the port is correct!"

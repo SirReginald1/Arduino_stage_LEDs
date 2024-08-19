@@ -5,17 +5,33 @@
 #include <Arduino.h>
 #include "Globals.h"
 
-/*Reads the contense of the serial buffer and sets all the appropriate variables.*/
-void read_input();
+// Declaring that this exists here instread of including to avoide circular imports
+struct animParamRef;
 
-void serialFlush();
 
-void copy2DTo3D(int rows, int cols, int depth, int source[rows][cols], int destination[rows][cols][depth], int targetDepth);
+class ComInterface{
+  public:
+    static int animation;
 
-//void showParsedData();
+    //static animParamRef animParamRefs[NB_ARRAYS];
 
-//void recvWithStartEndMarkers();
+    /*Reads the contense of the serial buffer and sets all the appropriate variables.*/
+    static void readInput();
 
-//void parseData()
+    static void serialFlush();
 
+    static void setAnimation(int value);
+
+    static int getAnimation();
+
+    /*static void initParametersArray();*/
+
+    //void showParsedData();
+
+    //void recvWithStartEndMarkers();
+
+    //void parseData()
+};
+
+//int ComInterface::animation = 1;
 #endif
