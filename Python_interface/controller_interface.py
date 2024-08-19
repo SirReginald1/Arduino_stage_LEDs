@@ -1,13 +1,10 @@
-from typing import Union, Dict, Tuple, List
+from typing import Union, Dict, Tuple, List, Callable
 from serial import Serial
 from numpy.random import randint
 
 
-class ArduinoInterface():
+class ControllerInterface():
     """Class that deals with interfacing with the arduino."""
-
-    baudrate: int = 115200
-    """The baudrate. (Comunication speed with the arduino.)"""
     
     init_values_strobe: List[Union[int, Tuple]] = [20, 60, (255, 255, 255)]
     """Parameter init values for the strobe animation. {time_on, time_off, (R, G, B)}"""
@@ -26,7 +23,7 @@ class ArduinoInterface():
     {(R, G, B), tail_length, delay_duration, interval, direction}
     """
 
-    init_values_sparkle: List[int] = [(0, 255, 100), 0]
+    init_values_sparkle: List[int] = [(200, 0, 100), 0]
     """Parameter init values for the sparkle animation."""
 
     init_values_fade: List[int] = [(255, 255, 255), 0]
@@ -84,16 +81,40 @@ class ArduinoInterface():
     # Send bytes representing the animation code
     # If bytes long then with parameters else just change animation
 
-    def __init__(self) -> None:
-        """Constructor for arduino interface."""
+    def __init__(self, 
+                 port: str = "COM3", 
+                 baudrate: int = 115200, 
+                 error_fun_call: Callable = None) -> "ControllerInterface":
+        """Constructor for arduino interface.
+        
+        ### Args:
+            - port (str, Optional): The port to which the interface will try to connect.
+            - baudrate (int, Optional): The baudrate used to comunicate with the controller.
+            - error_fun_call (Callable, Optional): The function that is called if the ControllerInterface is unable to make a serial connection or comunication.
+            This function must take a string as it's first parameter.
+
+        ### Returns:
+            - "ControllerInterface": A new ControllerInterface object. 
+        """ 
+        
+        self.port: str = port
+        """The port to which the interface will try to connect."""
+
+        self.baudrate: int = baudrate
+        """The baudrate used to connect to the controller. (Comunication speed with the controler.)"""
+
+        self.error_fun_call: Callable = error_fun_call
+        """The function that is called if the ControllerInterface is unable to make a serial connection."""
 
         try:
-            self.arduino = Serial(port='COM3', baudrate=self.baudrate, timeout=20000)
+            self.controller = Serial(port='COM3', baudrate=self.baudrate, timeout=10)
             """The arduino connection port."""
         except:
             #raise RuntimeError("Connection error! Check that that the port is correct!")
+            self.controller = None
+            if error_fun_call:
+                error_fun_call("Connection error! Check that that the port is correct!")
             print("Connection error! Check that that the port is correct!")
-            self.arduino = None
 
         #self.arduino = arduino
 
@@ -121,32 +142,33 @@ class ArduinoInterface():
         self.param_values_rainbow_circle: Dict[int] = {label : value for label, value in zip(self.init_labels_rainbow_wheel, self.init_values_rainbow_circle)}
         """Parameter values for the rainbow circle animation."""
  
-    def send_command(self, 
-                     animation: str, 
-                     LED_array_id: int,
-                     values: Union[Tuple[Union[str, int, float, bytes, bool]], List[Union[str, int, float, bytes, bool]]]) -> None:
-        """Send a message to the to the arduino.
+    def change_animation(self, 
+                         animation: str, 
+                         LED_array_id: int,
+                         values: Union[Tuple[Union[str, int, float, bytes, bool]], List[Union[str, int, float, bytes, bool]]]) -> None:
+        """Send a command to the arduino to change.
         
         ### Args:
             - animation (str): Name of the animation. The folowing values are accepted: 
             {"zip", "strobe", "volume_bar", "twinkle_pixel", "fire", "shooting_star", "sparkle", "fade", "rainbow_wheel"}
+            - LED_array_id (int): The id of the array that will have it's animation chaged
             - values (tuple, list): A list or tuple of parameter values to pass to the animation function.
         """
         params = ",".join([str(v) for v in values])
         message = f"<{LED_array_id},{self.animation_codes[animation]},{params}>"
-        print(message)
+        print(message) # Print message to cmd terminal
         try:
-            self.arduino.write(bytes(message, 'utf-8'))
+            self.controller.write(bytes(message, 'utf-8'))
         except AttributeError:
             print("No connection to arduino.")
         ##finally:
         ##    print("Can't send message.")
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: str) -> str:
         """Sends the provided text to the arduino."""
-        print(message)
+        print(message) # Print message to cmd terminal
         try:
-            self.arduino.write(bytes(message, 'utf-8'))
+            self.controller.write(bytes(message, 'utf-8'))
         except AttributeError:
             print("No connection to arduino.")
         ##finally:
@@ -158,11 +180,17 @@ class ArduinoInterface():
         ### Returns:
             - str: The string being sent from the arduino.
         """
+        if not self.controller:
+            print("No connection to controller. Can't send message.")
+            self.error_fun_call("No connection to controller. Can't send message.")
+            return "No connection to controller. Can't send message."
+        #print(self.controller.readline().decode())
         try:
-            return str(self.arduino.readline(),"utf-8").strip("'\r\n")[2:]
-        except AttributeError:
-            print("No connection to arduino. Can't send message.")
-            return "Arduino connection error!"
+            return self.controller.readline().decode()
+        except:
+            return "Error when reading message from serial! Try again \n"
+            
+
         
     def try_to_connect(self) -> str:
         """Attempt to connect to the arduino port.
@@ -171,7 +199,8 @@ class ArduinoInterface():
             - str: User message on connection status.
         """
         try:
-            self.arduino = Serial(port='COM3', baudrate=self.baudrate, timeout=100)
+            self.controller = Serial(port='COM3', baudrate=self.baudrate, timeout=10)
             return "Connection to arduino established."
         except:
-            return "Failed to connect to arduino! Check that that the port is correct!"
+            self.error_fun_call("Failed to connect to controller! Check that that the port is correct!")
+            return "Failed to connect to controller! Check that that the port is correct!"

@@ -1,7 +1,7 @@
 from typing import Tuple
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 from animation_tabs.array_frame import ArrayFrame
 
 
@@ -12,7 +12,7 @@ class ZipArrayFrame(ArrayFrame):
                  parent: Misc,
                  array_id: int,
                  label: str, 
-                 arduino_int: ArduinoInterface
+                 arduino_int: ControllerInterface
                  ) -> "ZipArrayFrame":
         """"""
         super().__init__(parent, array_id, arduino_int)
@@ -75,6 +75,6 @@ class ZipArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_command("zip", self.LED_array_id, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
+        self.arduino_int.change_animation("zip", self.LED_array_id, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
 
 

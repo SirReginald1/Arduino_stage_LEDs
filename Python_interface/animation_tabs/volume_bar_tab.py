@@ -1,7 +1,7 @@
 from typing import Tuple
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 from animation_tabs.array_frame import ArrayFrame
 
 
@@ -12,7 +12,7 @@ class VolumeBarArrayFrame(ArrayFrame):
                  parent: Misc,
                  array_id: int,
                  label: str, 
-                 arduino_int: ArduinoInterface
+                 arduino_int: ControllerInterface
                  ) -> "VolumeBarArrayFrame":
         """"""
         super().__init__(parent, array_id, arduino_int)
@@ -37,6 +37,6 @@ class VolumeBarArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_command("volume_bar", self.LED_array_id, [])
+        self.arduino_int.change_animation("volume_bar", self.LED_array_id, [])
 
 

@@ -1,7 +1,7 @@
 from typing import Tuple, Union, List, Any, TypeVar, Generic
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 
 
 class Tab(Frame):
@@ -13,7 +13,7 @@ class Tab(Frame):
 
     def __init__(self, 
                  parent: Misc, 
-                 arduino_int: ArduinoInterface, 
+                 arduino_int: ControllerInterface, 
                  nb_of_arrays: int,
                  array_frame_type: Generic[ArrayFrame]) -> "Tab":
         """Constructor for the 
@@ -23,7 +23,7 @@ class Tab(Frame):
             For strobe the tuple containse
         """
         super().__init__(parent)
-        self.arduino_int: ArduinoInterface = arduino_int
+        self.arduino_int: ControllerInterface = arduino_int
         #################### Make scrolable #################### 
         self.canvas = Canvas(self)
         self.scrollbar = Scrollbar(self.canvas, orient="vertical", command=self.canvas.yview)

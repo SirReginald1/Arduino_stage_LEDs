@@ -1,7 +1,7 @@
 from typing import Tuple
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 from animation_tabs.array_frame import ArrayFrame
   
 
@@ -12,7 +12,7 @@ class SparkleArrayFrame(ArrayFrame):
                  parent: Misc,
                  array_id: int,
                  label: str,
-                 arduino_int: ArduinoInterface
+                 arduino_int: ControllerInterface
                  ) -> "SparkleArrayFrame":
         """"""
         super().__init__(parent, array_id, arduino_int)
@@ -50,6 +50,6 @@ class SparkleArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_command("sparkle", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.delay_duration])
+        self.arduino_int.change_animation("sparkle", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.delay_duration])
 
 

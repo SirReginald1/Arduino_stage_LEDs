@@ -1,6 +1,6 @@
 from typing import Tuple
 from tkinter import *
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 from animation_tabs.array_frame import ArrayFrame
 
 
@@ -11,7 +11,7 @@ class ShootingStarArrayFrame(ArrayFrame):
                  parent: Misc,
                  array_id: int,
                  label: str, 
-                 arduino_int: ArduinoInterface
+                 arduino_int: ControllerInterface
                  ) -> "ShootingStarArrayFrame":
         """"""
         super().__init__(parent, array_id, arduino_int)
@@ -74,6 +74,6 @@ class ShootingStarArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_command("shooting_star", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
+        self.arduino_int.change_animation("shooting_star", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
 
 
