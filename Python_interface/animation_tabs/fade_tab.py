@@ -1,6 +1,6 @@
 from typing import Tuple
 from tkinter import *
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 from custom_widgets import Switch
 from animation_tabs.array_frame import ArrayFrame
 
@@ -12,7 +12,7 @@ class FadeArrayFrame(ArrayFrame):
                  parent: Misc,
                  array_id: int,
                  label: str, 
-                 arduino_int: ArduinoInterface
+                 arduino_int: ControllerInterface
                  ) -> "FadeArrayFrame":
         """"""
         super().__init__(parent, array_id, arduino_int)
@@ -57,5 +57,5 @@ class FadeArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_command("fade", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.random_colors])
+        self.arduino_int.change_animation("fade", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.random_colors])
 

@@ -2,7 +2,7 @@ from typing import Tuple, Union, List, Any
 from tkinter import *
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 from animation_tabs.array_frame import ArrayFrame
 
 
@@ -13,7 +13,7 @@ class FireArrayFrame(ArrayFrame):
                  parent: Misc,
                  array_id: int,
                  label: str, 
-                 arduino_int: ArduinoInterface
+                 arduino_int: ControllerInterface
                  ) -> "FireArrayFrame":
         """"""
         super().__init__(parent, array_id, arduino_int)
@@ -70,6 +70,6 @@ class FireArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_command("fire", self.LED_array_id, [self.flame_height, self.sparks, self.delay, self.intensity])
+        self.arduino_int.change_animation("fire", self.LED_array_id, [self.flame_height, self.sparks, self.delay, self.intensity])
 
 

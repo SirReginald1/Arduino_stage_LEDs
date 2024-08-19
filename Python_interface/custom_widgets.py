@@ -2,17 +2,18 @@ from typing import Callable
 import customtkinter as ctk
 import tkinter as tk
 from random import choice
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
+from console import Console
 
 class SlidePanel(ctk.CTkFrame):
-	def __init__(self, parent, start_pos, end_pos, arduino_interface: ArduinoInterface):
+	def __init__(self, parent, start_pos, end_pos, controller_interface: ControllerInterface):
 		super().__init__(master = parent)
 		# Console attributes
 		self.console_intput_str = ""
 		"""The last string that was inputed to the arduino."""
 		self.console_output_str = ""
 		"""The string that is outputed from the arduino."""
-		self.arduino_interface = arduino_interface
+		self.controller_interface = controller_interface
 
 		# general attributes 
 		self.start_pos = start_pos + 0.04
@@ -26,18 +27,27 @@ class SlidePanel(ctk.CTkFrame):
 		# layout
 		self.place(relx = self.start_pos, rely = 0.05, relwidth = self.width, relheight = 0.9)
 
-		self.create_widgets()
+		self.label1 = ctk.CTkLabel(self, text = 'Label 1')
+		self.label1.pack(expand = True, fill = 'both', padx = 2, pady = 10)
+		self.label2 = ctk.CTkLabel(self, text = 'Label 2')
+		self.label2.pack(expand = True, fill = 'both', padx = 2, pady = 10)
+		self.button1 = ctk.CTkButton(self, text = 'Button1', corner_radius = 0).pack(expand = True, fill = 'both', pady = 10)
+		self.console = Console(self,self.controller_interface)
+		self.console.pack(expand = True, fill = 'both', padx = 2, pady = 10)
+
+		#self.create_widgets()
 		
 	def create_widgets(self):
 		ctk.CTkLabel(self, text = 'Label 1').pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		ctk.CTkLabel(self, text = 'Label 2').pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		ctk.CTkButton(self, text = 'Button', corner_radius = 0).pack(expand = True, fill = 'both', pady = 10)
-		self.console_out = ctk.CTkTextbox(self, fg_color = ('#dbdbdb','#2b2b2b'))
-		self.console_out.insert(tk.INSERT,text=self.console_output_str)
-		self.console_out.pack(expand = True, fill = 'both', pady = 10)
-		self.console_in = tk.Entry(self, textvariable=tk.StringVar(value=str(self.console_intput_str)))
-		self.console_in.bind("<Return>", self.enter_key_event)
-		self.console_in.pack(expand = True, fill = 'both', pady = 10)
+
+		#self.console_out = ctk.CTkTextbox(self, fg_color = ('#dbdbdb','#2b2b2b'))
+		#self.console_out.insert(tk.INSERT,text=self.console_output_str)
+		#self.console_out.pack(expand = True, fill = 'both', pady = 10)
+		#self.console_in = tk.Entry(self, textvariable=tk.StringVar(value=str(self.console_intput_str)))
+		#self.console_in.bind("<Return>", self.enter_key_event)
+		#self.console_in.pack(expand = True, fill = 'both', pady = 10)
 
 	def animate(self):
 		if self.in_start_pos:
@@ -68,7 +78,7 @@ class SlidePanel(ctk.CTkFrame):
 	def enter_key_event(self, event: tk.Event):
 		""""""
 		self.console_intput_str = self.console_in.get()
-		self.arduino_interface.send_message(self.console_intput_str)
+		self.controller_interface.send_message(self.console_intput_str)
 		self.console_in.delete(0,tk.END)
 
 class Switch(tk.Frame):

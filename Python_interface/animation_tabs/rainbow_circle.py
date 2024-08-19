@@ -1,7 +1,7 @@
 from typing import Tuple
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
-from arduino_interface import ArduinoInterface
+from controller_interface import ControllerInterface
 from animation_tabs.array_frame import ArrayFrame
 
 class RainbowCircleArrayFrame(ArrayFrame):
@@ -11,7 +11,7 @@ class RainbowCircleArrayFrame(ArrayFrame):
                  parent: Misc,
                  array_id: int,
                  label: str, 
-                 arduino_int: ArduinoInterface
+                 arduino_int: ControllerInterface
                  ) -> "RainbowCircleArrayFrame":
         """"""
         super().__init__(parent, array_id, arduino_int)
@@ -44,5 +44,5 @@ class RainbowCircleArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.send_command("rainbow_circle", self.LED_array_id, [self.delay])
+        self.arduino_int.change_animation("rainbow_circle", self.LED_array_id, [self.delay])
 
