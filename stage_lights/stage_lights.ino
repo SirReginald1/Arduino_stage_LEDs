@@ -163,7 +163,7 @@ void setup() {
   // Setting up console output.
   Serial.begin(115200);//9600
   // Setting the time the program will wait for input.
-  Serial.setTimeout(100);
+  Serial.setTimeout(50);
   // #########################################################
   // ######################### LED ###########################
   // #########################################################

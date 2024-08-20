@@ -1,5 +1,6 @@
 from threading import Thread
 from main_window import MainWindow
+from time import time
 
 
 class App():

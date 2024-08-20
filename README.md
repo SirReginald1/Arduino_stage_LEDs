@@ -29,4 +29,5 @@ When adding an annimation make sure you update:
 - Add a sync option that toggles between animation function types
 - Make sur that the data parsing checks that selected array is not larger than NB_ARRAYS. Same for animations.
 - Correct python interface message sending from boxes
-- **ADD ERROR CODE SENT BACK TO PYTHON IF ANIMATION NOT RECOGNISED AND HAVE PYTHON SEND THE MESSAGE AGAINE**
+- **Move resend message function to console class.**
+- **Make sure resend counter is reset after message receved succsesfully**

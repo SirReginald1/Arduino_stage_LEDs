@@ -1,6 +1,9 @@
 from typing import Union, Dict, Tuple, List, Callable
 from serial import Serial
-from numpy.random import randint
+import sys
+import glob
+import serial
+from time import time
 
 
 class ControllerInterface():
@@ -84,7 +87,8 @@ class ControllerInterface():
     def __init__(self, 
                  port: str = "COM3", 
                  baudrate: int = 115200, 
-                 error_fun_call: Callable = None) -> "ControllerInterface":
+                 error_fun_call: Callable = None,
+                 use_smooth_coom: bool = True) -> "ControllerInterface":
         """Constructor for arduino interface.
         
         ### Args:
@@ -92,6 +96,8 @@ class ControllerInterface():
             - baudrate (int, Optional): The baudrate used to comunicate with the controller.
             - error_fun_call (Callable, Optional): The function that is called if the ControllerInterface is unable to make a serial connection or comunication.
             This function must take a string as it's first parameter.
+            - use_smooth_coom (bool, Optional): Value indicating if the controller interface should use tchniques to make communication smoother.
+              Such as automaticaly resending the last command if the controller interface receves a resend message from the controller.
 
         ### Returns:
             - "ControllerInterface": A new ControllerInterface object. 
@@ -105,6 +111,29 @@ class ControllerInterface():
 
         self.error_fun_call: Callable = error_fun_call
         """The function that is called if the ControllerInterface is unable to make a serial connection."""
+
+        self.last_message_sent: str = ""
+        """The last message sent by the controller interface"""
+
+        self.last_message_receved: str = ""
+        """The last message receved by the controller interface"""
+
+        self.resend_message: bool = False
+        """Boolean indicateing if interface should atempt to resend message."""
+
+        self.use_smooth_coom: bool = use_smooth_coom
+        """Value indicating if the controller interface should use tchniques to make communication smoother."""
+
+        self.nb_messages_resent: int = 0
+        """Counts the nuber of times a message is resent so as to stop the resending of messages after a certain amount. 
+        (Stops infinit loops if an unrecognised message is sent)
+        """
+
+        self.time_of_last_message_receved = float(0)
+        """The time the last message was receved."""
+
+        self.time_of_last_message_sent = float(0)
+        """The time the last message was sent."""
 
         try:
             self.controller = Serial(port='COM3', baudrate=self.baudrate, timeout=10)
@@ -157,41 +186,60 @@ class ControllerInterface():
         params = ",".join([str(v) for v in values])
         message = f"<{LED_array_id},{self.animation_codes[animation]},{params}>"
         print(message) # Print message to cmd terminal
+        self.last_message_sent = message
         try:
             self.controller.write(bytes(message, 'utf-8'))
+            self.last_message_sent = time()
         except AttributeError:
             print("No connection to arduino.")
-        ##finally:
-        ##    print("Can't send message.")
 
     def send_message(self, message: str) -> str:
         """Sends the provided text to the arduino."""
         print(message) # Print message to cmd terminal
         try:
             self.controller.write(bytes(message, 'utf-8'))
+            self.time_of_last_message_sent = time()
+            self.last_message_sent = message
         except AttributeError:
             print("No connection to arduino.")
-        ##finally:
-        ##    print("Can't send message.")
 
-    def read_str(self) -> str:
+    def read_str(self) -> Union[str, None]:
         """Reads the string sent from the arduino.
 
         ### Returns:
             - str: The string being sent from the arduino.
         """
-        if not self.controller:
+        if not self.controller: # Checks that interface is connected to a controller
             print("No connection to controller. Can't send message.")
             self.error_fun_call("No connection to controller. Can't send message.")
             return "No connection to controller. Can't send message."
         #print(self.controller.readline().decode())
-        try:
-            return self.controller.readline().decode()
-        except:
-            return "Error when reading message from serial! Try again \n"
-            
+        if self.controller.in_waiting > 0:
+            try:
+                #message = self.controller.readline().decode()
+                message = self.controller.read_until("@").decode().replace("@","")
+                if message and message != "":
+                    self.time_of_last_message_receved = time()
+                    self.last_message_receved = message
+                # Chack if controller understood last command
+                if message == "#!":
+                    self.resend_message = True
+                # If using smooth comunication and last message is did understand (#!) and nb of resends smaller that 10
+                if self.use_smooth_coom and self.resend_message and self.nb_messages_resent < 10:
+                    self.send_message(self.last_message_sent)
+                    self.time_of_last_message_sent = time()
+                    self.nb_messages_resent += 1
+                    print(f"Resending message: {self.last_message_sent}, nb resent: {self.nb_messages_resent}")
+                # Once it reaches 10 stop resending
+                elif self.use_smooth_coom and self.resend_message and self.nb_messages_resent == 10:
+                    self.resend_message = False
+                    self.nb_messages_resent = 0
 
-        
+                return message
+            except:
+                return "Error when reading message from serial! Try again \n"
+        return None
+            
     def try_to_connect(self) -> str:
         """Attempt to connect to the arduino port.
         
@@ -204,3 +252,31 @@ class ControllerInterface():
         except:
             self.error_fun_call("Failed to connect to controller! Check that that the port is correct!")
             return "Failed to connect to controller! Check that that the port is correct!"
+        
+    def serial_ports():
+        """ Lists serial port names. !!! Try to use serial.tools.list_ports in stead !!!
+
+            ### Returns:
+                - list: A list of the serial ports available on the system.
+            ### Raises: 
+                - EnvironmentError: On unsupported or unknown platforms.
+        """
+        if sys.platform.startswith('win'):
+            ports = ['COM%s' % (i + 1) for i in range(256)]
+        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+            # this excludes your current terminal "/dev/tty"
+            ports = glob.glob('/dev/tty[A-Za-z]*')
+        elif sys.platform.startswith('darwin'):
+            ports = glob.glob('/dev/tty.*')
+        else:
+            raise EnvironmentError('Unsupported platform')
+
+        result = []
+        for port in ports:
+            try:
+                s = serial.Serial(port)
+                s.close()
+                result.append(port)
+            except (OSError, serial.SerialException):
+                pass
+        return result

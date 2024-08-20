@@ -433,13 +433,13 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
       //Serial.println("Animation code not recognized!");
       #ifdef USE_INTERFACE
         ComInterface::setAnimation(1);
+        // This simbole means that it has not recognised the animation and the interface must therefore resend it send!
+        // TODO: Check that this is stille needed for the esp32 as serial seems to work much better on that board.
+        Serial.print("#!@");
       #endif
       #ifndef USE_INTERFACE
         extern animation = 1;
       #endif
-      // This simbole means that it has not recognised the animation and the interface must therefore resend it send!
-      // TODO: Check that this is stille needed for the esp32 as serial seems to work much better on that board.
-      Serial.print("#!");
   }
 }
 

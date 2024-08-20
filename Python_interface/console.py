@@ -1,6 +1,7 @@
 from typing import List
 from tkinter import *
 from controller_interface import ControllerInterface
+from time import localtime, strftime
 
 class Console(Frame):
     """Class representing the console for comunication with the contromer."""
@@ -58,7 +59,7 @@ class Console(Frame):
             self.input_history_nb += 1
             self.console_input_text_box.delete(0,END)
         self.input_history_idx = self.input_history_nb # Increment current position in console history
-        self.write_to_console(f"SENT> {message}")
+        self.write_to_console(f"SENT: {strftime("%H:%M:%S", localtime())}> {message}")
 
     def up_key_press(self, event: Event):
         """Function that is called when the up arrow is pressed and the console_input_text_box is selected."""

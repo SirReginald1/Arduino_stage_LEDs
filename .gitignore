@@ -1,0 +1,4 @@
+Python_interface/.venv/
+Python_interface/__pycache__/
+Python_interface/animation_tabs/__pycache__/
+.vscode/
