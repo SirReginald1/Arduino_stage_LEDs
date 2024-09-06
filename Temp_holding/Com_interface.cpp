@@ -270,7 +270,7 @@ void recvWithStartEndMarkers() {
 
 //============
 /*This function parses the data that hase been receved*/
-void parseData() {      // split the data into its parts
+void parseAnimationChangeData() {      // split the data into its parts
   /*Value extracted from buffer*/
   char * strtokIndx;
   /*Counts the number of parameters after the anomation value in current data parsing.*/
@@ -364,8 +364,8 @@ void read_input(){
   if (newData == true) {
       strcpy(tempChars, receivedChars);
           // this temporary copy is necessary to protect the original data
-          //   because strtok() used in parseData() replaces the commas with \0
-      parseData();
+          //   because strtok() used in parseAnimationChangeData() replaces the commas with \0
+      parseAnimationChangeData();
       showParsedData();
       newData = false;
   }

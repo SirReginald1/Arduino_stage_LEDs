@@ -206,7 +206,7 @@ void loop() {
   if(Serial.available() > 0){
 
     #ifdef USE_INTERFACE
-    ComInterface::readInput();
+    ComInterface::readInput(0);
     #endif
 
     #ifndef USE_INTERFACE
