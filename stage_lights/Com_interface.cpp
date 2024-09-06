@@ -81,7 +81,7 @@ class ComInterface{
 
     //============
     /*This function parses the data that hase been receved*/
-    static void parseData();
+    static void parseAnimationChangeData();
 
     static void readInput();
 };
@@ -251,7 +251,7 @@ void ComInterface::recvWithStartEndMarkers() {
 }
 
 /*This function parses the data that hase been receved*/
-void ComInterface::parseData() {      // split the data into its parts
+void ComInterface::parseAnimationChangeData() {      // split the data into its parts
         extern animParamRef animParamRefs[NB_ARRAYS];
   /*Value extracted from buffer*/
   char * strtokIndx;
@@ -337,7 +337,7 @@ void ComInterface::readInput(){
       strcpy(tempChars, receivedChars);
           // this temporary copy is necessary to protect the original data
           //   because strtok() used in parseData() replaces the commas with \0
-      ComInterface::parseData();
+      ComInterface::parseAnimationChangeData();
       newData = false;
   }
 }
