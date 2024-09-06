@@ -1,0 +1,153 @@
+/* 
+ * Arduino Beat Detector by: Damian Peckett 2015
+ *
+ * Adapted for FastLED by: Andrew Tuline 2021
+ * 
+ * Location: https://pastebin.com/Sh7JFf7K
+ * https://www.youtube.com/watch?v=pbqkeJAcPck
+ *
+ * Please refer to Damian Peckett's article (with code) for more information on this project:
+ * 
+ * https://damian.pecke.tt/2015/03/02/beat-detection-on-the-arduino.html
+ * 
+ * 
+ * This version was created with an ESP32, 30 WS2812 LED's and a MAX9814 @40db gain.
+ * 
+ * A value called 'thresh', is adjustable and is used for beat threshold detection. It's  
+ * currently hard coded, although you could add a potentiometer for adjustment, or as 
+ * Damian mentions, add some form of automatic gain control. I've added auto-zeroing for the
+ * data samples. As for Damian's filtering routines, that's beyond Andrew's paygrade.
+ * 
+ * The FastLED component adds rotating Perlin Noise with continuously changing palettes.
+ *
+ * Andrew's modification: 
+ * 
+ * 
+ * Here's a version implemented by someone in fixed point that should improve performance. According
+ * to the author, "no part of this project is currently released under any open source license", so I'm
+ * not touching it:
+ * 
+ * https://github.com/ben-xo/vu2
+ * 
+ */
+
+
+
+#include <FastLED.h>
+
+#define SAMPLEPERIODUS 200                                    // Our global sample rate, 5000hz (or 200 microseconds).
+
+#define MIC_PIN 36
+
+#define LED_DT 2                                              // Data pin to connect to the strip.
+#define COLOR_ORDER GRB                                       // It's GRB for WS2812 and BGR for APA102.
+#define LED_TYPE WS2812                                       // Using APA102, WS2812, WS2801. Don't forget to modify LEDS.addLeds to suit.
+#define NUM_LEDS 30 
+
+uint8_t max_bright = 64;                                      // Overall brightness.
+
+struct CRGB leds[NUM_LEDS];                                   // Initialize our LED array.
+CRGBPalette16 currentPalette = RainbowColors_p;
+CRGBPalette16 targetPalette;
+
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+  LEDS.addLeds<LED_TYPE, LED_DT, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(max_bright);
+}
+
+
+// 20 - 200hz Single Pole Bandpass IIR Filter
+float bassFilter(float sample) {
+  static float xv[3] = {0,0,0}, yv[3] = {0,0,0};
+  xv[0] = xv[1]; xv[1] = xv[2]; 
+  xv[2] = sample / 9.1f;
+  yv[0] = yv[1]; yv[1] = yv[2]; 
+  yv[2] = (xv[2] - xv[0]) + (-0.7960060012f * yv[0]) + (1.7903124146f * yv[1]);
+  return yv[2];
+}
+
+
+// 10hz Single Pole Lowpass IIR Filter
+float envelopeFilter(float sample) {
+  static float xv[2] = {0,0}, yv[2] = {0,0};
+  xv[0] = xv[1]; 
+  xv[1] = sample / 160.f;
+  yv[0] = yv[1]; 
+  yv[1] = (xv[0] + xv[1]) + (0.9875119299f * yv[0]);
+  return yv[1];
+}
+
+
+// 1.7 - 3.0hz Single Pole Bandpass IIR Filter
+float beatFilter(float sample) {
+  static float xv[3] = {0,0,0}, yv[3] = {0,0,0};
+  xv[0] = xv[1]; xv[1] = xv[2]; 
+  xv[2] = sample / 7.015f;
+  yv[0] = yv[1]; yv[1] = yv[2]; 
+  yv[2] = (xv[2] - xv[0]) + (-0.7169861741f * yv[0]) + (1.4453653501f * yv[1]);
+  return yv[2];
+}
+
+
+
+void loop() {
+  
+  unsigned long time = micros();          // Used to track rate
+  float sample, value, envelope, beat, thresh, micLev;
+    
+  for (uint8_t i = 0; ; ++i) {
+
+    
+    sample = (float)analogRead(MIC_PIN);             // Sample the pin.
+    micLev = ((micLev*31)+sample)/32;                // Smooth it out over the last 32 samples for automatic centering.
+    sample -= micLev;                                // Let's center the sample it to 0.
+
+    value = bassFilter(sample);
+    value = abs(value);                             // And get the absolute value of each sample.
+    
+    envelope = envelopeFilter(value);     // It's a filter of some kind. . . 
+
+    if (i == 200) {                       // Every 200 samples (25hz) filter the envelope 
+      beat = beatFilter(envelope);        // Filter out repeating bass sounds 100 - 180bpm
+      thresh = 0.02f * 75.;              // Use ~350 for ESP32 and about 75 for UNO/Nano, or use potentiometer and map the range.
+   
+      if(beat > thresh) {                 // Test to see if we have a beat.
+        digitalWrite(LED_BUILTIN, LOW);   // We have a beat.
+        
+        int strt = random8(NUM_LEDS/2);         // Start of FastLED stuff. Get a starting point.
+        int ende = strt + random8(NUM_LEDS/2);  // And and end point.
+        for(int i = strt; i < ende; i++) {
+          uint8_t index = inoise8(i*30, millis()+i*30);   // Make Perlin noise beteween those points.
+          leds[i] = ColorFromPalette(currentPalette, index, 255, LINEARBLEND);   // And display it with palettes.
+        }
+      } else {
+        digitalWrite(LED_BUILTIN, HIGH);     // We don't have a beat.
+      }
+      i = 0;                      // Reset sample counter.
+    }
+  
+    EVERY_N_SECONDS(5) {                                       // Change the target palette to a random one every 5 seconds.
+      uint8_t baseC = random8();                        // You can use this as a baseline colour if you want similar hues in the next line.
+      targetPalette = CRGBPalette16(CHSV(baseC + random8(32), 255, random8(128, 255)),
+                                    CHSV(baseC + random8(64), 255, random8(128, 255)), 
+                                    CHSV(baseC + random8(64), 192, random8(128, 255)), 
+                                    CHSV(baseC + random8(),   255, random8(128, 255)));
+    }
+
+    EVERY_N_MILLISECONDS(50) {                                // Awesome palette transitioning.
+      uint8_t maxChanges = 24;
+      nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
+    }
+
+    EVERY_N_MILLIS(50){
+      fadeToBlackBy(leds, NUM_LEDS, 64);                       // Fade the LED's
+      FastLED.show();                                          // We can't show too often, or things break.
+    }
+
+    for (unsigned long up = time+SAMPLEPERIODUS; time > 20 && time < up; time = micros()){  }    // Consume excess clock cycles, to keep at 5000 hz.
+    
+  } // for i
+} // loop()

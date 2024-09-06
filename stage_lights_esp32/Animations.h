@@ -54,8 +54,8 @@ class Animations{
 
     static void fadeInAndOut(CRGB* leds, int red, int green, int blue);
 
-    static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration);
-    static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], int red, int green, int blue, int delayDuration, unsigned long millisecs);
+    static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs);
+    static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefs[NB_ARRAYS], unsigned long millisecs);
 
     /*
       * FlameHeight - Use larger value for shorter flames, default=50.

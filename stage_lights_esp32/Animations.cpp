@@ -1,3 +1,7 @@
+/**
+  * ESP32 Animations
+*/
+
 #include "Arduino.h"
 #include <FastLED.h>
 #include "Globals.h"
@@ -141,9 +145,9 @@ class Animations{
 //   ####################### Sparkle animation ###############################
 //   #########################################################################
 
-    static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration);
+    static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs);
 
-    static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], int red, int green, int blue, int delayDuration, unsigned long millisecs);
+    static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefs[NB_ARRAYS], unsigned long millisecs);
 
 // #########################################################################
 // ############################ Fire animation #############################
@@ -356,14 +360,20 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
       //Animations::fadeInAndOut(ledArrays[1], random(&animations[1][0]), random(&animations[1][1]), random(&animations[1][2]));
       break;
     case 3:
+    /*
       for(i=0;i<NB_ARRAYS;i++){
-        Animations::sparkle(ledArrays, 
+        //Serial.print("i: ");Serial.println(i);
+        
+        Animations::sparkle(ledArrays[i], 
                             animParamRefArray[i].sparkleParamInt[1], // Red and Green are reversed in FastLED
                             animParamRefArray[i].sparkleParamInt[0], 
                             animParamRefArray[i].sparkleParamInt[2], 
                             animParamRefArray[i].sparkleParamInt[3], 
-                            millisecs);
-      }
+                            millisecs);                    
+      }*/
+      //FastLED.clear(true);
+      Animations::sparkle(ledArrays,  animParamRefArray, millisecs);
+      //FastLED.show();
       break;
     case 4:
       for(i=0;i<NB_ARRAYS;i++){
@@ -441,6 +451,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         extern animation = 1;
       #endif
   }
+  FastLED.show();
 }
 
 
@@ -635,28 +646,32 @@ void Animations::fadeInAndOut(CRGB* leds, int red, int green, int blue){//, int 
 //   ####################### Sparkle animation ###############################
 //   #########################################################################
 
-void Animations::sparkle(CRGB* leds, int red, int green, int blue, int delayDuration) {
+void Animations::sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs) {
   static unsigned long SparklePreviousMillis = 0;
-  int pixel = random(NUM_LEDS);
-  leds[pixel].setRGB(red, green, blue);
-  FastLED.show();
-  delay(delayDuration);
-  leds[pixel].setRGB(0, 0, 0);
+  if(millisecs - SparklePreviousMillis >= delayDuration){
+    int pixel = random(NUM_LEDS);
+    leds[pixel].setRGB(red, green, blue);
+    FastLED.show();
+    leds[pixel].setRGB(0, 0, 0);
+  }
 } 
 
-void Animations::sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], int red, int green, int blue, int delayDuration, unsigned long millisecs) {
+void Animations::sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefs[NB_ARRAYS], unsigned long millisecs) {
   static unsigned long SparklePreviousMillis = 0;
-  int pixel[NB_ARRAYS];
+  static int pixel[NB_ARRAYS];
   for(int i=0;i<NB_ARRAYS;i++){
-    pixel[i] = random(NUM_LEDS);
-    leds[i][pixel[i]].setRGB(red, green, blue);
+    if(millisecs - SparklePreviousMillis >= animParamRefs[i].sparkleParamInt[3]){
+      leds[i][pixel[i]].setRGB(0, 0, 0);
+      pixel[i] = random(NUM_LEDS);
+      leds[i][pixel[i]].setRGB(animParamRefs[i].sparkleParamInt[1], animParamRefs[i].sparkleParamInt[0], animParamRefs[i].sparkleParamInt[2]);
+    }
   }
-  if(millisecs - SparklePreviousMillis >= delayDuration){
-    FastLED.show();
-  }
-  for(int i=0;i<NB_ARRAYS;i++){
+  //if(millisecs - SparklePreviousMillis >= animParamRefs[i].sparkleParamInt[3]){
+  //FastLED.show();
+  //}
+  /*for(int i=0;i<NB_ARRAYS;i++){
     leds[i][pixel[i]].setRGB(0, 0, 0);
-  }
+  }*/
     SparklePreviousMillis = millisecs;
 } 
 
@@ -863,4 +878,4 @@ void Animations::zip(CRGB leds[NB_ARRAYS][NUM_LEDS], int size, int start, int en
     zip_animation_pos_counter = ++zip_animation_pos_counter % (end - start + size);
     zip_animation_prev_mills = current_time;
   }
-} 
+}
