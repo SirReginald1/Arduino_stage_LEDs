@@ -1,65 +1,135 @@
-#include "Microphone.h"
-
-#define NUM_LEDS 122
-//extern unsigned long millisecs;
-
 /*
-class Microphone {
-  public:
+  ESP32 I2S Microphone Sample
+  esp32-i2s-mic-sample.ino
+  Sample sound from I2S microphone, display on Serial Plotter
+  Requires INMP441 I2S microphone
+
+  DroneBot Workshop 2022
+  https://dronebotworkshop.com
 */
+/*
+// Include I2S driver
+#include <driver/i2s.h>
 
-// ################### MICROPHONE VARIABLES ######################
-// The basline backgound noise
-//int basline_amp = 200;
-// Value picked up directly by the microphone
-int mic_amp;
-// The sound picked up by the mick minus the baseline background noise
-float amplitude;
-// The maximum sound amplitude detected in the last interval
-float max_amp_in_interval = 0.01;
-// The interval of time between max amplitude samplings
-const unsigned long max_amp_millis_interval = 200;
-// The previouse millisecond value for the max amplitude sampling
-unsigned long max_amp_prev_mills = 0;
+// Connections to INMP441 I2S microphone
+#define I2S_WS 17
+#define I2S_SD 19
+#define I2S_SCK 18
 
-void sample_mic(int mic_pin){
-  mic_amp = abs(analogRead(mic_pin));
+// Use I2S Processor 0
+#define I2S_PORT I2S_NUM_0
 
-  amplitude = max(mic_amp - 200/*basline_amp*/, 0);
+// Define input buffer length
+#define bufferLen 64
+int16_t sBuffer[bufferLen];
+
+void i2s_install() {
+  // Set up I2S Processor configuration
+  const i2s_config_t i2s_config = {
+    .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
+    .sample_rate = 44100,
+    .bits_per_sample = i2s_bits_per_sample_t(16),
+    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT, //I2S_CHANNEL_FMT_ALL_RIGHT
+    .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S), // If fails to compile try changing this line
+    .intr_alloc_flags = 0, //ESP_INTR_FLAG_LEVEL1
+    .dma_buf_count = 8, //2
+    .dma_buf_len = bufferLen,
+    .use_apll = false
+  };
+
+  i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
 
-float get_amplitude(){
-  return amplitude;
+void i2s_setpin() {
+  // Set I2S pin configuration
+  const i2s_pin_config_t pin_config = {
+    .bck_io_num = I2S_SCK,
+    .ws_io_num = I2S_WS,
+    .data_out_num = -1,
+    .data_in_num = I2S_SD
+  };
+
+  i2s_set_pin(I2S_PORT, &pin_config);
 }
 
-/*
-  * Samples the amplitude at specified intervals
-*/
-void sample_max_amp(unsigned long millisecs){
-  if(millisecs - max_amp_prev_mills > max_amp_millis_interval){
-    max_amp_in_interval = amplitude;
-    max_amp_prev_mills = millisecs;
+void setup() {
+
+  // Set up Serial Monitor
+  Serial.begin(115200);
+  Serial.println(" ");
+
+  delay(1000);
+
+  // Set up I2S
+  i2s_install();
+  i2s_setpin();
+  i2s_start(I2S_PORT);
+
+
+  delay(500);
+}
+
+void loop() {
+
+  // Get I2S data and place in data buffer
+  size_t bytesIn = 0;
+  esp_err_t result = i2s_read(I2S_PORT, &sBuffer, bufferLen * sizeof(int16_t), &bytesIn, portMAX_DELAY);
+
+  if (result == ESP_OK)
+  {
+
+    
+    
+    // Read I2S data buffer
+    int16_t samples_read = bytesIn / 8;
+    if (samples_read > 0) {
+      //float mean = 0;
+      for (int16_t i = 0; i < samples_read; ++i) {
+        mean += (sBuffer[i]);
+      }
+
+      // Average the data reading
+      mean /= samples_read;
+
+      // Print to serial plotter
+      Serial.println(mean);
+    }
+  }
+}*/
+#include "driver/i2s.h"
+
+#define SAMPLE_RATE 44100
+void setup() {
+  // Initialize serial console
+  Serial.begin(115200);
+
+  // Configure I2S microphone
+  i2s_config_t i2s_config = {
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+    .sample_rate = SAMPLE_RATE,
+    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+    .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT,
+    .communication_format = I2S_COMM_FORMAT_I2S,
+    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+    .dma_buf_count = 2,
+    .dma_buf_len = 64
+  };
+  i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
+  i2s_set_pin(I2S_NUM_0, &i2s_pin_config);
+  i2s_set_clk(I2S_NUM_0, SAMPLE_RATE, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
+}
+
+void loop() {
+  // Allocate buffer to store audio data
+  const int num_samples = 512;
+  int16_t samples[num_samples];
+
+  // Read audio data from I2S microphone
+  size_t bytes_read = 0;
+  i2s_read(I2S_NUM_0, samples, num_samples * sizeof(int16_t), &bytes_read, portMAX_DELAY);
+
+  // Print audio data to serial console
+  for (int i = 0; i < num_samples; i++) {
+    Serial.println(samples[i]);
   }
 }
-
-
- int volum_bar_last_nb = 0;
-  int volum_bar_nb_led = 0;
-  unsigned long volum_bar_mill = 0;
-  void volum_bar_animation(CRGB *leds, unsigned long millisecs, int nb_leds){
-    volum_bar_nb_led = min((amplitude)/max_amp_in_interval, nb_leds);//(amplitude/max_amp_in_interval > 0.01 ?  amplitude/max_amp_in_interval : 0.01) *NUM_LEDS;
-    //nb_led = random(0,NUM_LEDS);
-    // Fill loop
-    if(millisecs - volum_bar_mill > 2000){
-      volum_bar_mill = volum_bar_mill;
-    for(int i=0; i<volum_bar_nb_led; i++){
-      leds[i] = CRGB(random(0,50),random(0.150),random(0,50));
-    }
-    for(int i=volum_bar_nb_led; i<NUM_LEDS; i++){
-      leds[i] = CRGB::Black;
-    }
-    FastLED.show();
-    }
-  }
-
-//};

@@ -8,6 +8,10 @@
 // ################### Compilation options ####################
 #define START_MARKER '<'
 #define END_MARKER '>'
+/** Receving this symbole signals the controler to start somthing.*/
+#define START_ACTION_MARKER '#'
+/** Receving this symbole signals the controler to stop somthing.*/
+#define STOP_ACTION_MARKER '!'
 
 
 class ComInterface{
@@ -24,8 +28,8 @@ class ComInterface{
     // The number of unsigned long parameters that are being used by each array
     static unsigned long paramCountUnsignedLong[NB_ARRAYS];
 
-    /** The array of structs that contain*/
-    //static animParamRef animParamRefs[NB_ARRAYS];
+    /**Value indicating */
+    static bool runingAction;
 
     // ################### Reading data code ##################
     /*The maximum number of bytes that the buffer can recive.*/
@@ -82,8 +86,10 @@ class ComInterface{
     //============
     /*This function parses the data that hase been receved*/
     static void parseAnimationChangeData();
+    /**This function deals with parsing data in a default general context.*/
+    static void parseGeneralData();
 
-    static void readInput();
+    static void readInput(int mode);
 };
 
 // #########################################################################################################################
@@ -110,6 +116,9 @@ char ComInterface::receivedChars[numChars] = {0};
 
 /*Temporary array for use when parsing*/
 char ComInterface::tempChars[numChars] = {0};
+
+/**VFalue indicating if the controller has been ordered to start runing an action.*/
+bool ComInterface::runingAction = false;
 
 // #########################################################################################################################
 // ######################################### GETTER AND SETTER FUNCTION DEFINITION #########################################
@@ -252,7 +261,7 @@ void ComInterface::recvWithStartEndMarkers() {
 
 /*This function parses the data that hase been receved*/
 void ComInterface::parseAnimationChangeData() {      // split the data into its parts
-        extern animParamRef animParamRefs[NB_ARRAYS];
+  extern animParamRef animParamRefs[NB_ARRAYS];
   /*Value extracted from buffer*/
   char * strtokIndx;
   /*Counts the number of parameters after the anomation value in current data parsing.*/
@@ -331,13 +340,50 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
       */
 }
 
-void ComInterface::readInput(){ 
+/**
+  * This function deals with parsing data in a default general context. This function is the one that call the action functions based on input.
+*/
+void ComInterface::parseGeneralData(){
+  /*Value extracted from buffer*/
+  char * strtokIndx;
+  // The first element in the list
+  strtokIndx = strtok(tempChars,",");
+  // Switch that deals with spetial characters in first position
+  switch((int)strtokIndx){
+    case START_ACTION_MARKER:
+      ComInterface::runingAction = true;
+      break;
+    case STOP_ACTION_MARKER:
+      ComInterface::runingAction = false;
+      break;
+  }
+  // The second element in the list
+  strtokIndx = strtok(NULL, ",");
+  while(strtokIndx != NULL) {
+    break;
+  }
+  // Leave this at end
+  strtokIndx = strtok(NULL, ",");
+}
+
+/**
+  * Function called in main program to wich will read and parse the data present in the input buffer depending on the mode it is given as parameter.
+  * @param mode Integer indicating the which mode to use to parse the data.
+*/
+void ComInterface::readInput(int mode){ 
   ComInterface::recvWithStartEndMarkers();
   if (newData == true) {
       strcpy(tempChars, receivedChars);
           // this temporary copy is necessary to protect the original data
           //   because strtok() used in parseData() replaces the commas with \0
-      ComInterface::parseAnimationChangeData();
+      switch(mode){
+        case 0:
+          ComInterface::parseAnimationChangeData();
+          break;
+        case 1:
+          ComInterface::parseGeneralData();
+          break;
+      }
       newData = false;
   }
 }
