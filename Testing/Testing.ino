@@ -1,39 +1,103 @@
-// This example code is in the Public Domain (or CC0 licensed, at your option.)
-// By Evandro Copercini - 2018
-//
-// This example creates a bridge between Serial and Classical Bluetooth (SPP)
-// and also demonstrate that SerialBT have the same functionalities of a normal Serial
-// Note: Pairing is authenticated automatically by this device
+/*
+  ESP32 I2S Microphone Sample
+  esp32-i2s-mic-sample.ino
+  Sample sound from I2S microphone, display on Serial Plotter
+  Requires INMP441 I2S microphone
 
-#include "BluetoothSerial.h"
+  DroneBot Workshop 2022
+  https://dronebotworkshop.com
+*/
 
-String device_name = "ESP32-BT-Slave";
+// Include I2S driver
+#include <driver/i2s.h>
 
-// Check if Bluetooth is available
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
-#endif
+// Connections to INMP441 I2S microphone
+#define I2S_WS 17
+#define I2S_SD 19
+#define I2S_SCK 18
 
-// Check Serial Port Profile
-#if !defined(CONFIG_BT_SPP_ENABLED)
-#error Serial Port Profile for Bluetooth is not available or not enabled. It is only available for the ESP32 chip.
-#endif
+// Use I2S Processor 0
+#define I2S_PORT I2S_NUM_0
 
-BluetoothSerial SerialBT;
+// Define input buffer length
+#define bufferLen 64
+int16_t sBuffer[bufferLen];
+
+void i2s_install() {
+  // Set up I2S Processor configuration
+  const i2s_config_t i2s_config = {
+    .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
+    .sample_rate = 44100,
+    .bits_per_sample = i2s_bits_per_sample_t(16),
+    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S), // If fails to compile try changing this line
+    .intr_alloc_flags = 0,
+    .dma_buf_count = 8,
+    .dma_buf_len = bufferLen,
+    .use_apll = false
+  };
+
+  i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
+}
+
+void i2s_setpin() {
+  // Set I2S pin configuration
+  const i2s_pin_config_t pin_config = {
+    .bck_io_num = I2S_SCK,
+    .ws_io_num = I2S_WS,
+    .data_out_num = -1,
+    .data_in_num = I2S_SD
+  };
+
+  i2s_set_pin(I2S_PORT, &pin_config);
+}
 
 void setup() {
+
+  // Set up Serial Monitor
   Serial.begin(115200);
-  SerialBT.begin(device_name);  //Bluetooth device name
-  //SerialBT.deleteAllBondedDevices(); // Uncomment this to delete paired devices; Must be called after begin
-  Serial.printf("The device with name \"%s\" is started.\nNow you can pair it with Bluetooth!\n", device_name.c_str());
+  Serial.println(" ");
+
+  delay(1000);
+
+  // Set up I2S
+  i2s_install();
+  i2s_setpin();
+  i2s_start(I2S_PORT);
+
+
+  delay(500);
 }
 
 void loop() {
-  if (Serial.available()) {
-    SerialBT.write(Serial.read());
+
+  // False print statements to "lock range" on serial plotter display
+  // Change rangelimit value to adjust "sensitivity"
+  int rangelimit = 3000;
+  //Serial.print(rangelimit * -1);
+  //Serial.print(" ");
+  //Serial.print(rangelimit);
+  //Serial.print(" ");
+
+  // Get I2S data and place in data buffer
+  size_t bytesIn = 0;
+  esp_err_t result = i2s_read(I2S_PORT, &sBuffer, bufferLen, &bytesIn, portMAX_DELAY);
+
+  if (result == ESP_OK)
+  {
+    // Read I2S data buffer
+    int16_t samples_read = bytesIn / 8;
+    if (samples_read > 0) {
+      float mean = 0;
+      for (int16_t i = 0; i < samples_read; ++i) {
+        mean += (sBuffer[i]);
+      }
+
+      // Average the data reading
+      mean /= samples_read;
+
+      // Print to serial plotter
+      Serial.println(mean);
+    }
   }
-  if (SerialBT.available()) {
-    Serial.write(SerialBT.read());
-  }
-  delay(20);
 }

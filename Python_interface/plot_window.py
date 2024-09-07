@@ -1,5 +1,5 @@
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
+from typing import Any, List
 import tkinter as tk
 from time import time, sleep
 from tkinter import Frame,Label,Entry,Button
@@ -11,23 +11,28 @@ from threading import Thread
 
 class PlotWindow(Frame):
 
-    def __init__(self, master = None) -> None:
+    def __init__(self, 
+                 controller: ControllerInterface,
+                 master: Any = None) -> None:
         Frame.__init__(self, master)
-        self.master = master
+        self.master: Any = master
 
-        self.start_time = time()
+        self.controller: ControllerInterface = controller
 
-        self.x_values = []#np.array([])
+        self.start_time: float = time()
 
-        self.y_values = []#np.array([])
+        self.x_values: List[int] = []
 
-        self.x_lim = [0,100]
+        self.y_values: List[int] = []
 
-        self.y_lim = [-10000, 10000]
+        self.x_lim: List[int] = [0,100]
 
-        self.x_lim_step = 100
+        self.y_lim: List[int] = [-10000, 10000]
 
-        def animate(i):
+        self.x_lim_step: int = 100
+
+        def animate(i: int):
+           """Function called by """
            #self.line.set_ydata(self.yaxis[i])  # update the data
            self.line.set_data(self.x_values, self.y_values)
            self.ax.set_xlim(self.x_lim[0], self.x_lim[1])
@@ -68,7 +73,7 @@ class PlotWindow(Frame):
         """Function used in own thead to read values from the controller and append them to the xaxis array."""
         while True:
            try:
-               reading = controller.read_measurments()
+               reading = self.controller.read_measurments()
                if reading:
                    self.y_values.append(reading)
                    self.x_values.append(time()-self.start_time)
@@ -87,12 +92,14 @@ class PlotWindow(Frame):
     def Clear(self):
         self.x_values = []
         self.y_values = []
+        self.x_lim = [0, 100]
+        self.y_lim = [-10000, 10000]
 
 controller = ControllerInterface(port="COM7", baudrate=115200)
 
 root = tk.Tk()
 root.geometry("1200x800")
-app = PlotWindow(root)
+app = PlotWindow(root, controller)
 tread_read_measurment = Thread(target=app.read_measurment)
 tread_read_measurment.daemon = True
 tread_read_measurment.start()

@@ -85,10 +85,10 @@ class ControllerInterface():
     # If bytes long then with parameters else just change animation
 
     def __init__(self, 
-                 port: str = "COM3", 
+                 port: str = "COM7", 
                  baudrate: int = 115200, 
                  error_fun_call: Callable = None,
-                 use_smooth_coom: bool = True) -> "ControllerInterface":
+                 use_smooth_coom: bool = False) -> "ControllerInterface":
         """Constructor for arduino interface.
         
         ### Args:
@@ -135,8 +135,11 @@ class ControllerInterface():
         self.time_of_last_message_sent = float(0)
         """The time the last message was sent."""
 
+        self.last_measurment_receved = float(0)
+        """The last"""
+
         try:
-            self.controller = Serial(port='COM3', baudrate=self.baudrate, timeout=10)
+            self.controller = Serial(port=self.port, baudrate=self.baudrate, timeout=1)
             """The arduino connection port."""
         except:
             #raise RuntimeError("Connection error! Check that that the port is correct!")
@@ -239,7 +242,14 @@ class ControllerInterface():
             except:
                 return "Error when reading message from serial! Try again \n"
         return None
-            
+    
+    def read_measurments(self) -> Union[float, None]:
+        """Reads measurments sent from the controller. """
+        try:
+            return float(str(self.controller.readline())[2:][:-5])
+        except:
+            return None
+
     def try_to_connect(self) -> str:
         """Attempt to connect to the arduino port.
         
@@ -247,7 +257,7 @@ class ControllerInterface():
             - str: User message on connection status.
         """
         try:
-            self.controller = Serial(port='COM3', baudrate=self.baudrate, timeout=10)
+            self.controller = Serial(port='COM7', baudrate=self.baudrate, timeout=10)
             return "Connection to arduino established."
         except:
             self.error_fun_call("Failed to connect to controller! Check that that the port is correct!")
