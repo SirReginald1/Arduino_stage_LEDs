@@ -1,9 +1,9 @@
 from typing import Union, Dict, Tuple, List, Callable
-from serial import Serial
+from serial import Serial, SerialException
 import sys
 import glob
-import serial
 from time import time
+from struct import unpack
 
 
 class ControllerInterface():
@@ -224,6 +224,13 @@ class ControllerInterface():
         """Reads measurments sent from the controller. """
         try:
             return float(str(self.controller.readline())[2:][:-5])
+            #if self.controller.in_waiting > 1:
+            #    temp = self.controller.read(2)
+            #    print(temp)
+            #    out = unpack("e",temp)[0]
+            #    print(f"out: {out}, type: {type(out)}")
+            return out
+            
         except:
             return None
 
@@ -261,9 +268,9 @@ class ControllerInterface():
         result = []
         for port in ports:
             try:
-                s = serial.Serial(port)
+                s = Serial(port)
                 s.close()
                 result.append(port)
-            except (OSError, serial.SerialException):
+            except (OSError, SerialException):
                 pass
         return result
