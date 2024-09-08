@@ -12,6 +12,13 @@
 #define START_ACTION_MARKER '#'
 /** Receving this symbole signals the controler to stop somthing.*/
 #define STOP_ACTION_MARKER '!'
+// #################### Comunication reception mode #####################
+/** The flag used to signal that the following integer is to be interpreted as mode comunication mode change.*/
+#define MODE_CHANGE_FLAG '@'
+/** The mode number for the animation and parameter selection mode.*/
+#define RECIVE_MODE_ANIM_SELECT 0
+/** The mode number for the preprepared animation mode.*/
+#define RECIVE_MODE_RUN_PREP_ANIM 1
 
 
 class ComInterface{
@@ -46,6 +53,9 @@ class ComInterface{
     If true will not read and parse from the buffer. Is set back to false once all data reved data hase been delt with.
     */
     static boolean newData;
+
+    /**The mode used to determin how receved data is parsed. In sync with the curently used functionality.*/
+    static int dataParsingMode;
 
     // ###################### Getter an setter functions ######################################
 
@@ -89,7 +99,7 @@ class ComInterface{
     /**This function deals with parsing data in a default general context.*/
     static void parseGeneralData();
 
-    static void readInput(int mode);
+    static void readInput();
 };
 
 // #########################################################################################################################
@@ -119,6 +129,9 @@ char ComInterface::tempChars[numChars] = {0};
 
 /**VFalue indicating if the controller has been ordered to start runing an action.*/
 bool ComInterface::runingAction = false;
+
+/**The mode used to determin how receved data is parsed. In sync with the curently used functionality.*/
+int ComInterface::dataParsingMode = 0;
 
 // #########################################################################################################################
 // ######################################### GETTER AND SETTER FUNCTION DEFINITION #########################################
@@ -228,33 +241,39 @@ int ComInterface::separate(String str, char **p, int size){
 
 /*This function is requiered for boards like the arduino that have trouble receving data over serial*/
 void ComInterface::recvWithStartEndMarkers() {
-  static boolean recvInProgress = false;
   static byte ndx = 0;
-  char startMarker = START_MARKER;
-  char endMarker = END_MARKER;
   char rc;
-
+  rc = Serial.read();
+  // Checks the first character which is the flag that indicates which parsing mode will be used
+  // The second character is the parsing mode to be used
+  switch(rc){
+    case START_MARKER:
+      break;
+    case MODE_CHANGE_FLAG:
+      try{
+        ComInterface::dataParsingMode = Serial.read()-48;
+      }
+      catch(...){
+        // Do nothing
+      }
+      break;
+    default:
+      break;
+  }
   while (Serial.available() > 0 && newData == false) {
       rc = Serial.read();
-
-      if (recvInProgress == true) {
-          if (rc != endMarker) {
-              receivedChars[ndx] = rc;
-              ndx++;
-              if (ndx >= numChars) {
-                  ndx = numChars - 1;
-              }
-          }
-          else {
-              receivedChars[ndx] = '\0'; // terminate the string
-              recvInProgress = false;
-              ndx = 0;
-              newData = true;
+      if (rc != END_MARKER) {
+          receivedChars[ndx] = rc;
+          ndx++;
+          if (ndx >= numChars) {
+              ndx = numChars - 1;
           }
       }
-
-      else if (rc == startMarker) {
-          recvInProgress = true;
+      else {
+          receivedChars[ndx] = '\0'; // terminate the string
+          //recvInProgress = false;
+          ndx = 0;
+          newData = true;
       }
   }
 }
@@ -368,19 +387,19 @@ void ComInterface::parseGeneralData(){
 
 /**
   * Function called in main program to wich will read and parse the data present in the input buffer depending on the mode it is given as parameter.
-  * @param mode Integer indicating the which mode to use to parse the data.
 */
-void ComInterface::readInput(int mode){ 
+void ComInterface::readInput(){ 
   ComInterface::recvWithStartEndMarkers();
+
   if (newData == true) {
       strcpy(tempChars, receivedChars);
           // this temporary copy is necessary to protect the original data
           //   because strtok() used in parseData() replaces the commas with \0
-      switch(mode){
-        case 0:
+      switch(ComInterface::dataParsingMode){
+        case RECIVE_MODE_ANIM_SELECT:
           ComInterface::parseAnimationChangeData();
           break;
-        case 1:
+        case RECIVE_MODE_RUN_PREP_ANIM:
           ComInterface::parseGeneralData();
           break;
       }
