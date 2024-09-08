@@ -16,7 +16,7 @@ class ComInterface{
     //static animParamRef animParamRefs[NB_ARRAYS];
 
     /*Reads the contense of the serial buffer and sets all the appropriate variables.*/
-    static void readInput(int mode);
+    static void readInput();
 
     static void serialFlush();
 
