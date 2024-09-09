@@ -97,7 +97,7 @@ class ComInterface{
     /*This function parses the data that hase been receved*/
     static void parseAnimationChangeData();
     /**This function deals with parsing data in a default general context.*/
-    static void parseGeneralData();
+    static void parsePreprepAnimData();
 
     static void readInput();
 };
@@ -360,14 +360,14 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
 }
 
 /**
-  * This function deals with parsing data in a default general context. This function is the one that call the action functions based on input.
+  * This function deals with parsing data when preprepared animation mode is active.
 */
-void ComInterface::parseGeneralData(){
+void ComInterface::parsePreprepAnimData(){
   /*Value extracted from buffer*/
   char * strtokIndx;
   // The first element in the list
   strtokIndx = strtok(tempChars,",");
-  // Switch that deals with spetial characters in first position
+  // Switch that deals with potential flags in fist position.
   switch((int)strtokIndx){
     case START_ACTION_MARKER:
       ComInterface::runingAction = true;
@@ -400,7 +400,7 @@ void ComInterface::readInput(){
           ComInterface::parseAnimationChangeData();
           break;
         case RECIVE_MODE_RUN_PREP_ANIM:
-          ComInterface::parseGeneralData();
+          ComInterface::parsePreprepAnimData();
           break;
       }
       newData = false;

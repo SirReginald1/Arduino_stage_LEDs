@@ -3,7 +3,7 @@ This project seeks to program controlers for LED arrays allong with perifiral ut
 
 **Currently supported boards:**
 - arduino UNO
-- esp32 (not fully implemented yet)
+- esp32
 
 # Before compiling 
 - Set the compiler constants in the Globals.h file
@@ -29,5 +29,3 @@ When adding an annimation make sure you update:
 - Add a sync option that toggles between animation function types
 - Make sur that the data parsing checks that selected array is not larger than NB_ARRAYS. Same for animations.
 - Correct python interface message sending from boxes
-- **Move resend message function to console class.**
-- **Make sure resend counter is reset after message receved succsesfully**
