@@ -123,7 +123,7 @@ class PlotWindow(Frame):
         tread_saving_file.start()
         
 
-controller = ControllerInterface(port="COM7", baudrate=115200)
+controller = ControllerInterface(port="COM7", baudrate=155200)
 
 root = tk.Tk()
 root.geometry("1200x800")

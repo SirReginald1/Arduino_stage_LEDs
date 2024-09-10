@@ -10,6 +10,8 @@
 // Include I2S driver
 #include <driver/i2s.h>
 
+#include "driver/uart.h"
+
 // Connections to INMP441 I2S microphone
 #define I2S_WS 17
 #define I2S_SD 19
@@ -35,6 +37,12 @@ void i2s_install() {
     .dma_buf_len = bufferLen,
     .use_apll = false
   };
+
+  i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
+}
+
+void i2s_setpin() {
+  // Set I2S pin configuration
   const i2s_pin_config_t pin_config = {
     .bck_io_num = I2S_SCK,
     .ws_io_num = I2S_WS,
@@ -46,9 +54,9 @@ void i2s_install() {
 }
 
 void setup() {
-
+  uart_set_baudrate(UART_NUM_0, 1000000);
   // Set up Serial Monitor
-  Serial.begin(115200);
+  Serial.begin(1000000); //115200
   //Serial.println(" ");
 
   delay(1000);
