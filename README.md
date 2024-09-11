@@ -1,5 +1,5 @@
 # Project description
-This project seeks to program controlers for LED arrays allong with perifiral utilities such as a computer and smartphone interfaces to modifie the animations in real time,
+This project seeks to program controlers for LED arrays allong with perifiral utilities such as a computer and smartphone interfaces to modifie the animations in real time.
 
 **Currently supported boards:**
 - arduino UNO
@@ -16,7 +16,8 @@ The cmd console will remane open and is used as a debuging terminal.
 
 >[WARNING]
 >
->The arduino IDE or any other application that hase made a serial connection to the controller must be closed before launching the >interface otherwise the python interface will be unable to connect to the controller.
+>The arduino IDE or any other application that hase made a serial connection to the controller must be closed before launching the
+>interface otherwise the python interface will be unable to connect to the controller.
 
 # Adding animations
 When adding an annimation make sure you update:

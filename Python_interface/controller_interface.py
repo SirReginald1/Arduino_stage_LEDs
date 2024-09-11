@@ -87,8 +87,7 @@ class ControllerInterface():
     def __init__(self, 
                  port: str = "COM7", 
                  baudrate: int = 115200, 
-                 error_fun_call: Callable = None,
-                 use_smooth_coom: bool = False) -> "ControllerInterface":
+                 error_fun_call: Callable = None) -> "ControllerInterface":
         """Constructor for arduino interface.
         
         ### Args:
@@ -121,9 +120,6 @@ class ControllerInterface():
         self.resend_message: bool = False
         """Boolean indicateing if interface should atempt to resend message."""
 
-        self.use_smooth_coom: bool = use_smooth_coom
-        """Value indicating if the controller interface should use tchniques to make communication smoother."""
-
         self.nb_messages_resent: int = 0
         """Counts the nuber of times a message is resent so as to stop the resending of messages after a certain amount. 
         (Stops infinit loops if an unrecognised message is sent)
@@ -135,9 +131,6 @@ class ControllerInterface():
         self.time_of_last_message_sent = float(0)
         """The time the last message was sent."""
 
-        self.last_measurment_receved = float(0)
-        """The last"""
-
         try:
             self.controller = Serial(port=self.port, baudrate=self.baudrate, timeout=1)
             """The arduino connection port."""
@@ -147,8 +140,6 @@ class ControllerInterface():
             if error_fun_call:
                 error_fun_call("Connection error! Check that that the port is correct!")
             print("Connection error! Check that that the port is correct!")
-
-        #self.arduino = arduino
 
         self.param_values_strobe: Dict[int, Tuple[int]] = {label : value for label, value in zip(self.init_labels_strobe, self.init_values_strobe)}
         """Parameter values for the strobe animation."""
@@ -224,20 +215,6 @@ class ControllerInterface():
                 if message and message != "":
                     self.time_of_last_message_receved = time()
                     self.last_message_receved = message
-                # Chack if controller understood last command
-                if message == "#!":
-                    self.resend_message = True
-                # If using smooth comunication and last message is did understand (#!) and nb of resends smaller that 10
-                if self.use_smooth_coom and self.resend_message and self.nb_messages_resent < 10:
-                    self.send_message(self.last_message_sent)
-                    self.time_of_last_message_sent = time()
-                    self.nb_messages_resent += 1
-                    print(f"Resending message: {self.last_message_sent}, nb resent: {self.nb_messages_resent}")
-                # Once it reaches 10 stop resending
-                elif self.use_smooth_coom and self.resend_message and self.nb_messages_resent == 10:
-                    self.resend_message = False
-                    self.nb_messages_resent = 0
-
                 return message
             except:
                 return "Error when reading message from serial! Try again \n"

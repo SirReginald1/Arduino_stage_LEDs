@@ -35,7 +35,7 @@ class MainWindow(ttk.Window):
         #self.menu_test.add_command(label="test", command=lambda : 10)
         #self.config(menu=self.menu_bar)
 
-        self.controller_interface = ControllerInterface(use_smooth_coom=False)
+        self.controller_interface = ControllerInterface(baudrate=1000000,use_smooth_coom=False)
 
         self.title("The title")
         #self.iconbitmap()

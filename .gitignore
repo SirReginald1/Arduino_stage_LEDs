@@ -3,4 +3,8 @@ Python_interface/__pycache__/
 Python_interface/animation_tabs/__pycache__/
 .vscode/
 test.csv
+test.pkl
+working.ipynb
 Python_interface/working.ipynb
+Python_interface/Beat_detection/Sound_files/
+Python_interface/Beat_detection/Timing_arrays/
