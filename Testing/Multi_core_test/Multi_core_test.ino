@@ -22,6 +22,8 @@
 #define bufferLen 64
 int16_t sBuffer[bufferLen];
 
+TaskHandle_t Task1;
+
 void i2s_install() {
   // Set up I2S Processor configuration
   const i2s_config_t i2s_config = {
@@ -51,25 +53,7 @@ void i2s_setpin() {
   i2s_set_pin(I2S_PORT, &pin_config);
 }
 
-void setup() {
-
-  // Set up Serial Monitor
-  Serial.begin(115200);
-  //Serial.println(" ");
-
-  delay(1000);
-
-  // Set up I2S
-  i2s_install();
-  i2s_setpin();
-  i2s_start(I2S_PORT);
-
-
-  delay(500);
-}
-
-void loop() {
-
+void sample_mic(){
   // Get I2S data and place in data buffer
   size_t bytesIn = 0;
   esp_err_t result = i2s_read(I2S_PORT, &sBuffer, bufferLen * sizeof(int16_t), &bytesIn, portMAX_DELAY);
@@ -89,9 +73,55 @@ void loop() {
 
       // Average the data reading
       mean /= samples_read;
-
+      xSemaphoreTake(xSemaphore, xBlockTime)
       // Print to serial plotter
       Serial.println(mean);
     }
+    Serial.print("Max stack memory use core1: ");Serial.println(uxTaskGetStackHighWaterMark(NULL));
   }
+  Serial.print("Core ID: ");Serial.println(xPortGetCoreID());
+  Serial.print("Time end of loop: ");Serial.println(millis());
+}
+
+void core0Task( void * parameter){
+  for(;;){
+    Serial.print("Core ID: ");Serial.println(xPortGetCoreID());
+    Serial.print("Time before loop: ");Serial.println(millis());
+    for(int i=0; i<1000000; i++);
+    Serial.print("Time after loop: ");Serial.println(millis());
+    Serial.print("Max stack memory use core0: ");Serial.println(uxTaskGetStackHighWaterMark(NULL));
+  }
+}
+
+void setup() {
+
+  // Set up Serial Monitor
+  Serial.begin(115200);//230400
+  //Serial.println(" ");
+  
+
+  xTaskCreatePinnedToCore(
+                          core0Task, /* The function called by the task */
+                          "Task_1", /* The name of the task */
+                          1000, /* The stack size allocated to the task */
+                          NULL, /* Parameters to be passed to the task */
+                          1, /* Priority of task */
+                          &Task1, /* The task hadler to keep track of the task */
+                          0); /* The ID of the core it will run on */
+
+  delay(1000);
+
+  // Set up I2S
+  i2s_install();
+  i2s_setpin();
+  i2s_start(I2S_PORT);
+
+
+  delay(500);
+  
+}
+
+void loop() {
+  sample_mic();
+  
 }

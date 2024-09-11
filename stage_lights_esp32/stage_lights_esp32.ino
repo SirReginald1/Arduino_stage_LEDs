@@ -1,3 +1,4 @@
+#include "driver/uart.h" // driver used to change the baudrate
 #include <Arduino.h>
 #include <FastLED.h>
 //#include <TimerOne.h>
@@ -160,7 +161,8 @@ void setup() {
   //TimerOne.attachInterrupt(software_interrupt);
   // ################ IN OUT CONSOLE ##################
   // Setting up console output.
-  Serial.begin(115200);//9600
+  uart_set_baudrate(UART_NUM_0, 1000000);
+  Serial.begin(1000000);
   // Setting the time the program will wait for input.
   Serial.setTimeout(50);
   // #########################################################

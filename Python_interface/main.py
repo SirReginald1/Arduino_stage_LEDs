@@ -1,6 +1,7 @@
 from threading import Thread
-from main_window import MainWindow
 from time import time
+from tkinter import Event
+from main_window import MainWindow
 
 
 class App():
