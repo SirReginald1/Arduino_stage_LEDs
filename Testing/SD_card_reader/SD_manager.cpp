@@ -71,6 +71,8 @@ class SDManager{
 
     static void readTxtFile(fs::FS &fs, const char *path);
 
+    static void readBinFile(fs::FS &fs, const char *path);
+
     static void writeTxtFile(fs::FS &fs, const char *path, const char *message);
 
     static void appendTxtFile(fs::FS &fs, const char *path, const char *message);
@@ -205,6 +207,26 @@ void SDManager::removeDir(fs::FS &fs, const char *path) {
  * @param path The path to the txt file to be read.
  */
 void SDManager::readTxtFile(fs::FS &fs, const char *path) {
+  Serial.printf("Reading file: %s\n", path);
+
+  File file = fs.open(path);
+  if (!file) {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+
+  Serial.print("Read from file: ");
+  while (file.available()) {
+    Serial.write(file.read());
+  }
+}
+
+/**
+ * Reads the file containing.
+ * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
+ * @param path The path to the binary file to be read.
+ */
+void SDManager::readTimingFile(fs::FS &fs, const char *path){
   Serial.printf("Reading file: %s\n", path);
 
   File file = fs.open(path);

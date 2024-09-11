@@ -22,6 +22,8 @@
 
         static void readTxtFile(fs::FS &fs, const char *path);
 
+        static void readBinFile(fs::FS &fs, const char *path);
+
         static void writeTxtFile(fs::FS &fs, const char *path, const char *message);
 
         static void appendTxtFile(fs::FS &fs, const char *path, const char *message);

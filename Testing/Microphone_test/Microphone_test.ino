@@ -13,9 +13,9 @@
 #include "driver/uart.h"
 
 // Connections to INMP441 I2S microphone
-#define I2S_WS 17
-#define I2S_SD 19
-#define I2S_SCK 18
+#define I2S_WS 27
+#define I2S_SD 33
+#define I2S_SCK 32
 
 // Use I2S Processor 0
 #define I2S_PORT I2S_NUM_0
