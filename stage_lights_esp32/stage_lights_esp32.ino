@@ -161,8 +161,8 @@ void setup() {
   //TimerOne.attachInterrupt(software_interrupt);
   // ################ IN OUT CONSOLE ##################
   // Setting up console output.
-  uart_set_baudrate(UART_NUM_0, 1000000);
-  Serial.begin(1000000);
+  //uart_set_baudrate(UART_NUM_0, 155200);
+  Serial.begin(115200);
   // Setting the time the program will wait for input.
   Serial.setTimeout(50);
   // #########################################################

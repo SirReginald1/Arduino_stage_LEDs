@@ -46,7 +46,7 @@ def output_file(output_file_path: str, output_array: Union[List[float], ndarray]
     else:
         file = open(output_file_path, "w")
         for nb in output_array:
-                file.write(str(nb)+"\n")
+                file.write(str((str(nb)+"\n").encode("ascii")))
         file.close()
 
 path: Path = Path(realpath(__file__)) / ".."

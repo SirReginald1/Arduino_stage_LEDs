@@ -1,3 +1,4 @@
+
 #include "driver/uart.h"
 #include "SD_manager.h"
 #include "FS.h"
@@ -5,26 +6,33 @@
 
 
 void setup(){
-  uart_set_baudrate(UART_NUM_0, 1000000);
-  Serial.begin(1000000);
-  //setCpuFrequencyMhz(240);
-
+  Serial.begin(115200);
+  
   SDManager::setup();
 
-  SDManager::listDir(SD_MMC, "/", 0);
-  SDManager::createDir(SD_MMC, "/mydir");
-  SDManager::listDir(SD_MMC, "/", 0);
-  SDManager::removeDir(SD_MMC, "/mydir");
-  SDManager::listDir(SD_MMC, "/", 2);
-  SDManager::writeTxtFile(SD_MMC, "/hello.txt", "Hello ");
-  SDManager::appendTxtFile(SD_MMC, "/hello.txt", "World!\n");
-  SDManager::readTxtFile(SD_MMC, "/hello.txt");
-  SDManager::deleteFile(SD_MMC, "/foo.txt");
-  SDManager::renameFile(SD_MMC, "/hello.txt", "/foo.txt");
-  SDManager::readTxtFile(SD_MMC, "/foo.txt");
-  SDManager::testFileIO(SD_MMC, "/test.txt");
-  Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
-  Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
+  Serial.println("listing directories:\n");
+  SDManager::listDir(SD_MMC, "/", 1);
+
+  Serial.println("Reading file:\n");
+  // Variable to hold the number of floats read from the file
+    int numFloats = 0;
+
+    // Binary file containing the floats
+    const char* filename = "/Vibe Chemistry & HARLEE - Same Old Song_mp3.txt";  // Path to the binary file on the SD card
+
+    // Read floats from the binary file on the SD card
+    float* floats = SDManager::readTimingTxtFile<float>(SD_MMC, filename, &numFloats);
+
+    // If successful, print the floats
+    if (floats != NULL) {
+        Serial.println("Floats read from the binary file on SD card:");
+        for (int i = 0; i < numFloats; i++) {
+            Serial.println(floats[i], 6);  // Print floats with 6 decimal places
+        }
+
+        // Free the allocated memory after use
+        free(floats);
+    }
 
 }
 

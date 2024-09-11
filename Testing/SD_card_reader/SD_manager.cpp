@@ -1,3 +1,4 @@
+#include <type_traits>
 /*
  * pin 1 - D2                |  Micro SD card     |
  * pin 2 - D3                |                   /
@@ -38,6 +39,10 @@
  */
 #include "FS.h"
 #include "SD_MMC.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 /** This value indicates if the ONE_BIT_MODE is used. Set to false for slightly faster comunication. SD card pin 1 and 9 must be pluged if set to false.  */
 #define ONE_BIT_MODE true
@@ -49,6 +54,20 @@
 /* Only used if ONE_BIT_MODE == false */
 #define D3_PIN 13
 #define D2_PIN 12
+
+/**
+* Utility function returns the string representation of the parameters data type.
+*/
+template <class T>
+String type_name(const T&)
+{   
+    String s = __PRETTY_FUNCTION__;
+
+    int start = s.indexOf("[with T = ") + 10;
+    int stop = s.lastIndexOf(']');
+
+    return s.substring(start, stop);
+}
 
 
 /**
@@ -71,7 +90,13 @@ class SDManager{
 
     static void readTxtFile(fs::FS &fs, const char *path);
 
-    static void readBinFile(fs::FS &fs, const char *path);
+    template <typename T> static T* readTimingBinFile(fs::FS &fs, const char *path, int* numFloats);
+
+    template<typename T> static T* readTimingTxtFile(fs::FS &fs, const char *path, int* numElements);
+
+    float* readTimingBinFile(fs::FS&, char const*, int*);
+
+    static void readTimingTxtFile(fs::FS &fs, const char *path);
 
     static void writeTxtFile(fs::FS &fs, const char *path, const char *message);
 
@@ -82,6 +107,8 @@ class SDManager{
     static void deleteFile(fs::FS &fs, const char *path);
 
     static void testFileIO(fs::FS &fs, const char *path);
+
+    //template <typename T> static T readDataChunk(FILE *f, long int offset);
 };
 
 // ##############################################################################
@@ -95,6 +122,21 @@ uint8_t SDManager::cardType = 0;
 // ##############################################################################
 // ########################## STATIC FUNCTION DEFINITIONS #######################
 // ##############################################################################
+
+/**
+ * Reads a number of bytes equal to sizeof(T) from a given file and returns the data converted to type T.
+ * 
+ * @param f The file from wich the bytes are to be read.
+ * @param offset Offset from the start of the file.
+ * @return An array of variables of type T.
+ *//*
+template <typename T> T SDManager::readDataChunk(File *f, long int offset) {
+  T out;
+  //fread((void*)(&out), sizeof(out), 1, f);
+  fseek(f, offset * sizeof(out), 0);
+  fread((void*)(&out), sizeof(out), 1, f);
+  return out;
+}*/
 
 /**
  * Setts all the pinModes for the SD card manager.
@@ -207,38 +249,25 @@ void SDManager::removeDir(fs::FS &fs, const char *path) {
  * @param path The path to the txt file to be read.
  */
 void SDManager::readTxtFile(fs::FS &fs, const char *path) {
-  Serial.printf("Reading file: %s\n", path);
-
-  File file = fs.open(path);
+  File file = fs.open(path, "r");
+  //file.readBytes(char *buffer, size_t length);
+  
   if (!file) {
-    Serial.println("Failed to open file for reading");
+    Serial.println("Opening file to read failed");
     return;
   }
-
-  Serial.print("Read from file: ");
+  Serial.println("File Content:");
   while (file.available()) {
-    Serial.write(file.read());
+    //Serial.write(file.read());
+    //Serial.println(file.readStringUntil('\n'));
+    Serial.println(file.parseFloat());
   }
-}
-
-/**
- * Reads the file containing.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
- * @param path The path to the binary file to be read.
+  /*
+  while ((ch = fgetc(file)) != EOF) {
+        printf("%c", ch);
+    }
  */
-void SDManager::readTimingFile(fs::FS &fs, const char *path){
-  Serial.printf("Reading file: %s\n", path);
-
-  File file = fs.open(path);
-  if (!file) {
-    Serial.println("Failed to open file for reading");
-    return;
-  }
-
-  Serial.print("Read from file: ");
-  while (file.available()) {
-    Serial.write(file.read());
-  }
+  file.close();
 }
 
 /**
