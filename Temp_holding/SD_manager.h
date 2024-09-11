@@ -9,7 +9,7 @@
 class SDManager{
     public:
 
-      static fs::FS errorType;
+      static fs::FS fileSystem;
 
       static uint8_t cardType;
 

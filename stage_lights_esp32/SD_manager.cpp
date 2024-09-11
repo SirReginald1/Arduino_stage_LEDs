@@ -76,37 +76,33 @@ String type_name(const T&)
 class SDManager{
     public:
 
-    static fs::FS errorType;
-
     static uint8_t cardType;
 
     static void setup();
 
-    static void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
+    static void listDir(const char *dirname, uint8_t levels);
 
-    static void createDir(fs::FS &fs, const char *path);
+    static void createDir(const char *path);
 
-    static void removeDir(fs::FS &fs, const char *path);
+    static void removeDir(const char *path);
 
-    static void readTxtFile(fs::FS &fs, const char *path);
+    static void readTxtFile(const char *path);
 
-    template <typename T> static T* readTimingBinFile(fs::FS &fs, const char *path, int* numFloats);
+    template <typename T> static T* readTimingBinFile(const char *path, int* numFloats);
 
-    template<typename T> static T* readTimingTxtFile(fs::FS &fs, const char *path, int* numElements);
+    template<typename T> static T* readTimingTxtFile(const char *path, int* numElements);
 
-    float* readTimingBinFile(fs::FS&, char const*, int*);
+    static void readTimingTxtFile(const char *path);
 
-    static void readTimingTxtFile(fs::FS &fs, const char *path);
+    static void writeTxtFile(const char *path, const char *message);
 
-    static void writeTxtFile(fs::FS &fs, const char *path, const char *message);
+    static void appendTxtFile(const char *path, const char *message);
 
-    static void appendTxtFile(fs::FS &fs, const char *path, const char *message);
+    static void renameFile(const char *path1, const char *path2);
 
-    static void renameFile(fs::FS &fs, const char *path1, const char *path2);
+    static void deleteFile(const char *path);
 
-    static void deleteFile(fs::FS &fs, const char *path);
-
-    static void testFileIO(fs::FS &fs, const char *path);
+    static void testFileIO(const char *path);
 
     //template <typename T> static T readDataChunk(FILE *f, long int offset);
 };
@@ -114,8 +110,6 @@ class SDManager{
 // ##############################################################################
 // ########################## STATIC VARIABLES DEFINITIONS ######################
 // ##############################################################################
-
-fs::FS SDManager::errorType = SD_MMC;
 
 uint8_t SDManager::cardType = 0;
 
@@ -142,6 +136,7 @@ template <typename T> T SDManager::readDataChunk(File *f, long int offset) {
  * Setts all the pinModes for the SD card manager.
  */
 void SDManager::setup(){
+    Serial.println("\nSD card manager setup:");
     pinMode(D0_PIN,INPUT_PULLUP);
     // Not sure if next 4 pinMode calls are needed remove if not working
     pinMode(D1_PIN,INPUT_PULLUP);
@@ -180,14 +175,13 @@ void SDManager::setup(){
 /**
  * Prints the list the contents of a given directory.
  * 
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param dirname The name of the directory to list.
  * @param levels Indicates the depth of directories to list.
  */
-void SDManager::listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
+void SDManager::listDir(const char *dirname, uint8_t levels) {
     Serial.printf("Listing directory: %s\n", dirname);
 
-    File root = fs.open(dirname);
+    File root = SD_MMC.open(dirname);
     if (!root) {
       Serial.println("Failed to open directory");
       return;
@@ -203,7 +197,7 @@ void SDManager::listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
         Serial.print("  DIR : ");
         Serial.println(file.name());
         if (levels) {
-          listDir(fs, file.path(), levels - 1);
+          listDir(file.path(), levels - 1);
         }
       } else {
         Serial.print("  FILE: ");
@@ -217,12 +211,11 @@ void SDManager::listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
 
 /**
  * Creates a directory at the specified path.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path The path to the directory to be created.
  */
-void  SDManager::createDir(fs::FS &fs, const char *path) {
+void  SDManager::createDir(const char *path) {
   Serial.printf("Creating Dir: %s\n", path);
-  if (fs.mkdir(path)) {
+  if (SD_MMC.mkdir(path)) {
     Serial.println("Dir created");
   } else {
     Serial.println("mkdir failed");
@@ -231,12 +224,11 @@ void  SDManager::createDir(fs::FS &fs, const char *path) {
 
 /**
  * Deletes the directory at the specified path.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path The path to the directory to be deleted.
  */
-void SDManager::removeDir(fs::FS &fs, const char *path) {
+void SDManager::removeDir(const char *path) {
   Serial.printf("Removing Dir: %s\n", path);
-  if (fs.rmdir(path)) {
+  if (SD_MMC.rmdir(path)) {
     Serial.println("Dir removed");
   } else {
     Serial.println("rmdir failed");
@@ -245,11 +237,10 @@ void SDManager::removeDir(fs::FS &fs, const char *path) {
 
 /**
  * Reads the file at the specifide path.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path The path to the txt file to be read.
  */
-void SDManager::readTxtFile(fs::FS &fs, const char *path) {
-  File file = fs.open(path, "r");
+void SDManager::readTxtFile(const char *path) {
+  File file = SD_MMC.open(path, "r");
   //file.readBytes(char *buffer, size_t length);
   
   if (!file) {
@@ -272,14 +263,13 @@ void SDManager::readTxtFile(fs::FS &fs, const char *path) {
 
 /**
  * Writes the given message to a new file at the specified path.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path The path to the txt file to be read.
  * @param message The message to be writen to the file.
  */
-void SDManager::writeTxtFile(fs::FS &fs, const char *path, const char *message) {
+void SDManager::writeTxtFile(const char *path, const char *message) {
   Serial.printf("Writing file: %s\n", path);
 
-  File file = fs.open(path, FILE_WRITE);
+  File file = SD_MMC.open(path, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to open file for writing");
     return;
@@ -293,14 +283,13 @@ void SDManager::writeTxtFile(fs::FS &fs, const char *path, const char *message) 
 
 /**
  * Appends the given message to the specified the file at the specifide path.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path The path to the txt file to be read.
  * @param message The message to be writen to be appended to the file.
  */
-void SDManager::appendTxtFile(fs::FS &fs, const char *path, const char *message) {
+void SDManager::appendTxtFile(const char *path, const char *message) {
   Serial.printf("Appending to file: %s\n", path);
 
-  File file = fs.open(path, FILE_APPEND);
+  File file = SD_MMC.open(path, FILE_APPEND);
   if (!file) {
     Serial.println("Failed to open file for appending");
     return;
@@ -314,13 +303,12 @@ void SDManager::appendTxtFile(fs::FS &fs, const char *path, const char *message)
 
 /**
  * Renames or moves a file to from the first path to the second path.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path1 The path to the original file.
  * @param path2 The path to the new file.
  */
-void SDManager::renameFile(fs::FS &fs, const char *path1, const char *path2) {
+void SDManager::renameFile(const char *path1, const char *path2) {
   Serial.printf("Renaming file %s to %s\n", path1, path2);
-  if (fs.rename(path1, path2)) {
+  if (SD_MMC.rename(path1, path2)) {
     Serial.println("File renamed");
   } else {
     Serial.println("Rename failed");
@@ -329,12 +317,11 @@ void SDManager::renameFile(fs::FS &fs, const char *path1, const char *path2) {
 
 /**
  * Delets the file at the specifide path.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path The path to the file to be deleted.
  */
-void SDManager::deleteFile(fs::FS &fs, const char *path) {
+void SDManager::deleteFile(const char *path) {
   Serial.printf("Deleting file: %s\n", path);
-  if (fs.remove(path)) {
+  if (SD_MMC.remove(path)) {
     Serial.println("File deleted");
   } else {
     Serial.println("Delete failed");
@@ -343,11 +330,10 @@ void SDManager::deleteFile(fs::FS &fs, const char *path) {
 
 /**
  * Measures how long it takes to read a file and prints out the result allong with its size.
- * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
  * @param path The path to the file to be tested.
  */
-void SDManager::testFileIO(fs::FS &fs, const char *path) {
-  File file = fs.open(path);
+void SDManager::testFileIO(const char *path) {
+  File file = SD_MMC.open(path);
   static uint8_t buf[512];
   size_t len = 0;
   uint32_t start = millis();
@@ -371,7 +357,7 @@ void SDManager::testFileIO(fs::FS &fs, const char *path) {
     Serial.println("Failed to open file for reading");
   }
 
-  file = fs.open(path, FILE_WRITE);
+  file = SD_MMC.open(path, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to open file for writing");
     return;

@@ -1,3 +1,3 @@
 @echo off
-"%~dp0..\.venv\Scripts\python.exe" "%~dp0beat_detection.py"
+"%~dp0..\.venv\Scripts\python.exe" "%~dp0beat_detection.py" -b
 pause

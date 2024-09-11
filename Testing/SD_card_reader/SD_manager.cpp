@@ -76,13 +76,13 @@ String type_name(const T&)
 class SDManager{
     public:
 
-    static fs::FS errorType;
+    //static fs::FS fileSystem;
 
     static uint8_t cardType;
 
     static void setup();
 
-    static void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
+    static void listDir(const char *dirname, uint8_t levels);
 
     static void createDir(fs::FS &fs, const char *path);
 
@@ -115,7 +115,7 @@ class SDManager{
 // ########################## STATIC VARIABLES DEFINITIONS ######################
 // ##############################################################################
 
-fs::FS SDManager::errorType = SD_MMC;
+//fs::FS SDManager::fileSystem = SD_MMC;
 
 uint8_t SDManager::cardType = 0;
 
@@ -184,10 +184,10 @@ void SDManager::setup(){
  * @param dirname The name of the directory to list.
  * @param levels Indicates the depth of directories to list.
  */
-void SDManager::listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
+void SDManager::listDir(const char *dirname, uint8_t levels) {
     Serial.printf("Listing directory: %s\n", dirname);
 
-    File root = fs.open(dirname);
+    File root = SD_MMC.open(dirname);
     if (!root) {
       Serial.println("Failed to open directory");
       return;
@@ -203,7 +203,7 @@ void SDManager::listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
         Serial.print("  DIR : ");
         Serial.println(file.name());
         if (levels) {
-          listDir(fs, file.path(), levels - 1);
+          listDir(SD_MMC, file.path(), levels - 1);
         }
       } else {
         Serial.print("  FILE: ");

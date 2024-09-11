@@ -28,6 +28,18 @@ struct animParamRef{
 class Animations{
   public:
 
+// #########################################################################
+// ############################## Class variables ##########################
+// #########################################################################
+
+    /** Indicates if the flashToBeat animation should start. */
+    static bool flashToBeatGo;
+
+    /** Indicates if the flashToBeat animation has started. */
+    static bool flashToBeatStarted;
+
+    static void stopFlashToBeat();
+
     static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs);
 
     static int* getParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode);
@@ -116,6 +128,8 @@ class Animations{
       * @param speed Length of the delay in millisecs between each led turning off.
     */
     static void clear_sequential(CRGB* leds, int direction, int speed);
+
+    static void flashToBeat(CRGB leds[NB_ARRAYS][NUM_LEDS], float* timings, int* timingsLength, unsigned long current_time, CRGB color);
 };
 
 #endif

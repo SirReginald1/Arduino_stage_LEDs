@@ -5,6 +5,7 @@
 #include "Globals.h"
 #include "Animations.h"
 #include "Com_interface.h"
+#include "SD_manager.h"
 //#include "Microphone.h"
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
@@ -140,6 +141,11 @@ void disolve_to_black(CRGB* leds, int speed){
 }
 
 */
+
+/** Variables used for preprepared animations */ 
+float* timings;
+int timingsLength = 0;
+
 void setup() {
   // #########################################################
   // ###################### HARDWARE #########################
@@ -166,6 +172,11 @@ void setup() {
   // Setting the time the program will wait for input.
   Serial.setTimeout(50);
   // #########################################################
+  // ###################### SD card reader ###################
+  // #########################################################
+  SDManager::setup();
+  SDManager::listDir("/", 1);
+  // #########################################################
   // ######################### LED ###########################
   // #########################################################
 
@@ -190,8 +201,8 @@ void setup() {
   #ifdef USE_INTERFACE
   ComInterface::setAnimation(1);
   #endif
+  timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
 }
-
 
 void loop() {
   millisecs = millis();
@@ -217,6 +228,6 @@ void loop() {
 
     FastLED.clear();
   }
-
+  
   Animations::runAnimations(led_arrays, animParamRefs, millisecs);
 }
