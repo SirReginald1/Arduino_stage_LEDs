@@ -1,4 +1,4 @@
-#include "driver/uart.h" // driver used to change the baudrate
+//#include "driver/uart.h" // driver used to change the baudrate
 #include <Arduino.h>
 #include <FastLED.h>
 //#include <TimerOne.h>
@@ -6,6 +6,7 @@
 #include "Animations.h"
 #include "Com_interface.h"
 #include "SD_manager.h"
+#include "Beat_detector.h"
 //#include "Microphone.h"
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
@@ -123,28 +124,11 @@ void software_interrupt(){
   Serial.print("iterupt animation value: ");Serial.print(animation);Serial.println();
 }
 */
-/*
-void rain_animation(){
-  // Used zip on random start (end = start - size) on all LED bars
-}
-
-void wrestle(){
- // ####################////////////////////////////
- // ######################/////////////////////////
- // #################//////////////////////////////
-}
-
-
-void disolve_to_black(CRGB* leds, int speed){
-
-
-}
-
-*/
-
 /** Variables used for preprepared animations */ 
 float* timings;
 int timingsLength = 0;
+
+TaskHandle_t fft;
 
 void setup() {
   // #########################################################
@@ -176,6 +160,12 @@ void setup() {
   // #########################################################
   SDManager::setup();
   SDManager::listDir("/", 1);
+
+  // #########################################################
+  // ###################### Beat detection ###################
+  // #########################################################
+  beatDetectionSetup();
+  xTaskCreatePinnedToCore(codeCore0, "FFT", 1000, NULL, 1, &fft, 0); // Setting up main code to run on second core.
   // #########################################################
   // ######################### LED ###########################
   // #########################################################
@@ -230,4 +220,13 @@ void loop() {
   }
   
   Animations::runAnimations(led_arrays, animParamRefs, millisecs);
+}
+
+void codeCore0( void * parameter){
+  //unsigned long start;
+  for(;;){
+    //start = millis();
+    getFFT(); // Takes about 20 ms to execute
+    //Serial.println(millis()-start);
+  }
 }

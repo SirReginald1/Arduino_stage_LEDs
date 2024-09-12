@@ -1,6 +1,14 @@
 # Project description
 This project seeks to program controlers for LED arrays allong with perifiral utilities such as a computer and smartphone interfaces to modifie the animations in real time.
 
+# Features:
+Most feature are buggy and not completely polished as focus was on implementing all wanted features as fast as possible to then be able to polish them sporadically.
+
+- Animation and animation parameter selection in real time both from the console and from a python GUI interface.
+- Real time plotting of sound using an I2S microphone. As well as ability to save the recorded sound.
+- Automated pipeline for beat detection. Place mp3 or wav file in Python_interface/Beat_detection/Sound_files, and launch the convert_sound_files.bat to convert sound files to .bin files. The bin files contain the arrays of all the timestamps of the music beats in milliseconds. This bin file can be read by the controller so as to execute animations in sync with music.
+- Realtime beat detection using an I2S compatible microphone so as to be able to launch animations in time with the music in real time.
+
 **Currently supported boards:**
 - arduino UNO
 - esp32
