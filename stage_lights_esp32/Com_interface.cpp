@@ -1,9 +1,19 @@
+/**
+* NOTES:
+* All comands passed to the controller must be surounded by START_MARKER and END_MARKER to be parsed.
+* In order to switch between data parsing modes use MODE_CHANGE_FLAG as first character followed by the desiered data parsing mode.
+*
+* At present the data parsing mode is automaticaly set to RECIVE_MODE_ANIM_SELECT at each animation change. Except for animation 7 where it switches to RECIVE_MODE_RUN_PREP_ANIM.
+* If stuck on animation 7 send "@0<0,1>".
+*/ 
+
 #include <Arduino.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "Globals.h"
 #include "Animations.h"
+#include "SD_manager.h"
 
 // ################### Compilation options ####################
 #define START_MARKER '<'
@@ -311,7 +321,7 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
   // The second element in the list
   strtokIndx = strtok(NULL, ",");
 
-  animation = atoi(strtokIndx); // The animation to be switched to
+  ComInterface::animation = atoi(strtokIndx); // The animation to be switched to
 
   strtokIndx = strtok(NULL, ",");
   // For each subsequent parameter define apropriate type and sets its value in the the appropriate reference table.
@@ -344,19 +354,6 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
       // Leave this at end
       strtokIndx = strtok(NULL, ",");
   }
-
-      /* Original code
-      char * strtokIndx; // this is used by strtok() as an index
-
-      strtokIndx = strtok(tempChars,",");      // get the first part - the string
-      strcpy(messageFromPC, strtokIndx); // copy it to messageFromPC
-
-      strtokIndx = strtok(NULL, ","); // this continues where the previous call left off
-      integerFromPC = atoi(strtokIndx);     // convert this part to an integer
-
-      strtokIndx = strtok(NULL, ",");
-      floatFromPC = atof(strtokIndx);     // convert this part to a float
-      */
 }
 
 /**
@@ -367,13 +364,16 @@ void ComInterface::parsePreprepAnimData(){
   char * strtokIndx;
   // The first element in the list
   strtokIndx = strtok(tempChars,",");
+  
   // Switch that deals with potential flags in fist position.
   switch((int)strtokIndx){
-    case START_ACTION_MARKER:
+    case (int)START_ACTION_MARKER:
       ComInterface::runingAction = true;
+      Animations::flashToBeatGo = true;
       break;
-    case STOP_ACTION_MARKER:
+    case (int)STOP_ACTION_MARKER:
       ComInterface::runingAction = false;
+      Animations::stopFlashToBeat();
       break;
   }
   // The second element in the list
@@ -405,4 +405,13 @@ void ComInterface::readInput(){
       }
       newData = false;
   }
+
+  if(ComInterface::animation == 7){
+    Serial.println("Switching parsing modes.");
+    ComInterface::dataParsingMode = RECIVE_MODE_RUN_PREP_ANIM;
+  }
+  else{
+    ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
+  }
+
 }

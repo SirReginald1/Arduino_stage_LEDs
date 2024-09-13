@@ -1,5 +1,5 @@
-#ifndef SD_manager.h
-#define SD_manager.h
+#ifndef SD_manager_h
+#define SD_manager_h
 
 #include "FS.h"
 #include "SD_MMC.h"
@@ -9,30 +9,32 @@
 class SDManager{
     public:
 
-      static fs::FS errorType;
+      //static fs::FS fileSystem;
 
       static uint8_t cardType;
 
+      /**
+      * Setts all the pinModes for the SD card manager.
+      */
       static void setup();
 
-      static void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
+      static void listDir(const char *dirname, uint8_t levels);
 
-      static void createDir(fs::FS &fs, const char *path);
+      static void createDir(const char *path);
 
-      static void removeDir(fs::FS &fs, const char *path);
+      static void removeDir(const char *path);
 
-      static void readTxtFile(fs::FS &fs, const char *path);
+      static void readTxtFile(const char *path);
 
       /**
       * Reads a provided txt file containing the timing array for light animations.
       * @typedef T must be of type float of any number of bits.
-      * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
       * @param path The path to the binary file to be read.
       * @param numElements The number of elements present in the array. (modifies the passed reference for posible use later)
       * @return Array of type T. Default is float.
       */
-      template<typename T> static T* readTimingTxtFile(fs::FS &fs, const char *path, int* numElements){
-        File file = fs.open(path, "r");
+      template<typename T> static T* readTimingTxtFile(const char *path, int* numElements){
+        File file = SD_MMC.open(path, "r");
         if (!file) {
           Serial.println("Opening file to read failed!");
           return nullptr;
@@ -79,12 +81,11 @@ class SDManager{
 
       /**
       * Reads a provided bin file containing the timing array for light animations.
-      * @param fs The DS_MMC obejct being used. (Always use SD_MMC)
       * @param path The path to the binary file to be read.
       * @param numElements The number of elements present in the array. (modifies the passed reference for posible use later)
       * @return Array of type T. Default is float.
       */
-      template <typename T = float> static T* readTimingBinFile(fs::FS &fs, const char *path, int* numElements){
+      template <typename T = float> static T* readTimingBinFile(const char *path, int* numElements){
           // Open the binary file for reading
           File file = SD_MMC.open(path, FILE_READ);
           if (!file) {
@@ -108,17 +109,17 @@ class SDManager{
           return floatArray;
       }
 
-        static void readTimingTxtFile(fs::FS &fs, const char *path);
+        static void readTimingTxtFile(const char *path);
 
-        static void writeTxtFile(fs::FS &fs, const char *path, const char *message);
+        static void writeTxtFile(const char *path, const char *message);
 
-        static void appendTxtFile(fs::FS &fs, const char *path, const char *message);
+        static void appendTxtFile(const char *path, const char *message);
 
-        static void renameFile(fs::FS &fs, const char *path1, const char *path2);
+        static void renameFile(const char *path1, const char *path2);
 
-        static void deleteFile(fs::FS &fs, const char *path);
+        static void deleteFile(const char *path);
 
-        static void testFileIO(fs::FS &fs, const char *path);
+        static void testFileIO(const char *path);
 
         //template <typename T> static T readDataChunk(FILE *f, long int offset);
     };

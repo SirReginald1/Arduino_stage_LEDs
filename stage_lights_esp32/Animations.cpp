@@ -8,6 +8,9 @@
 #include "Com_interface.h"
 
 
+extern float* timings; 
+extern int timingsLength;
+
 /**Struct that contains all the references to the aniamtion parameters*/
 struct animParamRef{
   int rainbowCycleParamInt[1] = {2000}; // {int delay}
@@ -32,6 +35,16 @@ struct animParamRef{
 
 class Animations{
   public:
+
+// #########################################################################
+// ############################## Class variables ##########################
+// #########################################################################
+    /** Indicates if the flashToBeat animation should start. */
+    static bool flashToBeatGo;
+
+    /** Indicates if the flashToBeat animation has started. */
+    static bool flashToBeatStarted;
+
 // #########################################################################
 // ##################### Animation Parameter References ####################
 // #########################################################################
@@ -269,6 +282,14 @@ class Animations{
 
     }
 
+// #############################################################################################################
+// ############################################ BEAT ANIMATIONS ################################################
+// #############################################################################################################
+
+    static void flashToBeat(CRGB leds[NB_ARRAYS][NUM_LEDS], float* timings, int* timingsLength, unsigned long current_time, CRGB color);
+
+    static void stopFlashToBeat();
+
   /*  
   void electromagneticSpectrum(int transitionSpeed) {
       switch(colorTime) {
@@ -330,8 +351,24 @@ class Animations{
         // Run in reverse.
     }
   } 
-  */  
+  */
 };
+
+// ###########################################################################################################################
+// ############################################### STATIC VARIABLE DEFINITIONS ###############################################
+// ###########################################################################################################################
+
+bool Animations::flashToBeatGo = false;
+
+bool Animations::flashToBeatStarted = false;
+
+/**
+* Function that must be called by any action that interupts the animation.
+*/
+void Animations::stopFlashToBeat(){
+  Animations::flashToBeatGo = false;
+  Animations::flashToBeatStarted = false;
+}
 
 // ###########################################################################################################################
 // ############################################### STATIC DEFINITIONS ########################################################
@@ -407,14 +444,16 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
                                   animParamRefArray[i].twinklePixelsParamInt[4]);
       }
       break;
-    /*case 7:
-      #ifdef USE_MIC
-        volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
-      #endif
-      #ifndef USE_MIC
-        Animations::strobe(led_arrays, 20, 55, CRGB(255, 255, 255));
-      #endif
-      break;*/
+    case 7:
+      //#ifdef USE_MIC
+      //  volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
+      //#endif
+        Animations::flashToBeat(ledArrays, 
+                                timings, 
+                                &timingsLength, 
+                                millisecs, 
+                                CRGB(0 ,200, 100));
+      break;
     case 8:
       Animations::strobe(ledArrays, 
                         animParamRefArray[i].strobeParamInt[0], 
@@ -877,5 +916,54 @@ void Animations::zip(CRGB leds[NB_ARRAYS][NUM_LEDS], int size, int start, int en
     FastLED.show();
     zip_animation_pos_counter = ++zip_animation_pos_counter % (end - start + size);
     zip_animation_prev_mills = current_time;
+  }
+}
+
+// #############################################################################################################
+// ############################################ BEAT ANIMATIONS ################################################
+// #############################################################################################################
+
+/**
+* Flashes all the arrays in time with the beat given by the timings array.
+*
+* @param leds The array of led arrays.
+* @param timings The array containing the timings in milliseconds for all the beats in a given music.
+* @param timingsLength The lenght of the beat array.
+* @param current_time The current time in milliseconds.
+* @param color The CRDB object containing the color values for the arrays.
+*/
+void Animations::flashToBeat(CRGB leds[NB_ARRAYS][NUM_LEDS], float* timings, int* timingsLength, unsigned long current_time, CRGB color){
+  if(!timings){
+    Serial.println("The array containing the beats is null. Can't run animation.");
+    return;
+  }
+  static int i;
+  static unsigned long start;
+  if(Animations::flashToBeatGo){
+      if(!Animations::flashToBeatStarted){
+        start = millis();
+        i = 0;
+        //Serial.print("Started set: ");Serial.println(start);
+        Animations::flashToBeatStarted = true;
+      }
+        //Serial.print("Timing ");Serial.print(i);Serial.print(": ");Serial.print("millisecs - start: ");Serial.print(millisecs - start);Serial.print(" | timings[i]: ");Serial.println(timings[i]);
+        //millisecs = millis();
+        if((current_time - start) > timings[i]){
+          //Serial.print("Timing ");Serial.print(i);Serial.print(": ");Serial.print("millisecs: ");Serial.print(millisecs);Serial.print(" | millisecs - start: ");Serial.print(millisecs - start);Serial.print(" | timings[i]: ");Serial.println(timings[i]);
+          for(int l=0;l<NB_ARRAYS;l++){
+            fill_solid(leds[l], NUM_LEDS, color);
+          }
+          //Serial.println("Flash");
+          FastLED.show();
+          for(int l=0;l<NB_ARRAYS;l++){
+            fill_solid(leds[l], NUM_LEDS, CRGB(0,0,0));
+          }
+          FastLED.show();
+          i++;
+        }
+      if(i >= *timingsLength){
+        Animations::flashToBeatGo = false;
+        Animations::flashToBeatStarted = false;
+      }
   }
 }

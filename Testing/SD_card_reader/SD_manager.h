@@ -9,13 +9,13 @@
 class SDManager{
     public:
 
-      static fs::FS errorType;
+      //static fs::FS fileSystem;
 
       static uint8_t cardType;
 
       static void setup();
 
-      static void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
+      static void listDir(const char *dirname, uint8_t levels);
 
       static void createDir(fs::FS &fs, const char *path);
 

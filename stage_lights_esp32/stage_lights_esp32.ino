@@ -1,10 +1,12 @@
-#include "driver/uart.h" // driver used to change the baudrate
+//#include "driver/uart.h" // driver used to change the baudrate
 #include <Arduino.h>
 #include <FastLED.h>
 //#include <TimerOne.h>
 #include "Globals.h"
 #include "Animations.h"
 #include "Com_interface.h"
+#include "SD_manager.h"
+#include "Beat_detector.h"
 //#include "Microphone.h"
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
@@ -122,24 +124,12 @@ void software_interrupt(){
   Serial.print("iterupt animation value: ");Serial.print(animation);Serial.println();
 }
 */
-/*
-void rain_animation(){
-  // Used zip on random start (end = start - size) on all LED bars
-}
+/** Variables used for preprepared animations */ 
+float* timings;
+int timingsLength = 0;
 
-void wrestle(){
- // ####################////////////////////////////
- // ######################/////////////////////////
- // #################//////////////////////////////
-}
+TaskHandle_t fft;
 
-
-void disolve_to_black(CRGB* leds, int speed){
-
-
-}
-
-*/
 void setup() {
   // #########################################################
   // ###################### HARDWARE #########################
@@ -166,6 +156,17 @@ void setup() {
   // Setting the time the program will wait for input.
   Serial.setTimeout(50);
   // #########################################################
+  // ###################### SD card reader ###################
+  // #########################################################
+  SDManager::setup();
+  SDManager::listDir("/", 1);
+
+  // #########################################################
+  // ###################### Beat detection ###################
+  // #########################################################
+  beatDetectionSetup();
+  xTaskCreatePinnedToCore(codeCore0, "FFT", 1000, NULL, 1, &fft, 0); // Setting up main code to run on second core.
+  // #########################################################
   // ######################### LED ###########################
   // #########################################################
 
@@ -190,8 +191,8 @@ void setup() {
   #ifdef USE_INTERFACE
   ComInterface::setAnimation(1);
   #endif
+  timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
 }
-
 
 void loop() {
   millisecs = millis();
@@ -217,6 +218,15 @@ void loop() {
 
     FastLED.clear();
   }
-
+  
   Animations::runAnimations(led_arrays, animParamRefs, millisecs);
+}
+
+void codeCore0( void * parameter){
+  //unsigned long start;
+  for(;;){
+    //start = millis();
+    getFFT(); // Takes about 20 ms to execute
+    //Serial.println(millis()-start);
+  }
 }

@@ -76,7 +76,7 @@ String type_name(const T&)
 class SDManager{
     public:
 
-    static fs::FS errorType;
+    static fs::FS fileSystem;
 
     static uint8_t cardType;
 
@@ -115,7 +115,7 @@ class SDManager{
 // ########################## STATIC VARIABLES DEFINITIONS ######################
 // ##############################################################################
 
-fs::FS SDManager::errorType = SD_MMC;
+fs::FS SDManager::fileSystem = SD_MMC;
 
 uint8_t SDManager::cardType = 0;
 

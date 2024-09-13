@@ -34,7 +34,7 @@ def convert_file(sound_file: str, dtype: type = float32, hop_length: int = 512) 
                                max_size=1, # default no filtering of frequ bins
                                detrend=False, # default, do notfilter onset strength to remove DC component
                                center=True) # Centered frame analysis in STFT, by hop length
-    bpm, beat_timing = beat_track(onset_envelope=onset_env, sr=sample_rate, units="time", hop_length=512, tightness=7)
+    bpm, beat_timing = beat_track(onset_envelope=onset_env, sr=sample_rate, units="time", hop_length=512, tightness=1000)
     return array(beat_timing, dtype=dtype)*1000
 
 def output_file(output_file_path: str, output_array: Union[List[float], ndarray], file_extention: str):
@@ -80,7 +80,6 @@ else:
     for file_name in [f for f in listdir(path / "Sound_files") if ".wav" in f or ".mp3" in f]:
         new_file_name: str = file_name[:-4].__add__(f"_{file_name[-3:]}.{file_extention}")
         new_file_path: Path = path.joinpath("Timing_arrays").joinpath(new_file_name)
-        print(f"Part: {new_file_path.parts[-1]}, new file: {new_file_name}")
         if new_file_path.parts[-1] not in output_folder_files:
             print(f"Converting file: {file_name}")
             output_file(new_file_path, 
