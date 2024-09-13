@@ -5,15 +5,17 @@
 
 const uint_fast16_t samples = NB_SAMPLES; //This value MUST ALWAYS be a power of 2
 ////const float signalFrequency = 1000;
-const double samplingFrequency = 100000;
+const double samplingFrequency = SAMPLING_FREQUENCY;
 ////const uint8_t amplitude = 100;
+/** Value indicating if a kick has been detected. Used for comunication between the cores */
+bool isKick = false;
 
 /** The array of real numbers used in the FFT. */
 float vReal[NB_SAMPLES] = {0};
 /** The array of imaginary numbers used in the FFT. */
-float vImag[samples] = {0};
+float vImag[NB_SAMPLES] = {0};
 /** The array buffer used to read the microphone values. */
-long buffer[samples] = {0};
+long buffer[NB_SAMPLES] = {0};
 /** The number of bites writen to the buffer variable affter a call to the I2C read function. */
 //size_t bytesIn = 0;
 
@@ -84,11 +86,7 @@ bool detectKick(unsigned long millisecons, unsigned long minPausBetweenCalls) {
     return false;
   }
   // Kick drum typically has energy in 40 Hz to 100 Hz
-  int bin_start = frequencyToBin(80);
-  int bin_end = frequencyToBin(180);
-  float threshold = 5000000000;  // Adjust based on experimentation
-  
-  return checkFrequencyRange(bin_start, bin_end, threshold);
+  return checkFrequencyRange(frequencyToBin(80), frequencyToBin(180), 5000000000); // Adjust based on experimentation
 }
 
 // Function to detect hi-hat sound

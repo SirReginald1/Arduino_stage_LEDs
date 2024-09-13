@@ -7,7 +7,9 @@
 #include "Com_interface.h"
 #include "SD_manager.h"
 #include "Beat_detector.h"
-//#include "Microphone.h"
+#include "Microphone.h"
+#include <arduinoFFT.h>
+#include "esp_task_wdt.h"
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
 //#define USE_INTERFACE
@@ -31,6 +33,8 @@ CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
 
 /** The array of structs that contain*/
 animParamRef animParamRefs[NB_ARRAYS];
+
+//esp_task_wdt_in
 
 // ########################## Console com variables ##########################
 /*
@@ -128,7 +132,10 @@ void software_interrupt(){
 float* timings;
 int timingsLength = 0;
 
+/** The task handler for the FFT task runing on core 0 */
 TaskHandle_t fft;
+/** The semaphore object used for asynchronos prossesing */
+SemaphoreHandle_t semaphore;
 
 void setup() {
   // #########################################################
@@ -165,7 +172,8 @@ void setup() {
   // ###################### Beat detection ###################
   // #########################################################
   beatDetectionSetup();
-  xTaskCreatePinnedToCore(codeCore0, "FFT", 1000, NULL, 1, &fft, 0); // Setting up main code to run on second core.
+  xTaskCreatePinnedToCore(codeCore0, "FFT", 10000, NULL, 1, &fft, 0); // Setting up main code to run on second core.
+  semaphore = xSemaphoreCreateMutex();
   // #########################################################
   // ######################### LED ###########################
   // #########################################################
@@ -223,10 +231,40 @@ void loop() {
 }
 
 void codeCore0( void * parameter){
-  //unsigned long start;
+  /*
+  extern const uint_fast16_t samples;
+  extern const double samplingFrequency;
+  extern float vReal[NB_SAMPLES];
+  extern float vImag[NB_SAMPLES];
+  extern long buffer[NB_SAMPLES];
+  extern ArduinoFFT<float> FFT; 
+  Microphone::setup(samplingFrequency);*/
+  unsigned long start;
+  
   for(;;){
-    //start = millis();
+    
+    start = millis();
+    
     getFFT(); // Takes about 20 ms to execute
-    //Serial.println(millis()-start);
+
+    if(detectKick(millis(), 5)){
+      
+    }
+    
+    //esp_task_wdt_reset();
+    //esp_task_wdt_deinit();
+    
+    /*
+    Microphone::readMic<long>(buffer);
+    for (int i = 0; i < samples; i++) {
+      vReal[i] = (float)buffer[i];  // Copy microphone samples into the real part of FFT input
+      vImag[i] = 0.0;  // Imaginary part is zero for FFT input
+      //Serial.println(vReal[i]);
+    }
+    FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+    FFT.compute(FFTDirection::Forward);
+    FFT.complexToMagnitude();
+    Serial.println(millis()-start);
+    */
   }
 }
