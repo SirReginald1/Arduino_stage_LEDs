@@ -6,10 +6,14 @@
 #include <FastLED.h>
 #include "Globals.h"
 #include "Com_interface.h"
+#include "Beat_detector.h"
 
 
 extern float* timings; 
 extern int timingsLength;
+
+/** The value indicating if the mic and FFT loop is runing on core0. */
+extern bool appModeMicFFTOnCore1;
 
 /**Struct that contains all the references to the aniamtion parameters*/
 struct animParamRef{
@@ -448,11 +452,20 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
       //#ifdef USE_MIC
       //  volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
       //#endif
+      /*
         Animations::flashToBeat(ledArrays, 
                                 timings, 
                                 &timingsLength, 
                                 millisecs, 
                                 CRGB(0 ,200, 100));
+      */
+        if(!appModeMicFFTOnCore1){
+          Serial.println("Mic detection mode off!");
+          ComInterface::setAnimation(1);
+        }
+        else{
+
+        }
       break;
     case 8:
       Animations::strobe(ledArrays, 
@@ -484,7 +497,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         ComInterface::setAnimation(1);
         // This simbole means that it has not recognised the animation and the interface must therefore resend it send!
         // TODO: Check that this is stille needed for the esp32 as serial seems to work much better on that board.
-        Serial.print("#!@");
+        Serial.println("#!@"); // Depricated
       #endif
       #ifndef USE_INTERFACE
         extern animation = 1;
