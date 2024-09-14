@@ -7,7 +7,10 @@
 #include "Com_interface.h"
 #include "SD_manager.h"
 #include "Beat_detector.h"
-//#include "Microphone.h"
+#include "Microphone.h"
+#include <arduinoFFT.h>
+#include "esp_task_wdt.h"
+#include "esp_system.h"
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
 //#define USE_INTERFACE
@@ -21,16 +24,25 @@
 // Setting button pins
 #define BTN_PIN 2
 
-#ifdef USE_MIC
-  const int mic_pin = A0;
-  const int mic_pin2 = A1;
-#endif
+// Functioning modes
+/** The value indicating if the animation selection mode is runing. (Is the default startup mode) */
+bool appModeAnimSelect = true;
+/** The value indicating if the preprepared animation mode is runing. must be. */
+bool appModePrePrepAnim = false;
+/** 
+* The value indicating if the mic and FFT loop is runing on core0. This value is used so as to not have to share resources between cores.
+* Is set at the same time as the task notification is sent in ConInterface pars function.
+*/
+bool appModeMicFFTOnCore1 = false;
+
 
 /* Array of all LED arrays. */
 CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
 
 /** The array of structs that contain*/
 animParamRef animParamRefs[NB_ARRAYS];
+
+//esp_task_wdt_in
 
 // ########################## Console com variables ##########################
 /*
@@ -128,7 +140,11 @@ void software_interrupt(){
 float* timings;
 int timingsLength = 0;
 
-TaskHandle_t fft;
+/** The task handler for the FFT task runing on core 0 */
+TaskHandle_t mainCore0Handle;
+/** The semaphore object used for asynchronos prossesing */
+//SemaphoreHandle_t semaphore;
+
 
 void setup() {
   // #########################################################
@@ -165,7 +181,11 @@ void setup() {
   // ###################### Beat detection ###################
   // #########################################################
   beatDetectionSetup();
-  xTaskCreatePinnedToCore(codeCore0, "FFT", 1000, NULL, 1, &fft, 0); // Setting up main code to run on second core.
+  xTaskCreatePinnedToCore(mainCore0, "mainCore0", 10000, NULL, 1, &mainCore0Handle, 0); // Setting up main code to run on second core.
+  if(mainCore0Handle == NULL){
+    Serial.println("The task on the second core was not created!");
+  }
+  //semaphore = xSemaphoreCreateMutex();
   // #########################################################
   // ######################### LED ###########################
   // #########################################################
@@ -220,13 +240,45 @@ void loop() {
   }
   
   Animations::runAnimations(led_arrays, animParamRefs, millisecs);
+
 }
 
-void codeCore0( void * parameter){
-  //unsigned long start;
+void mainCore0(void* parameter){
+  // Variable to store the notification value.
+  uint32_t notificationValue;
+  /** The value indicating if the microphone reading and FFT task should run */
+  bool appModeMicFFTOn = false;
+
+  //unsigned long start; // Variable used for timing print
   for(;;){
-    //start = millis();
-    getFFT(); // Takes about 20 ms to execute
-    //Serial.println(millis()-start);
+    // This part of the code deals with chacking if signals are recived from the main loop and processing them accordingly.
+    // This checks to see if there is a notification pending returns true if there was one, if timer exceded send false and move on.
+    if (xTaskNotifyWait(0x00, // Clear no bites in notificationValue before reading
+                        ULONG_MAX, // Clear all the bites in notificationValue after reading it.
+                        &notificationValue, // The variable to check
+                        (TickType_t)1) /*The time in ticks*/ == pdTRUE) {
+      switch(notificationValue){
+        case MODE_MIC_FFT_ON:
+          appModeMicFFTOn = !appModeMicFFTOn;
+          Serial.print("Core 0 appModeMicFFTOn = ");
+          Serial.println(appModeMicFFTOn);
+          break;
+        default:
+          Serial.print("Core 0 notif switch default");
+      }
+    }
+
+  
+    if(appModeMicFFTOn){
+      Serial.println("In FFT loop");
+      //start = millis();
+      getFFT(); // Takes about 20 ms to execute
+      //if(detectKick(millis(), 5)){
+      //}
+      //Serial.println(millis()-start);
+    }
+
+    // Delay this task
+    //vTaskDelay(pdMS_TO_TICKS(500));  // 500ms delay
   }
 }

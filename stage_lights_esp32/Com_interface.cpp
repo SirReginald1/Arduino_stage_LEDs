@@ -27,9 +27,15 @@
 #define MODE_CHANGE_FLAG '@'
 /** The mode number for the animation and parameter selection mode.*/
 #define RECIVE_MODE_ANIM_SELECT 0
+/** The mode number for switching on the microphone and beat detection.*/
+#define RECIVE_MODE_SWITCH_ON_BEAT_DETECT 1
 /** The mode number for the preprepared animation mode.*/
-#define RECIVE_MODE_RUN_PREP_ANIM 1
+#define RECIVE_MODE_RUN_PREP_ANIM 2
 
+/** The task handler for the FFT task runing on core 0 */
+extern TaskHandle_t mainCore0Handle;
+/** The value indicating if the mic and FFT loop is runing on core0. */
+extern bool appModeMicFFTOnCore1;
 
 class ComInterface{
   public:
@@ -108,6 +114,8 @@ class ComInterface{
     static void parseAnimationChangeData();
     /**This function deals with parsing data in a default general context.*/
     static void parsePreprepAnimData();
+
+    static void swithMicFFTMode();
 
     static void readInput();
 };
@@ -386,6 +394,16 @@ void ComInterface::parsePreprepAnimData(){
 }
 
 /**
+  * Function used to parse data when MODE_MIC_FFT_ON is receved.
+*/
+void ComInterface::swithMicFFTMode(){
+  //if(mainCore0Handle == NULL){
+    xTaskNotify(mainCore0Handle, MODE_MIC_FFT_ON, eSetValueWithOverwrite);
+    appModeMicFFTOnCore1 = !appModeMicFFTOnCore1;
+  //}
+}
+
+/**
   * Function called in main program to wich will read and parse the data present in the input buffer depending on the mode it is given as parameter.
 */
 void ComInterface::readInput(){ 
@@ -399,6 +417,9 @@ void ComInterface::readInput(){
         case RECIVE_MODE_ANIM_SELECT:
           ComInterface::parseAnimationChangeData();
           break;
+        case MODE_MIC_FFT_ON:
+            ComInterface::swithMicFFTMode(); // Doesn't switch data parsing modes as Mic animations will use the same as other.
+          break;
         case RECIVE_MODE_RUN_PREP_ANIM:
           ComInterface::parsePreprepAnimData();
           break;
@@ -406,7 +427,8 @@ void ComInterface::readInput(){
       newData = false;
   }
 
-  if(ComInterface::animation == 7){
+  // This ensures that once switched to animation mode 10 all subsequent messages are read with other mode untille specified otherwise.
+  if(ComInterface::animation == 10){
     Serial.println("Switching parsing modes.");
     ComInterface::dataParsingMode = RECIVE_MODE_RUN_PREP_ANIM;
   }
