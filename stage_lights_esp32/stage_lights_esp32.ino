@@ -209,7 +209,7 @@ void setup() {
   //current_array = 0;
   #endif
   #ifdef USE_INTERFACE
-  ComInterface::setAnimation(1);
+  //ComInterface::setAnimation(1);
   #endif
   timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
 }
@@ -239,8 +239,8 @@ void loop() {
     FastLED.clear();
   }
   
-  Animations::runAnimations(led_arrays, animParamRefs, millisecs);
-
+  //Animations::runAnimations(led_arrays, animParamRefs, millisecs);
+    Animations::runAnimations(led_arrays, animParamRefs);
 }
 
 void mainCore0(void* parameter){

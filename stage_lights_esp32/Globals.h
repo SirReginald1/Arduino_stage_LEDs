@@ -15,6 +15,8 @@
 #define MODE_PREPREP_ANIMATION 2
 #define MODE_MIC_FFT_ON 3
 
+/** The number of animations that are implemented */
+#define NB_ANIMATIONS 9
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
 #define USE_INTERFACE

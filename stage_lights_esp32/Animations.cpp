@@ -15,13 +15,20 @@ extern int timingsLength;
 /** The value indicating if the mic and FFT loop is runing on core0. */
 extern bool appModeMicFFTOnCore1;
 
-/**Struct that contains all the references to the aniamtion parameters*/
+/**Struct that contains the number of the animation being run by the array it's attributed to
+ *  as well as all the references to the aniamtion parameters.
+ * */
 struct animParamRef{
+
+  int nbLeds = NUM_LEDS; // The number of leds in the assigned array
+
+  int animation = 0; // The animation the array is currentlly set to
+
   int rainbowCycleParamInt[1] = {2000}; // {int delay}
 
   int fadeInAndOutParamInt[3] = {255, 255, 255}; // {int red, int green, int blue}
 
-  int sparkleParamInt[4] = {200, 0, 100, 0}; // {int red, int green, int blue, int delay}
+  int sparkleParamInt[5] = {200, 0, 100, 0, 0}; // {int red, int green, int blue, int delay, int lastPixel}
 
   int fireParamInt[3] = {50, 50, 0}; // {int flame_height, int sparks, int delay}
   float fireParamFloat[1] = {1.}; // {float fire_intensity}
@@ -36,6 +43,16 @@ struct animParamRef{
   unsigned long zipParamUnsignedLong[1] = {20}; // {unsigned long speed, unsigned long current_time}
 };
 
+/**
+ * Creates a new animParamRef struct with the given length.
+ * 
+ * @param nbLeds The number of leds contained in the array.
+ */
+animParamRef newAnimParamRef(int nbLeds){
+  animParamRef out;
+  out.nbLeds = nbLeds;
+  return out;
+}
 
 class Animations{
   public:
@@ -118,7 +135,21 @@ class Animations{
 // ############################ Run animations #############################
 // #########################################################################
 
-    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs);
+    /** The array containing all the animation functions. */
+    //typedef void (Animations::*animation)(animParamRef);
+
+    //static void (*functions[3])(MyStruct);
+
+    /** The array containing all the animation functions. */
+    static void (*animations[NB_ANIMATIONS])(CRGB*, animParamRef&);
+
+    //animation animations[NB_ANIMATIONS];
+
+    //static void runAnimationFunction(CRGB (*ledArray)[NUM_LEDS], int index, const animParamRef& paramStruct);
+
+    //static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs);
+
+    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef (&animParamRefArray)[NB_ARRAYS]);
 
 // #########################################################################
 // ####################### Rainbow Cycle animation #########################
@@ -162,9 +193,11 @@ class Animations{
 //   ####################### Sparkle animation ###############################
 //   #########################################################################
 
-    static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs);
+    static void sparkle(CRGB* leds, animParamRef& parameters);
 
-    static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefs[NB_ARRAYS], unsigned long millisecs);
+    //static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs);
+
+    //static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefs[NB_ARRAYS], unsigned long millisecs);
 
 // #########################################################################
 // ############################ Fire animation #############################
@@ -362,6 +395,16 @@ class Animations{
 // ############################################### STATIC VARIABLE DEFINITIONS ###############################################
 // ###########################################################################################################################
 
+void (*Animations::animations[NB_ANIMATIONS])(CRGB*, animParamRef&) = {&Animations::sparkle, 
+                                                                 &Animations::sparkle, 
+                                                                 &Animations::sparkle,
+                                                                 &Animations::sparkle,
+                                                                 &Animations::sparkle,
+                                                                 &Animations::sparkle,
+                                                                 &Animations::sparkle,
+                                                                 &Animations::sparkle,
+                                                                 &Animations::sparkle};
+
 bool Animations::flashToBeatGo = false;
 
 bool Animations::flashToBeatStarted = false;
@@ -378,131 +421,28 @@ void Animations::stopFlashToBeat(){
 // ############################################### STATIC DEFINITIONS ########################################################
 // ###########################################################################################################################
 
-void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs){
-  int i;
-  // Run animations with com interface
-  #ifdef USE_INTERFACE
-    switch (ComInterface::getAnimation()) {
-  #endif
-  #ifndef USE_INTERFACE
-    switch (animation) {
-  #endif
-    case 1:
-      for(i=0;i<NB_ARRAYS;i++){
-        //Serial.print("Val param: ");Serial.println(animParamRefArray[i].rainbowCycleParamInt[0]);
-        Animations::rainbowCycle(ledArrays[i], animParamRefArray[i].rainbowCycleParamInt[0], millisecs);
-      }
-      //Test::test();
-      break;
-    case 2:
-      for(i=0;i<NB_ARRAYS;i++){
-        Animations::fadeInAndOut(ledArrays[i], random(255), random(255), random(255));
-      }
-      //Animations::fadeInAndOut(ledArrays[1], random(&animations[1][0]), random(&animations[1][1]), random(&animations[1][2]));
-      break;
-    case 3:
-    /*
-      for(i=0;i<NB_ARRAYS;i++){
-        //Serial.print("i: ");Serial.println(i);
-        
-        Animations::sparkle(ledArrays[i], 
-                            animParamRefArray[i].sparkleParamInt[1], // Red and Green are reversed in FastLED
-                            animParamRefArray[i].sparkleParamInt[0], 
-                            animParamRefArray[i].sparkleParamInt[2], 
-                            animParamRefArray[i].sparkleParamInt[3], 
-                            millisecs);                    
-      }*/
-      //FastLED.clear(true);
-      Animations::sparkle(ledArrays,  animParamRefArray, millisecs);
-      //FastLED.show();
-      break;
-    case 4:
-      for(i=0;i<NB_ARRAYS;i++){
-        Animations::Fire(ledArrays[i], 
-                        animParamRefArray[i].fireParamInt[0], 
-                        animParamRefArray[i].fireParamInt[1], 
-                        animParamRefArray[i].fireParamInt[2], 
-                        animParamRefArray[i].fireParamFloat[0]);
-      }
-      break;
-    case 5:
-      for(i=0;i<NB_ARRAYS;i++){
-        Animations::shootingStar(ledArrays[i], 
-                                animParamRefArray[i].shootingStarParamInt[1], 
-                                animParamRefArray[i].shootingStarParamInt[0], 
-                                animParamRefArray[i].shootingStarParamInt[2], 
-                                animParamRefArray[i].shootingStarParamInt[3], 
-                                animParamRefArray[i].shootingStarParamInt[4], 
-                                animParamRefArray[i].shootingStarParamInt[5], 
-                                animParamRefArray[i].shootingStarParamInt[6], 
-                                millisecs);
-      }
-      break;
-    case 6:
-      for(i=0;i<NB_ARRAYS;i++){
-        Animations::twinklePixels(ledArrays[i], 
-                                  animParamRefArray[i].twinklePixelsParamInt[0], 
-                                  animParamRefArray[i].twinklePixelsParamInt[1], 
-                                  animParamRefArray[i].twinklePixelsParamInt[2], 
-                                  animParamRefArray[i].twinklePixelsParamInt[3], 
-                                  animParamRefArray[i].twinklePixelsParamInt[4]);
-      }
-      break;
-    case 7:
-      //#ifdef USE_MIC
-      //  volum_bar_animation(led_arrays[0], millisecs, NUM_LEDS);
-      //#endif
-      /*
-        Animations::flashToBeat(ledArrays, 
-                                timings, 
-                                &timingsLength, 
-                                millisecs, 
-                                CRGB(0 ,200, 100));
-      */
-        if(!appModeMicFFTOnCore1){
-          Serial.println("Mic detection mode off!");
-          ComInterface::setAnimation(1);
-        }
-        else{
+/** Used to call animation functions from the animations array.
+ * 
+ * @param index The number of the animation to be called.
+ * @param paramStruct The struct containing all the parameter values for the called animation.
+ */ 
+/*
+void Animations::runAnimationFunction(CRGB (*ledArray)[NUM_LEDS], int index, const animParamRef& paramStruct) {
+  (*animations[index])(ledArray, paramStruct); // Call the static function through the pointer
+}*/
 
-        }
-      break;
-    case 8:
-      Animations::strobe(ledArrays, 
-                        animParamRefArray[i].strobeParamInt[0], 
-                        animParamRefArray[i].strobeParamInt[1], 
-                        CRGB(animParamRefArray[i].strobeParamInt[3], 
-                            animParamRefArray[i].strobeParamInt[2], 
-                            animParamRefArray[i].strobeParamInt[4])
-                        );
-      break;
-    case 9:
-      for(i=0;i<NB_ARRAYS;i++){
-        Animations::zip(ledArrays, 
-                        animParamRefArray[i].zipParamInt[0], 
-                        animParamRefArray[i].zipParamInt[1], 
-                        animParamRefArray[i].zipParamInt[2], 
-                        animParamRefArray[i].zipParamInt[3], 
-                        animParamRefArray[i].zipParamUnsignedLong[0], 
-                        millisecs, 
-                        CRGB(animParamRefArray[i].zipParamInt[4],
-                            animParamRefArray[i].zipParamInt[5],
-                            animParamRefArray[i].zipParamInt[6])
-                        );
-      }
-      break;
-    default:
-      //Serial.println("Animation code not recognized!");
-      #ifdef USE_INTERFACE
-        ComInterface::setAnimation(1);
-        // This simbole means that it has not recognised the animation and the interface must therefore resend it send!
-        // TODO: Check that this is stille needed for the esp32 as serial seems to work much better on that board.
-        Serial.println("#!@"); // Depricated
-      #endif
-      #ifndef USE_INTERFACE
-        extern animation = 1;
-      #endif
-  }
+/**
+ * Runs the animations for the given arrays using the parameters contained in the 
+ */
+void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef (&animParamRefArray)[NB_ARRAYS]){
+  //if(ComInterface::animation == -1){
+  //  Animations::sparkle(ledArrays, animParamRefArray, 0);
+  //}
+  //else{
+    for(int i=0;i<animParamRefArray[i].nbLeds;i++){
+      (*animations[animParamRefArray[i].animation])(ledArrays[i], animParamRefArray[i]);
+    }
+  //}
   FastLED.show();
 }
 
@@ -698,6 +638,15 @@ void Animations::fadeInAndOut(CRGB* leds, int red, int green, int blue){//, int 
 //   ####################### Sparkle animation ###############################
 //   #########################################################################
 
+void Animations::sparkle(CRGB* leds, animParamRef& parameters) {
+  EVERY_N_MILLISECONDS(parameters.sparkleParamInt[3]){
+    leds[parameters.sparkleParamInt[4]].setRGB(0, 0, 0);
+    parameters.sparkleParamInt[4] = random(parameters.nbLeds);
+    leds[parameters.sparkleParamInt[4]].setRGB(parameters.sparkleParamInt[0], parameters.sparkleParamInt[1], parameters.sparkleParamInt[2]);
+    //FastLED.show();
+  }
+} 
+/*
 void Animations::sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs) {
   static unsigned long SparklePreviousMillis = 0;
   if(millisecs - SparklePreviousMillis >= delayDuration){
@@ -721,12 +670,12 @@ void Animations::sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamR
   //if(millisecs - SparklePreviousMillis >= animParamRefs[i].sparkleParamInt[3]){
   //FastLED.show();
   //}
-  /*for(int i=0;i<NB_ARRAYS;i++){
-    leds[i][pixel[i]].setRGB(0, 0, 0);
-  }*/
+  //for(int i=0;i<NB_ARRAYS;i++){
+  //  leds[i][pixel[i]].setRGB(0, 0, 0);
+  //}
     SparklePreviousMillis = millisecs;
 } 
-
+*/
 // #########################################################################
 // ############################ Fire animation #############################
 // #########################################################################

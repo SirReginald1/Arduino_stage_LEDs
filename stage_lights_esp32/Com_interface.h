@@ -11,7 +11,7 @@ struct animParamRef;
 
 class ComInterface{
   public:
-    static int animation;
+    //static int animation;
 
     //static animParamRef animParamRefs[NB_ARRAYS];
 
@@ -20,9 +20,9 @@ class ComInterface{
 
     static void serialFlush();
 
-    static void setAnimation(int value);
+    //static void setAnimation(int value);
 
-    static int getAnimation();
+    //static int getAnimation();
 
     /*static void initParametersArray();*/
 

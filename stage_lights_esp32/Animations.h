@@ -6,11 +6,16 @@
 #include "Globals.h"
 
 struct animParamRef{
+
+  int nbLeds = NUM_LEDS; // The number of leds in the assigned array
+
+  int animation = 0; // The animation the array is currentlly set to
+
   int rainbowCycleParamInt[1] = {2000};
 
   int fadeInAndOutParamInt[3] = {255, 255, 255};
 
-  int sparkleParamInt[4] = {255, 255, 255, 0};
+  int sparkleParamInt[5] = {200, 0, 100, 0, 0};
 
   int fireParamInt[3] = {50, 50, 0};
   float fireParamFloat[1] = {1.};
@@ -24,6 +29,8 @@ struct animParamRef{
   int zipParamInt[7] = {2, 10, NUM_LEDS-5, 0, 0, 0, 255};
   unsigned long zipParamUnsignedLong[1] = {20};
 };
+
+animParamRef newAnimParamRef(int nbLeds);
 
 class Animations{
   public:
@@ -40,7 +47,9 @@ class Animations{
 
     static void stopFlashToBeat();
 
-    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs);
+    //static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs);
+
+    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef (&animParamRefArray)[NB_ARRAYS]);
 
     static int* getParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode);
 
@@ -66,8 +75,10 @@ class Animations{
 
     static void fadeInAndOut(CRGB* leds, int red, int green, int blue);
 
-    static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs);
-    static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefs[NB_ARRAYS], unsigned long millisecs);
+    static void sparkle(CRGB* leds, animParamRef& parameters);
+
+    //static void sparkle(CRGB* leds, int red, int green, int blue, int delayDuration, unsigned long millisecs);
+    //static void sparkle(CRGB leds[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefs[NB_ARRAYS], unsigned long millisecs);
 
     /*
       * FlameHeight - Use larger value for shorter flames, default=50.
