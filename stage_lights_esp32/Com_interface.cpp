@@ -199,6 +199,7 @@ int ComInterface::findParamType(int animation_in, int param_buffer_count_in){
   // This switch identifies the type of the parameter in question.
     switch (animation_in) {
       // ################# The Sparkle animation #######################
+      /*
       case 3: 
         // This switch looks at which parameter in the function the current parameter is.
         switch (param_buffer_count_in) { // Starts at 0
@@ -209,9 +210,10 @@ int ComInterface::findParamType(int animation_in, int param_buffer_count_in){
             type_indicator_out = 0;
         }
         break;
+        */
       // ###########################################################
       // ################# The Fire animation #######################
-      case 4:
+      case ANIM_CODE_FIRE:
         // This switch looks at which parameter in the function the current parameter is.
         switch (param_buffer_count_in) {
           case 3:
@@ -223,7 +225,7 @@ int ComInterface::findParamType(int animation_in, int param_buffer_count_in){
         break;
       // ###########################################################
       // ################# The zip animation #######################
-      case 9:
+      case ANIM_CODE_ZIP:
         // This switch looks at which parameter in the function the current parameter is.
         switch (param_buffer_count_in) {
           case 4:
@@ -269,7 +271,8 @@ void ComInterface::recvWithStartEndMarkers() {
       break;
     case MODE_CHANGE_FLAG:
       try{
-        ComInterface::dataParsingMode = Serial.read()-48;
+        ComInterface::dataParsingMode = Serial.read()-48; //Serial.parseInt();
+        //Serial.read();
       }
       catch(...){
         // Do nothing
@@ -391,6 +394,9 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
     }
   }
   else{
+
+    animParamRefs[currentArray].animation = animation;
+
     // For each subsequent parameter define apropriate type and sets its value in the the appropriate reference table.
     while(strtokIndx != NULL) {
       // Finds the type of the current parameter value
@@ -434,7 +440,7 @@ void ComInterface::parsePreprepAnimData(){
       break;
     case (int)STOP_ACTION_MARKER:
       ComInterface::runingAction = false;
-      Animations::stopFlashToBeat();
+      Animations::stopFlashToBeatArray();
       break;
   }
   // The second element in the list
@@ -461,7 +467,6 @@ void ComInterface::swithMicFFTMode(){
 */
 void ComInterface::readInput(){ 
   ComInterface::recvWithStartEndMarkers();
-
   if (newData == true) {
       strcpy(tempChars, receivedChars);
           // this temporary copy is necessary to protect the original data
@@ -470,11 +475,14 @@ void ComInterface::readInput(){
         case RECIVE_MODE_ANIM_SELECT:
           ComInterface::parseAnimationChangeData();
           break;
-        case MODE_MIC_FFT_ON:
+        case RECIVE_MODE_SWITCH_ON_BEAT_DETECT:
+            //ComInterface::parseAnimationChangeData();
             ComInterface::swithMicFFTMode(); // Doesn't switch data parsing modes as Mic animations will use the same as other.
+            ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_RUN_PREP_ANIM:
           ComInterface::parsePreprepAnimData();
+          ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
       }
       newData = false;
