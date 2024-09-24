@@ -11,6 +11,7 @@
 #include <arduinoFFT.h>
 #include "esp_task_wdt.h"
 #include "esp_system.h"
+#include "freertos/queue.h"
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
 //#define USE_INTERFACE
@@ -42,59 +43,14 @@ CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
 /** The array of structs that contain*/
 animParamRef animParamRefs[NB_ARRAYS];
 
+
 //esp_task_wdt_in
-
-// ########################## Console com variables ##########################
-/*
-#ifdef USE_INTERFACE
-  // The value that indicates which animation to run.
-  //extern int animation;
-  // The index of the array currently being manipulated
-  extern int current_array;
-#endif
-*/
-#ifndef USE_INTERFACE
-  // The value that indicates which animation to run.
-  int animation;
-  // The index of the array currently being manipulated
-  //int current_array;
-#endif
-
-
-
-
-// List of parameters
-//int parameters[NB_PARAMS];
-//extern int parameters[NB_PARAMS];
-// The current number of parameters in parameters array
-//int param_count;
-//extern int *param_count;
 
 // ############################# Time variables ##############################
 // Millisecond counter
 unsigned long millisecs;
-// Leds1 millisecond counter
-/*
-//unsigned long millisec_led1 = 0;
-// Leds2 millisecond counter
-unsigned long millisec_led2 = 0;
-// Leds3 millisecond counter
-unsigned long millisec_led3 = 0;
-// Leds4 millisecond counter
-unsigned long millisec_led4 = 0;
-*/
 
-/*
-// Pointer to milliseconds leds 1
-unsigned long *millisec_led1_pnt = &millisec_led1
-// Pointer to milliseconds leds 2
-unsigned long *millisec_led2_pnt = &millisec_led1
-// Pointer to milliseconds leds 3
-unsigned long *millisec_led3_pnt = &millisec_led1
-// Pointer to milliseconds leds 4
-unsigned long *millisec_led4_pnt = &millisec_led1
-*/
-
+// ############################# Interupt ##############################
 /**
 The code to be executed during a hardware interupt.
 */
@@ -142,8 +98,10 @@ int timingsLength = 0;
 
 /** The task handler for the FFT task runing on core 0 */
 TaskHandle_t mainCore0Handle;
-/** The semaphore object used for asynchronos prossesing */
-//SemaphoreHandle_t semaphore;
+/** The notification queue used by core0 to signal core 1 */
+QueueHandle_t core1NotifQueue;
+/** Value indicating what audio feature hase been detected. If none detected will be set to NO_AUDIO_FEATURE_DETECTED. */
+extern u_int16_t FFTAudioFeatureDetected;
 
 
 void setup() {
@@ -185,7 +143,8 @@ void setup() {
   if(mainCore0Handle == NULL){
     Serial.println("The task on the second core was not created!");
   }
-  //semaphore = xSemaphoreCreateMutex();
+  core1NotifQueue = xQueueCreate(10, // Queue length
+                            sizeof(u_int16_t));
   // #########################################################
   // ######################### LED ###########################
   // #########################################################
@@ -200,47 +159,32 @@ void setup() {
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);
   // Make sure all lights are off
   FastLED.clear();
+  // Setup array IDs
+  for(int i=0;i<NB_ARRAYS;i++){
+    animParamRefs[i].arrayId = i;
+  }
   // #########################################################
   // ################## Set variables ########################
   // #########################################################
-  // Set starting animation choice
-  #ifndef USE_INTERFACE
-  animation = 1;
-  //current_array = 0;
-  #endif
-  #ifdef USE_INTERFACE
-  ComInterface::setAnimation(1);
-  #endif
+  // Load preprepared animation timings array from SD card
   timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
 }
 
 void loop() {
   millisecs = millis();
-  
-  // ####################### MIC CODE #########################
-  #ifdef USE_MIC
-    sample_mic(mic_pin);
-    sample_max_amp(millisecs);
-  #endif
-  
-  //Serial.println(get_amplitude());
-  
   // ############# LED CODE ##############
   if(Serial.available() > 0){
-
-    #ifdef USE_INTERFACE
     ComInterface::readInput();
-    #endif
-
-    #ifndef USE_INTERFACE
-    animation = Serial.parseInt();
-    #endif
-
-    FastLED.clear();
+    FastLED.clear(); // !!!!!!!!!!!!!! Flickering at animation switch probably comes from here !!!!!!!!!!!!!!!!!!!!!!!!!!!
   }
-  
-  Animations::runAnimations(led_arrays, animParamRefs, millisecs);
-
+  if(appModeMicFFTOnCore1){
+    readBeatQueue();
+    Animations::runAnimations(led_arrays, animParamRefs);
+    resetBeatDetectionVariables();
+  }
+  else{
+    Animations::runAnimations(led_arrays, animParamRefs);
+  }
 }
 
 void mainCore0(void* parameter){
@@ -249,7 +193,10 @@ void mainCore0(void* parameter){
   /** The value indicating if the microphone reading and FFT task should run */
   bool appModeMicFFTOn = false;
 
-  //unsigned long start; // Variable used for timing print
+  /** Used by core 0 as a pointer to send signal to core 1 if an audio feature is detected */
+  u_int16_t detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED;
+
+  unsigned long start; // Variable used for timing print
   for(;;){
     // This part of the code deals with chacking if signals are recived from the main loop and processing them accordingly.
     // This checks to see if there is a notification pending returns true if there was one, if timer exceded send false and move on.
@@ -270,12 +217,20 @@ void mainCore0(void* parameter){
 
   
     if(appModeMicFFTOn){
-      Serial.println("In FFT loop");
+      //Serial.println("In FFT loop");
       //start = millis();
       getFFT(); // Takes about 20 ms to execute
-      //if(detectKick(millis(), 5)){
-      //}
-      //Serial.println(millis()-start);
+      
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////
+      if(detectKick(5)){
+        // Send notification to the main core 1 through the queue
+        detectedAudioFeature = KICK_DETECTED;
+        xQueueSend(core1NotifQueue, &detectedAudioFeature, 0);
+        //Serial.println("Core 0 kick!");
+        //detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED; // Probably don't need this
+      }
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////
+      
     }
 
     // Delay this task

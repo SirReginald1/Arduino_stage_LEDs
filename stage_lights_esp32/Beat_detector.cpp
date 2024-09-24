@@ -1,14 +1,24 @@
-#include "Microphone.h"
+#include "esp32-hal.h"
+#include "freertos/queue.h"
 #include <arduinoFFT.h>
-#include"Beat_detector.h"
+#include "Microphone.h"
+#include "Beat_detector.h"
+#include "Globals.h"
 
+extern QueueHandle_t core1NotifQueue;
 
 const uint_fast16_t samples = NB_SAMPLES; //This value MUST ALWAYS be a power of 2
 ////const float signalFrequency = 1000;
 const double samplingFrequency = SAMPLING_FREQUENCY;
 ////const uint8_t amplitude = 100;
-/** Value indicating if a kick has been detected. Used for comunication between the cores */
-bool isKick = false;
+/** Value indicating what audio feature hase been detected. If none detected will be set to NO_AUDIO_FEATURE_DETECTED. */
+/*volatile*/u_int16_t FFTAudioFeatureDetected = NO_AUDIO_FEATURE_DETECTED;
+/** Indicates if a kick is detected */
+bool detectedKick = false;
+/** Indicates if a snaire is detected */
+bool detectedSnaire = false;
+/** Indicates if a high hat is detected */
+bool detectedHighHat = false;
 
 /** The array of real numbers used in the FFT. */
 float vReal[NB_SAMPLES] = {0};
@@ -36,6 +46,45 @@ void getFFT() {
   FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
   FFT.complexToMagnitude(); /* Compute magnitudes */
+}
+
+/**
+  * Function called before runing animations to read the contense of the core1NotifQueue and set the beat detection animations indicator variables accordingly.
+*/
+void readBeatQueue(){
+  while(xQueueReceive(core1NotifQueue, &FFTAudioFeatureDetected, (TickType_t) 0) == pdTRUE){
+    switch (FFTAudioFeatureDetected) {
+      case NO_AUDIO_FEATURE_DETECTED:
+        return;
+        break;
+      case KICK_DETECTED:
+        detectedKick = true;
+        break;
+      case SNAIRE_DETECTED:
+        detectedSnaire = true;
+        break;
+      case HIGH_HAT_DETECTED:
+        detectedHighHat = true;
+        break;
+      default:
+        FFTAudioFeatureDetected = NO_AUDIO_FEATURE_DETECTED;
+        return;
+    }
+    if(!detectedKick && !detectedSnaire && !detectedHighHat){
+      FFTAudioFeatureDetected = NO_AUDIO_FEATURE_DETECTED;
+      return;
+    }
+  }
+  FFTAudioFeatureDetected = NO_AUDIO_FEATURE_DETECTED;
+}
+
+/**
+  * Called after runing animations to reset beat detection indicators.
+*/
+void resetBeatDetectionVariables(){
+  detectedKick = false;
+  detectedSnaire = false;
+  detectedHighHat = false;
 }
  
 // Helper function to convert frequency to bin number
@@ -79,13 +128,14 @@ bool detectSnare() {
 /** 
 * Detects if a kick is present in the music
 */
-bool detectKick(unsigned long millisecons, unsigned long minPausBetweenCalls) {
+bool detectKick(unsigned long minPausBetweenCalls) {
   static unsigned long lastCall;
-  if((lastCall - millisecons) < minPausBetweenCalls){
-    lastCall = millisecons;
+  unsigned long current_time = millis();
+  if((lastCall - current_time) < minPausBetweenCalls){
     return false;
   }
-  // Kick drum typically has energy in 40 Hz to 100 Hz
+  lastCall = current_time;
+  // Kick drum typically has energy in 40 Hz to 100 Hz. The magic values seem to be 80 to 180 Hz.
   return checkFrequencyRange(frequencyToBin(80), frequencyToBin(180), 5000000000); // Adjust based on experimentation
 }
 

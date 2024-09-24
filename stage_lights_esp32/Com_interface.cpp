@@ -41,7 +41,7 @@ class ComInterface{
   public:
     // ################## Comunication variables ##################
     // The value that indicates which animation to run.
-    static int animation;
+    //static int animation;
     // The index of the array currently being manipulated
     static int currentArray;
     // The number of interger parameters that are being used by each array
@@ -74,10 +74,10 @@ class ComInterface{
     static int dataParsingMode;
 
     // ###################### Getter an setter functions ######################################
-
+    /*
     static void setAnimation(int value);
     static int getAnimation();
-
+    */
     static void setCurrentArray(int value);
     static int getCurrentArray();
 
@@ -126,7 +126,7 @@ class ComInterface{
 
 boolean ComInterface::newData = false;
 
-int ComInterface::animation = 1;
+//int ComInterface::animation = 1;
 
 int ComInterface::currentArray = 0;
 
@@ -154,7 +154,7 @@ int ComInterface::dataParsingMode = 0;
 // #########################################################################################################################
 // ######################################### GETTER AND SETTER FUNCTION DEFINITION #########################################
 // #########################################################################################################################
-
+/*
 void ComInterface::setAnimation(int value){
   animation = value;
 }
@@ -162,7 +162,7 @@ void ComInterface::setAnimation(int value){
 int ComInterface::getAnimation(){
   return animation;
 }
-
+*/
 void ComInterface::setCurrentArray(int value){
   currentArray = value;
 }
@@ -199,6 +199,7 @@ int ComInterface::findParamType(int animation_in, int param_buffer_count_in){
   // This switch identifies the type of the parameter in question.
     switch (animation_in) {
       // ################# The Sparkle animation #######################
+      /*
       case 3: 
         // This switch looks at which parameter in the function the current parameter is.
         switch (param_buffer_count_in) { // Starts at 0
@@ -209,9 +210,10 @@ int ComInterface::findParamType(int animation_in, int param_buffer_count_in){
             type_indicator_out = 0;
         }
         break;
+        */
       // ###########################################################
       // ################# The Fire animation #######################
-      case 4:
+      case ANIM_CODE_FIRE:
         // This switch looks at which parameter in the function the current parameter is.
         switch (param_buffer_count_in) {
           case 3:
@@ -223,7 +225,7 @@ int ComInterface::findParamType(int animation_in, int param_buffer_count_in){
         break;
       // ###########################################################
       // ################# The zip animation #######################
-      case 9:
+      case ANIM_CODE_ZIP:
         // This switch looks at which parameter in the function the current parameter is.
         switch (param_buffer_count_in) {
           case 4:
@@ -269,7 +271,8 @@ void ComInterface::recvWithStartEndMarkers() {
       break;
     case MODE_CHANGE_FLAG:
       try{
-        ComInterface::dataParsingMode = Serial.read()-48;
+        ComInterface::dataParsingMode = Serial.read()-48; //Serial.parseInt();
+        //Serial.read();
       }
       catch(...){
         // Do nothing
@@ -323,44 +326,100 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
   */
   unsigned long parameter_value_unsigned_long;
 
+  int animation = 0;
+
   // The first element in the list
   strtokIndx = strtok(tempChars,",");
   currentArray = atoi(strtokIndx); // The current array being manipulated
+
+  // Check that currentArray is acceptable
+  if(currentArray < -2 || currentArray >= NB_ARRAYS){
+    Serial.println("Invalide array!");
+    currentArray = 0;
+    return;
+  }
+
   // The second element in the list
   strtokIndx = strtok(NULL, ",");
 
-  ComInterface::animation = atoi(strtokIndx); // The animation to be switched to
+  animation = atoi(strtokIndx); // The animation to be switched to
+
+  // Check that entered annimation value is valid
+  if(animation < 0 || animation >= NB_ANIMATIONS){
+    //ComInterface::animation = 1;
+    Serial.println("Invalid animation!");
+    return;
+  }
 
   strtokIndx = strtok(NULL, ",");
-  // For each subsequent parameter define apropriate type and sets its value in the the appropriate reference table.
-  while(strtokIndx != NULL) {
-      
-    // Finds the type of the current parameter value
-    type_indicator = findParamType(animation, param_buffer_count);
 
-    // This switch casts the parameter to the appropriate type and sets the appropriate possition in the appropriat table with that value.
-    switch (type_indicator) {
-      case 1:
-        parameter_value_float = atof(strtokIndx);
-        //outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersFloat, currentArray, animation, param_buffer_count, parameter_value_float);
-        Animations::setParametersFloat(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_float);
-        break;
-      case 2:
-        parameter_value_unsigned_long  = (unsigned long)atoi(strtokIndx);
-        //outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersUnsignedLong, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
-        Animations::setParametersUnsignedLong(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
-        break;
-      default:
-        parameter_value_int  = atoi(strtokIndx);
-        //outputAndReplace(NB_ARRAYS, NB_ANIMATIONS, NB_MAX_PARAMS, parametersInt, currentArray, animation, param_buffer_count, parameter_value_int);
-        Animations::setParametersInt(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_int);
+  // Checks to see if array is == -1 which means change parameters for all arrays. -2 means change parameters for all and switch all arrays to animation
+  if(currentArray == -1 || currentArray == -2){
+    
+    // If currentArray == -2 also switch all animations to specified animation
+    if(currentArray == -2){
+      for(int i=0;i<NB_ARRAYS;i++){
+        animParamRefs[i].animation = animation;
+      }
     }
 
-
+    // For each subsequent parameter define apropriate type and sets its value in the the appropriate reference table.
+    while(strtokIndx != NULL) {
+      // Finds the type of the current parameter value
+      type_indicator = findParamType(animation, param_buffer_count);
+      // This switch casts the parameter to the appropriate type and sets the appropriate possition in the appropriat table with that value.
+      switch (type_indicator) {
+        case 1:
+          parameter_value_float = atof(strtokIndx);
+          for(int i=0;i<NB_ARRAYS;i++){
+            Animations::setParametersFloat(animParamRefs, i, animation, param_buffer_count, parameter_value_float);
+          }
+          break;
+        case 2:
+          parameter_value_unsigned_long  = (unsigned long)atoi(strtokIndx);
+          for(int i=0;i<NB_ARRAYS;i++){
+            Animations::setParametersUnsignedLong(animParamRefs, i, animation, param_buffer_count, parameter_value_unsigned_long);
+          }
+          break;
+        default:
+          parameter_value_int  = atoi(strtokIndx);
+          for(int i=0;i<NB_ARRAYS;i++){
+            Animations::setParametersInt(animParamRefs, i, animation, param_buffer_count, parameter_value_int);
+          }
+      }
       // For each iteration of the loop will tell 
       param_buffer_count++;
       // Leave this at end
       strtokIndx = strtok(NULL, ",");
+    }
+  }
+  else{
+
+    animParamRefs[currentArray].animation = animation;
+
+    // For each subsequent parameter define apropriate type and sets its value in the the appropriate reference table.
+    while(strtokIndx != NULL) {
+      // Finds the type of the current parameter value
+      type_indicator = findParamType(animation, param_buffer_count);
+      // This switch casts the parameter to the appropriate type and sets the appropriate possition in the appropriat table with that value.
+      switch (type_indicator) {
+        case 1:
+          parameter_value_float = atof(strtokIndx);
+          Animations::setParametersFloat(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_float);
+          break;
+        case 2:
+          parameter_value_unsigned_long  = (unsigned long)atoi(strtokIndx);
+          Animations::setParametersUnsignedLong(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
+          break;
+        default:
+          parameter_value_int  = atoi(strtokIndx);
+          Animations::setParametersInt(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_int);
+      }
+      // For each iteration of the loop will tell 
+      param_buffer_count++;
+      // Leave this at end
+      strtokIndx = strtok(NULL, ",");
+    }
   }
 }
 
@@ -381,7 +440,7 @@ void ComInterface::parsePreprepAnimData(){
       break;
     case (int)STOP_ACTION_MARKER:
       ComInterface::runingAction = false;
-      Animations::stopFlashToBeat();
+      Animations::stopFlashToBeatArray();
       break;
   }
   // The second element in the list
@@ -408,7 +467,6 @@ void ComInterface::swithMicFFTMode(){
 */
 void ComInterface::readInput(){ 
   ComInterface::recvWithStartEndMarkers();
-
   if (newData == true) {
       strcpy(tempChars, receivedChars);
           // this temporary copy is necessary to protect the original data
@@ -417,17 +475,21 @@ void ComInterface::readInput(){
         case RECIVE_MODE_ANIM_SELECT:
           ComInterface::parseAnimationChangeData();
           break;
-        case MODE_MIC_FFT_ON:
+        case RECIVE_MODE_SWITCH_ON_BEAT_DETECT:
+            //ComInterface::parseAnimationChangeData();
             ComInterface::swithMicFFTMode(); // Doesn't switch data parsing modes as Mic animations will use the same as other.
+            ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_RUN_PREP_ANIM:
           ComInterface::parsePreprepAnimData();
+          ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
       }
       newData = false;
   }
 
   // This ensures that once switched to animation mode 10 all subsequent messages are read with other mode untille specified otherwise.
+  /*
   if(ComInterface::animation == 10){
     Serial.println("Switching parsing modes.");
     ComInterface::dataParsingMode = RECIVE_MODE_RUN_PREP_ANIM;
@@ -435,5 +497,6 @@ void ComInterface::readInput(){
   else{
     ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
   }
+  */
 
 }
