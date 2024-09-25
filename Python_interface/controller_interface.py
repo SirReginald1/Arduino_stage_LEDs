@@ -9,16 +9,16 @@ from struct import unpack
 class ControllerInterface():
     """Class that deals with interfacing with the arduino."""
     
-    init_values_strobe: List[Union[int, Tuple]] = [20, 60, (255, 255, 255)]
+    init_values_strobe: List[Union[int, Tuple]] = [20, 55, (255, 255, 255)]
     """Parameter init values for the strobe animation. {time_on, time_off, (R, G, B)}"""
 
     init_values_zip: List[int] = [2,10,122,0,(0, 0, 255)]
     """Parameter init values for the zip animation."""
 
-    init_values_twinkle_pixel: List[int] = [200,50,50,20,100]
+    init_values_twinkle_pixel: List[int] = [200,50,50,100,50]
     """Parameter init values for the pixel animation."""
 
-    init_values_fire: List[int] = [50,50,0,0.01]
+    init_values_fire: List[int] = [50,50,25,1.]
     """Parameter init values for the fire animation. {flame_height, sparks, delay, intensity}"""
 
     init_values_shooting_star: List[int] = [(150, 0, 150), 20, 10, 2000, 1]
@@ -29,10 +29,10 @@ class ControllerInterface():
     init_values_sparkle: List[int] = [(200, 0, 100), 0]
     """Parameter init values for the sparkle animation."""
 
-    init_values_fade: List[int] = [(255, 255, 255), 0]
+    init_values_fade: List[int] = [(255, 255, 255), 100]
     """Parameter init values for the fade animation."""
 
-    init_values_rainbow_circle: List[int] = [2000]
+    init_values_rainbow_circle: List[int] = [0]
     """Parameter init values for the rainbow wheel animation. {delay}"""
 
     init_labels_strobe: List[str] = ["time_on", "time_off", "color"]
@@ -59,15 +59,15 @@ class ControllerInterface():
     init_labels_rainbow_wheel: List[str] = ["delay"]
     """Parameter init labels for the rainbow wheel animation."""
 
-    animation_codes = {"zip" : 9, 
-                       "strobe" : 8, 
-                       "volume_bar" : 8, 
-                       "twinkle_pixel" : 6, 
-                       "shooting_star" : 5, 
-                       "fire" : 4, 
-                       "sparkle" : 3, 
-                       "fade" : 2, 
-                       "rainbow_circle" : 1}
+    animation_codes = {"Rainbow circle" : 0,
+                       "Fade" : 1,
+                       "Sparle" : 2, 
+                       "Fire" : 3, 
+                       "Shooting star" : 4, 
+                       "Twinkle pixel" : 5, 
+                       "Strobe" : 6, 
+                       "Zip" : 7, 
+                       "Flash to beat" : 8}
     """Dictionary of the codes that reference each animation in the arduino code."""
     
     animation_labels = ["zip", 

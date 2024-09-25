@@ -1,102 +1,110 @@
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
 import tkinter as tk
-from time import time, sleep
-from tkinter import Frame,Label,Entry,Button
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 from controller_interface import ControllerInterface
-from threading import Thread
+from menu_bar import MenuBar, CustomMenuBar
 
-class PlotWindow(Frame):
+animation_codes = {"Rainbow circle" : 0,
+                   "Fade" : 1,
+                   "Sparle" : 2, 
+                   "Fire" : 3, 
+                   "Shooting star" : 4, 
+                   "Twinkle pixel" : 5, 
+                   "Strobe" : 6, 
+                   "Zip" : 7, 
+                   "Flash to beat" : 8}
 
-    def __init__(self, master = None) -> None:
-        Frame.__init__(self, master)
-        self.master = master
+# Function to replace frame contents with new labels and buttons
+def switch_frame_content(frame):
+    # Clear the frame
+    for widget in frame.winfo_children():
+        widget.destroy()
+    # Create a red "exit" button with a cross
+    exit_button = ttk.Button(frame, text="✖", bootstyle=WARNING, command=lambda: create_buttons(frame), width=5)
+    exit_button.place(x=10, y=10)  # Position in the top-left corner
+    # Create a new label inside the frame
+    label = ttk.Label(frame, text="New Content", font=("Arial", 20), bootstyle=SECONDARY)
+    label.pack(pady=20)
 
-        self.start_time = time()
+# Function to create ten buttons in a grid layout (5 rows, 2 columns) in the left section of each frame
+def create_buttons(left_section):
+    # Clear the left section first (to allow for back-and-forth switch)
+    for widget in left_section.winfo_children():
+        widget.destroy()
 
-        self.x_values = []#np.array([])
+    # Create 10 buttons in a grid (2 rows, 5 columns)
+    for btn_idx, animation_label in zip(range(len(animation_codes)), animation_codes):
+        button = ttk.Button(left_section, 
+                            text=f"{animation_label}", 
+                            width = 15,
+                            bootstyle=PRIMARY, 
+                            command=lambda sec=left_section: switch_frame_content(sec))
+        button.grid(row=btn_idx//5, column=btn_idx%5, padx=5, pady=5, sticky="nsew")
 
-        self.y_values = []#np.array([])
+    # Ensure that the buttons expand evenly in the grid
+    for col in range(5):
+        left_section.grid_columnconfigure(col, weight=0)
+    for row in range(2):
+        left_section.grid_rowconfigure(row, weight=1)
 
-        self.x_lim = [0,100]
+# Main window setup
+root = ttk.Window(themename="superhero")  # Use ttkbootstrap Window with 'superhero' theme
+root.title("4 Frames Interface with Superhero Theme")
 
-        self.y_lim = [-10000, 10000]
+# Set the window to take up the full width of the screen
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
 
-        self.x_lim_step = 100
+# We will limit the total window height so that the frames don't take up the full screen height
+window_height = screen_height // 2  # Half the screen height
+root.geometry(f"{screen_width}x{window_height}")
 
-        def animate(i):
-           #self.line.set_ydata(self.yaxis[i])  # update the data
-           self.line.set_data(self.x_values, self.y_values)
-           self.ax.set_xlim(self.x_lim[0], self.x_lim[1])
-           #print(f"len x: {len(self.xaxis)}")
-           #print(f"len y: {len(self.yaxis)}")
-           return self.line,
+# Define number of frames and their relative height
+num_frames = 4
+frame_height = window_height // num_frames
 
-        self.master.title("Controler readings")
-        self.pack(fill='both', expand=1)     
+# Create 4 frames, each with 2 sections, and stack them at the top of the window
+for i in range(num_frames):
+    array_frame = ttk.Frame(root, height=frame_height)
+    array_frame.pack(fill=tk.X, side="top")  # Stack frames at the top
 
-#Create the controls, note use of grid
+    title_label = ttk.Label(array_frame, text=f"Array {i}", font=("Helvetica", 18), anchor="w")
+    title_label.grid()
 
-        self.buttonClear = Button(self,text="Clear",command=self.Clear,width=12)
-        self.buttonClear.grid(row=2,column=2)
+    # Define two sections within each frame using grid
+    left_section = ttk.Frame(array_frame)
+    right_section = ttk.Frame(array_frame)
 
-#        self.buttonClear.bind(lambda e:self.Plot)
-        self.buttonClear.bind(lambda e:self.Clear)
+    left_section.grid(row=1, column=0, sticky="nsew")
+    right_section.grid(row=1, column=2, sticky="nsew")
 
-        tk.Label(self,text="SHM Simulation").grid(column=0, row=3)
+    # Create a style object
+    style = ttk.Style()
+    style.configure("Custom.TSeparator", background="red")  # Change 'red' to any color you prefer
+    # Create a vertical separator
+    separator = ttk.Separator(array_frame, orient="vertical", style="Custom.TSeparator")
+    separator.grid(row=0, column=1, sticky="ns", padx=10, rowspan=2, pady = 5)  # 'ns' means the separator will stretch vertically
+    
+    # Make sure both sections expand equally
+    array_frame.grid_columnconfigure(0, weight=1)
+    array_frame.grid_columnconfigure(1, weight=1)
 
-        self.fig = plt.Figure()
+    # Populate the left section with 10 buttons in a grid layout
+    create_buttons(left_section)
 
-        #self.x = np.arange(0, 2*np.pi, 0.01)        # x-array
+#menu_bar = MenuBar(root)
+menu_bar = CustomMenuBar(root)
+menu_bar.pack(side=tk.TOP, fill=tk.X)
+# Configure the menu bar on the main window
+root.config(menu=menu_bar)
 
-        #self.xaxis = range(629)
 
-        self.ax = self.fig.add_subplot(111)
-        self.line, = self.ax.plot(self.x_values, self.y_values)        
-        self.ax.set_xlim(self.x_lim[0], self.x_lim[1])
-        self.ax.set_ylim(self.y_lim[0], self.y_lim[1])
 
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().grid(column=0,row=4)
-
-        self.animation = animation.FuncAnimation(self.fig, animate, np.arange(1, 1000000000), interval=1/1000, blit=False)
-
-    def read_measurment(self) -> None:
-        """Function used in own thead to read values from the controller and append them to the xaxis array."""
-        while True:
-           try:
-               reading = controller.read_measurments()
-               if reading:
-                   self.y_values.append(reading)
-                   self.x_values.append(time()-self.start_time)
-               #print(f"Read: {reading}, time: {time()-self.start_time}")
-           except:
-              break
-           
-    def check_gaph_changes(self) -> None:
-        """Function used in thread to update graph limits."""
-        while True:
-           if len(self.x_values) > 0 and self.x_values[-1] > self.x_lim[1]:
-               self.x_lim[0] = self.x_lim[1]
-               self.x_lim[1] = self.x_lim[1] + self.x_lim_step
-           sleep(0.1)
-
-    def Clear(self):
-        self.x_values = []
-        self.y_values = []
-
-controller = ControllerInterface(port="COM7", baudrate=115200)
-
-root = tk.Tk()
-root.geometry("1200x800")
-app = PlotWindow(root)
-tread_read_measurment = Thread(target=app.read_measurment)
-tread_read_measurment.daemon = True
-tread_read_measurment.start()
-tread_read_check_graph = Thread(target=app.check_gaph_changes)
-tread_read_check_graph.daemon = True
-tread_read_check_graph.start()
-tk.mainloop()
+# Use option_add to set colors for the menu (may only work on some platforms like Windows)
+#root.option_add('*TearOff', False)
+#root.option_add('*Menu.background', '#2C3E50')  # Dark background
+#root.option_add('*Menu.foreground', '#ECF0F1')  # Light text
+#root.option_add('*Menu.activeBackground', '#2980B9')  # Highlight color when hovering
+#root.option_add('*Menu.activeForeground', '#FFFFFF')  # Active text color
+# Start the main event loop
+root.mainloop()

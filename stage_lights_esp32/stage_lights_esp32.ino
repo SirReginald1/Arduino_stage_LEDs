@@ -207,7 +207,7 @@ void mainCore0(void* parameter){
       switch(notificationValue){
         case MODE_MIC_FFT_ON:
           appModeMicFFTOn = !appModeMicFFTOn;
-          Serial.print("Core 0 appModeMicFFTOn = ");
+          Serial.print("FFTOn:");
           Serial.println(appModeMicFFTOn);
           break;
         default:

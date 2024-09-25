@@ -1,34 +1,34 @@
 from typing import Tuple
 from tkinter import *
 from controller_interface import ControllerInterface
-from animation_tabs.array_frame import ArrayFrame
+from animation_tabs.parameters_frame import ParametersFrame
 
 
-class ShootingStarArrayFrame(ArrayFrame):
+class ShootingStarArrayFrame(ParametersFrame):
     """The Frame containing all the controles for a single array."""
 
     def __init__(self, 
                  parent: Misc,
                  array_id: int,
-                 label: str, 
-                 arduino_int: ControllerInterface
+                 #label: str, 
+                 controller_interface: ControllerInterface
                  ) -> "ShootingStarArrayFrame":
         """"""
-        super().__init__(parent, array_id, arduino_int)
+        super().__init__(parent, array_id, controller_interface)
 
         self.nb_rows: int = 10
         self.nb_cols: int = 2
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
         
-        self.tail_length: int = arduino_int.init_values_shooting_star[1]
-        self.delay: int = arduino_int.init_values_shooting_star[2]
-        self.interval: int = arduino_int.init_values_shooting_star[3]
-        self.direction: int = arduino_int.init_values_shooting_star[4]
-        self.color: Tuple[int] = arduino_int.init_values_shooting_star[0]
+        self.tail_length: int = controller_interface.init_values_shooting_star[1]
+        self.delay: int = controller_interface.init_values_shooting_star[2]
+        self.interval: int = controller_interface.init_values_shooting_star[3]
+        self.direction: int = controller_interface.init_values_shooting_star[4]
+        self.color: Tuple[int] = controller_interface.init_values_shooting_star[0]
 
         ##################### Widgets ######################
-        self.frame_label = Label(self, text=label, font=self.label_font2)
+        self.frame_label = Label(self, text="Shooting Star", font=self.label_font2)
         self.frame_label.grid(row=0, column=0, columnspan=2)
 
         self.lab_tail_length: Label = Label(self, text = "Tail length: ", font=self.label_font)
@@ -74,6 +74,6 @@ class ShootingStarArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("shooting_star", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
+        self.arduino_int.change_animation("Shooting star", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
 
 
