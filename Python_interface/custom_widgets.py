@@ -27,8 +27,8 @@ class SlidePanel(ctk.CTkFrame):
 		# layout
 		self.place(relx = self.start_pos, rely = 0.05, relwidth = self.width, relheight = 0.9)
 
-		self.label1 = ctk.CTkLabel(self, text = 'Label 1')
-		self.label1.pack(expand = True, fill = 'both', padx = 2, pady = 10)
+		self.mic_on_lab = ctk.CTkLabel(self, text = f'Microphone: off')
+		self.mic_on_lab.pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		self.label2 = ctk.CTkLabel(self, text = 'Label 2')
 		self.label2.pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		self.button1 = ctk.CTkButton(self, text = 'Button1', corner_radius = 0).pack(expand = True, fill = 'both', pady = 10)
@@ -94,7 +94,7 @@ class Switch(tk.Frame):
 			variable=ctk.StringVar(value="on"), onvalue=1, offvalue=0,
 			#width=200,
 			#height=100,
-			switch_width=200,
+			switch_width=60,
 			switch_height=25,
 			#corner_radius=10,
 			border_color="orange",

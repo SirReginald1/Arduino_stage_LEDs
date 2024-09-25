@@ -1,35 +1,35 @@
 from typing import Tuple
 from tkinter import *
 from controller_interface import ControllerInterface
-from animation_tabs.array_frame import ArrayFrame
+from animation_tabs.parameters_frame import ParametersFrame
 
 
-class TwinklePixelArrayFrame(ArrayFrame):
+class TwinklePixelArrayFrame(ParametersFrame):
     """The Frame containing all the controles for a single array."""
 
     def __init__(self, 
                  parent: Misc,
                  array_id: int,
-                 label: str, 
-                 arduino_int: ControllerInterface
+                 #label: str, 
+                 controller_interface: ControllerInterface
                  ) -> "TwinklePixelArrayFrame":
         """"""
-        super().__init__(parent, array_id, arduino_int)
+        super().__init__(parent, array_id, controller_interface)
 
         self.nb_rows: int = 10
         self.nb_cols: int = 2
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
         
-        self.color: int = arduino_int.init_values_twinkle_pixel[0]
-        self.color_saturation: int = arduino_int.init_values_twinkle_pixel[1]
-        self.pixel_volume: int = arduino_int.init_values_twinkle_pixel[2]
-        self.fade_amount: int = arduino_int.init_values_twinkle_pixel[3]
-        self.delay: int = arduino_int.init_values_twinkle_pixel[4]
+        self.color: int = controller_interface.init_values_twinkle_pixel[0]
+        self.color_saturation: int = controller_interface.init_values_twinkle_pixel[1]
+        self.pixel_volume: int = controller_interface.init_values_twinkle_pixel[2]
+        self.fade_amount: int = controller_interface.init_values_twinkle_pixel[3]
+        self.delay: int = controller_interface.init_values_twinkle_pixel[4]
         #self.color: Tuple[int] = (255, 255, 255)
 
         ##################### Widgets ######################
-        self.frame_label = Label(self, text=label, font=self.label_font2)
+        self.frame_label = Label(self, text="Twinkle Pixel", font=self.label_font2)
         self.frame_label.grid(row=0, column=0, columnspan=2)
 
         self.lab_color: Label = Label(self, text = "Color: ", font=self.label_font)
@@ -82,6 +82,6 @@ class TwinklePixelArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("twinkle_pixel", self.LED_array_id, [self.color, self.color_saturation, self.pixel_volume, self.fade_amount, self.delay])
+        self.arduino_int.change_animation("Twinkle pixel", self.LED_array_id, [self.color, self.color_saturation, self.pixel_volume, self.fade_amount, self.delay])
 
 

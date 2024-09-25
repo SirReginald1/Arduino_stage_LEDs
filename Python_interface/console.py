@@ -1,10 +1,12 @@
-from typing import List
+from time import localtime, strftime
+from typing import List, Dict, Callable
 from tkinter import *
 from controller_interface import ControllerInterface
-from time import localtime, strftime
 
 class Console(Frame):
     """Class representing the console for comunication with the contromer."""
+
+    
 
     def __init__(self,
                  parent: Misc,
@@ -19,6 +21,8 @@ class Console(Frame):
         self.controller_interface: ControllerInterface = controller_int
         """The arduino interface object used to connect to the arduino."""
         
+        self.know_controller_commands: Dict[str, Callable] = {"FFTOn:" : self.microphone_is_switched}
+
         self.nb_rows: int = 2
         self.nb_cols: int = 1
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1, pad=1)
@@ -87,6 +91,35 @@ class Console(Frame):
         """Updates the console window."""
         message = self.controller_interface.read_str()
         if message:
+            self.detectModeChange(message)
             self.write_to_console(message)
-            self.console_output_text_box.yview('end')
+            self.console_output_text_box.yview("moveto", 1.0)
             print(message)
+
+    def detectModeChange(self, message: str) -> None:
+        """Looks at the message to see if the message matches a recognised command from the controller.
+        If the message matches a known command then the function will call the appropriate functions.
+        
+        ### Args:
+            - message (str): Is the message that is to be mached to known commands.
+        """
+        for i in range(len(message)):
+            command = self.know_controller_commands.get(message[:i])
+            if command:
+                #reversed_string = message[::-1]
+                #target_index = reversed_string.find(':')
+                #if target_index == -1:
+                #    return
+                #value = reversed_string[target_index + 1:][::-1]
+                value = message[i:]
+                print(f"Command value: {value}")
+                command(int(value))
+                return
+            
+    def microphone_is_switched(self, value: int) -> None:
+        if value == 0:
+            self.master.mic_on_lab.configure(text="Microphone: off")
+        elif value == 1:
+            self.master.mic_on_lab.configure(text="Microphone: on")
+        else:
+            self.master.mic_on_lab.configure(text="Microphone: ERROR")

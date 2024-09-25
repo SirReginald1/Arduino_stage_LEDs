@@ -5,7 +5,7 @@ from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 from controller_interface import ControllerInterface
 
 
-class ArrayFrame(Frame):
+class ParametersFrame(Frame):
     """The Frame containing all the controles for a single array."""
 
     label_font: Tuple[str, int] = ("Helvetica", 18)
@@ -18,9 +18,9 @@ class ArrayFrame(Frame):
                  parent: Misc,
                  array_id: int,
                  arduino_int: ControllerInterface
-                 ) -> "ArrayFrame":
+                 ) -> "ParametersFrame":
         """"""
-        super().__init__(parent)
+        super().__init__(parent) #, borderwidth=3, relief="ridge"
         self.LED_array_id: int = array_id
         """The id of the LED array that this command panel controls."""
         self.arduino_int: ControllerInterface = arduino_int
