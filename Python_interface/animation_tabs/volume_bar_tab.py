@@ -2,20 +2,20 @@ from typing import Tuple
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 from controller_interface import ControllerInterface
-from animation_tabs.array_frame import ArrayFrame
+from animation_tabs.parameters_frame import ParametersFrame
 
 
-class VolumeBarArrayFrame(ArrayFrame):
+class VolumeBarArrayFrame(ParametersFrame):
     """The Frame containing all the controles for a single array."""
 
     def __init__(self, 
                  parent: Misc,
                  array_id: int,
-                 label: str, 
-                 arduino_int: ControllerInterface
+                 #label: str, 
+                 controller_interface: ControllerInterface
                  ) -> "VolumeBarArrayFrame":
         """"""
-        super().__init__(parent, array_id, arduino_int)
+        super().__init__(parent, array_id, controller_interface)
         
         self.nb_rows: int = 10
         self.nb_cols: int = 2
@@ -23,7 +23,7 @@ class VolumeBarArrayFrame(ArrayFrame):
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
 
         ##################### Widgets ######################
-        self.frame_label = Label(self, text=label, font=self.label_font2)
+        self.frame_label = Label(self, text="Flash to Beat", font=self.label_font2)
         self.frame_label.grid(row=0, column=0, columnspan=2)
 
 
@@ -37,6 +37,6 @@ class VolumeBarArrayFrame(ArrayFrame):
 
     def send_update(self) -> None:
         """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("volume_bar", self.LED_array_id, [])
+        self.arduino_int.change_animation("Flash to beat", self.LED_array_id, [])
 
 
