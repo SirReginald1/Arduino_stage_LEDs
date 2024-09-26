@@ -31,7 +31,9 @@ class SlidePanel(ctk.CTkFrame):
 		self.mic_on_lab.pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		self.label2 = ctk.CTkLabel(self, text = 'Label 2')
 		self.label2.pack(expand = True, fill = 'both', padx = 2, pady = 10)
-		self.button1 = ctk.CTkButton(self, text = 'Button1', corner_radius = 0).pack(expand = True, fill = 'both', pady = 10)
+		self.button1 = ctk.CTkButton(self, text = 'Turn on mic', corner_radius = 0, 
+							   		 command=lambda: controller_interface.send_message("@1<>"))
+		self.button1.pack(expand = True, fill = 'both', pady = 10)
 		self.console = Console(self,self.controller_interface)
 		self.console.pack(expand = True, fill = 'both', padx = 2, pady = 10)
 
@@ -40,7 +42,7 @@ class SlidePanel(ctk.CTkFrame):
 	def create_widgets(self):
 		ctk.CTkLabel(self, text = 'Label 1').pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		ctk.CTkLabel(self, text = 'Label 2').pack(expand = True, fill = 'both', padx = 2, pady = 10)
-		ctk.CTkButton(self, text = 'Button', corner_radius = 0).pack(expand = True, fill = 'both', pady = 10)
+		ctk.CTkButton(self, text = 'Turn on mic', corner_radius = 0).pack(expand = True, fill = 'both', pady = 10)
 
 		#self.console_out = ctk.CTkTextbox(self, fg_color = ('#dbdbdb','#2b2b2b'))
 		#self.console_out.insert(tk.INSERT,text=self.console_output_str)
