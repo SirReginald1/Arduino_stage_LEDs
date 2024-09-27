@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Union
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 from controller_interface import ControllerInterface
@@ -45,7 +45,17 @@ class RainbowCircleArrayFrame(ParametersFrame):
         self.delay = self.txtin_delay.get()
         self.send_update()
 
-    def send_update(self) -> None:
-        """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("Rainbow circle", self.LED_array_id, [self.delay])
-
+    def send_update(self, array_idx: Union[int, None] = None) -> None:
+        """This function sends the curent values for the parameters to the controller.
+        
+        ### Args:
+            - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
+            Used for synching multiple arrays using the checkboxes.
+        """
+        if sum(self.array_selection) == 0:
+            self.arduino_int.change_animation("Rainbow circle", self.LED_array_id, [self.delay])
+        else:
+            for array in range(len(self.array_selection[1:])):
+                if self.array_selection[array+1] == 1:
+                    print(f"array idx: {array}")
+                    #self.arduino_int.change_animation("Rainbow circle", array, [self.delay])
