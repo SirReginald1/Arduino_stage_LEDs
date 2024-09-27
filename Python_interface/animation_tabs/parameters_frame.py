@@ -24,11 +24,11 @@ class ParametersFrame(Frame):
         super().__init__(parent) #, borderwidth=3, relief="ridge"
         self.LED_array_id: int = array_id
         """The id of the LED array that this command panel controls."""
-        self.arduino_int: ControllerInterface = controller_interface
+        self.controller_interface: ControllerInterface = controller_interface
         self.color: Tuple[int] = None
         self.nb_rows: int = 10
         self.nb_cols: int = 10
-        self.array_selection = CheckboxFrame(parent, self.master.master.master.app.NB_ARRAYS)
+        self.array_selection = CheckboxFrame(parent, self, self.master.master.master.app.NB_ARRAYS)
         self.array_selection.pack(side=RIGHT)
         
     def choos_color(self) -> None:
@@ -55,14 +55,17 @@ class ParametersFrame(Frame):
     
 class CheckboxFrame(ttk.Frame):
 
-    def __init__(self, parent: Misc,
+    def __init__(self, 
+                 parent: Misc,
+                 using_element: Misc,
                  n: int,
                  *args: Any,
                  **kwargs: Any) -> None:
         super().__init__(parent, *args, **kwargs)
         
         self.check_vars = []  # To store the IntVars for the checkboxes
-        
+        self.using_element = using_element
+        """The element that uses the varibles in check_vars."""
         # Create n+1 checkboxes dynamically
         for i in range(n+1):
             var = IntVar()  # Create an IntVar for each checkbox
@@ -74,7 +77,7 @@ class CheckboxFrame(ttk.Frame):
             self.check_vars.append(var)  # Store the variable
 
         # Button to print the state of each checkbox
-        print_button = ttk.Button(self, text="Set arrays", command=lambda: print(f"Parent: {type(parent)}")) #parent.send_update
+        print_button = ttk.Button(self, text="Set arrays", command= self.send_message_to_arrays) #parent.send_update
         print_button.grid(row=n+1, column=0, pady=10)
 
     def check_checkbox(self, idx: int) -> None:
@@ -99,10 +102,13 @@ class CheckboxFrame(ttk.Frame):
     
     def send_message_to_arrays(self) -> None:
         """Function that sends the appropriate update message to the controller."""
-        message = ""
-        #for i in self.check_vars:
-
-        print(f"Message sent: {message}")
+        #print(f"Array value: {self.check_vars[0].get()}")
+        if self.check_vars[0].get() == 1:
+            self.using_element.send_update(-2)
+        else:
+            for i in range(len(self.check_vars)):
+                if self.check_vars[i].get() == 1:
+                    self.using_element.send_update(i-1)
 
     # Function to print the current state of all checkboxes
     def print_states(self) -> None:

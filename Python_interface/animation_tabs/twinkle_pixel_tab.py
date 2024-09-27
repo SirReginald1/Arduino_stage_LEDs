@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 from tkinter import *
 from controller_interface import ControllerInterface
 from animation_tabs.parameters_frame import ParametersFrame
@@ -80,8 +80,16 @@ class TwinklePixelArrayFrame(ParametersFrame):
         self.delay = self.txtin_delay.get()
         self.send_update()
 
-    def send_update(self) -> None:
-        """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("Twinkle pixel", self.LED_array_id, [self.color, self.color_saturation, self.pixel_volume, self.fade_amount, self.delay])
+    def send_update(self, array_idx: Union[int, None] = None) -> None:
+        """This function sends the curent values for the parameters to the controller.
+        
+        ### Args:
+            - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
+            Used for synching multiple arrays using the checkboxes.
+        """
+        if not array_idx:
+            self.controller_interface.change_animation("Twinkle pixel", self.LED_array_id, [self.color, self.color_saturation, self.pixel_volume, self.fade_amount, self.delay])
+        else:
+            self.controller_interface.change_animation("Twinkle pixel", array_idx, [self.color, self.color_saturation, self.pixel_volume, self.fade_amount, self.delay])
 
 

@@ -10,7 +10,7 @@ from animation_tabs.zip_tab import ZipArrayFrame
 from animation_tabs.rainbow_circle import RainbowCircleArrayFrame
 from animation_tabs.fade_tab import FadeArrayFrame
 from animation_tabs.fire_tab import FireArrayFrame
-from animation_tabs.volume_bar_tab import VolumeBarArrayFrame
+from animation_tabs.flash_to_beat_tab import FlashToBeatFrame
 
 class LedArrayFrame(Frame):
 
@@ -22,7 +22,7 @@ class LedArrayFrame(Frame):
                                                        "Twinkle pixel" : TwinklePixelArrayFrame, 
                                                        "Strobe" : StrobeArrayFrame, 
                                                        "Zip" : ZipArrayFrame, 
-                                                       "Flash to beat" : ZipArrayFrame}
+                                                       "Flash to beat" : FlashToBeatFrame}
 
 
     def __init__(self,

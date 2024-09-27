@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 from tkinter import *
 from ttkbootstrap.dialogs.colorchooser import ColorChooserDialog
 from controller_interface import ControllerInterface
@@ -73,8 +73,16 @@ class ZipArrayFrame(ParametersFrame):
         self.delay = self.txtin_delay.get()
         self.send_update()
 
-    def send_update(self) -> None:
-        """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("Zip", self.LED_array_id, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
+    def send_update(self, array_idx: Union[int, None] = None) -> None:
+        """This function sends the curent values for the parameters to the controller.
+        
+        ### Args:
+            - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
+            Used for synching multiple arrays using the checkboxes.
+        """
+        if not array_idx:
+            self.controller_interface.change_animation("Zip", self.LED_array_id, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
+        else:
+            self.controller_interface.change_animation("Zip", array_idx, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
 
 

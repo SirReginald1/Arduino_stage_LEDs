@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 from tkinter import *
 from controller_interface import ControllerInterface
 from animation_tabs.parameters_frame import ParametersFrame
@@ -72,8 +72,16 @@ class ShootingStarArrayFrame(ParametersFrame):
         self.direction = self.switch_direction.get()
         self.send_update()
 
-    def send_update(self) -> None:
-        """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("Shooting star", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
+    def send_update(self, array_idx: Union[int, None] = None) -> None:
+        """This function sends the curent values for the parameters to the controller.
+        
+        ### Args:
+            - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
+            Used for synching multiple arrays using the checkboxes.
+        """
+        if not array_idx:
+            self.controller_interface.change_animation("Shooting star", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
+        else:
+            self.controller_interface.change_animation("Shooting star", array_idx, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
 
 

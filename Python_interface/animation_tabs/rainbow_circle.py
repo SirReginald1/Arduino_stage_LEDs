@@ -52,10 +52,7 @@ class RainbowCircleArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if sum(self.array_selection) == 0:
-            self.arduino_int.change_animation("Rainbow circle", self.LED_array_id, [self.delay])
+        if not array_idx:
+            self.controller_interface.change_animation("Rainbow circle", self.LED_array_id, [self.delay])
         else:
-            for array in range(len(self.array_selection[1:])):
-                if self.array_selection[array+1] == 1:
-                    print(f"array idx: {array}")
-                    #self.arduino_int.change_animation("Rainbow circle", array, [self.delay])
+            self.controller_interface.change_animation("Rainbow circle", array_idx, [self.delay])

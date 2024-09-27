@@ -35,6 +35,9 @@ class ControllerInterface():
     init_values_rainbow_circle: List[int] = [0]
     """Parameter init values for the rainbow wheel animation. {delay}"""
 
+    init_values_flash_to_beat: List[int] = [(255, 255, 255), 50, 80, 180]
+    """Parameter init values for the flash to beat animation. {freq_bin_low, freq_bin_high, time_on}"""
+
     init_labels_strobe: List[str] = ["time_on", "time_off", "color"]
     """Parameter init labels for the strobe animation."""
 
