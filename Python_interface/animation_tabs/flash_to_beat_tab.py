@@ -57,6 +57,9 @@ class FlashToBeatFrame(ParametersFrame):
         ### Args:
             - event (Event): The key pess event.
         """
+        self.time_on = self.txtin_time_on.get()
+        self.freq_bin_low = self.txtin_freq_bin_low.get()
+        self.freq_bin_high = self.txtin_freq_bin_high.get()
         self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
@@ -67,8 +70,8 @@ class FlashToBeatFrame(ParametersFrame):
             Used for synching multiple arrays using the checkboxes.
         """
         if not array_idx:
-            self.controller_interface.change_animation("Flash to beat", self.LED_array_id, [])
+            self.controller_interface.change_animation("Flash to beat", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.time_on])#, self.freq_bin_low, self.freq_bin_high])
         else:
-            self.controller_interface.change_animation("Flash to beat", array_idx, [])
+            self.controller_interface.change_animation("Flash to beat", array_idx, [self.color[0], self.color[1], self.color[2], self.time_on])#, self.freq_bin_low, self.freq_bin_high])
 
 

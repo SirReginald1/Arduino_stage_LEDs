@@ -1,62 +1,89 @@
 import tkinter as tk
-from tkinter import Misc
-import ttkbootstrap as ttk
-from ttkbootstrap.constants import *
+from tkinter import ttk
 
-class CustomMenuBar(ttk.Frame):
+class HorizontalScrollableFrame(ttk.Frame):
+    def __init__(self, parent, labels=[], entries=[], checkboxes=[], *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
 
-    def __init__(self,
-                 parent: Misc) -> "CustomMenuBar":
-        # Function to handle menu actions
+        # Create a canvas and a scrollbar
+        self.canvas = tk.Canvas(self, borderwidth=0)
+        self.scrollbar = ttk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
+        self.scrollable_frame = ttk.Frame(self.canvas)
 
-        # Create a custom menu bar using a frame to control its color
-        super().__init__(parent, bootstyle="dark", padding=(5, 5))
-        #self.pack(side=tk.TOP, fill=tk.X)
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
 
-        # Create the actual Tkinter Menu (inside the frame)
-        self.menu_bar = tk.Menu(self, tearoff=0)
-        #self.menu_bar.pack()
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(xscrollcommand=self.scrollbar.set)
 
-        # Add "File" menu with sub-items
-        self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.file_menu.add_command(label="New", command=lambda: self.menu_action("New"))
-        self.file_menu.add_command(label="Open", command=lambda: self.menu_action("Open"))
-        self.file_menu.add_command(label="Save", command=lambda: self.menu_action("Save"))
-        self.file_menu.add_separator()
-        self.file_menu.add_command(label="Exit", command=lambda: self.menu_action("Pressed quit!"))
+        # Pack the canvas and scrollbar
+        self.canvas.pack(side="top", fill="both", expand=True)
+        self.scrollbar.pack(side="bottom", fill="x")
 
-        # Add "Edit" menu with sub-items
-        self.edit_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.edit_menu.add_command(label="Undo", command=lambda: self.menu_action("Undo"))
-        self.edit_menu.add_command(label="Redo", command=lambda: self.menu_action("Redo"))
-        self.edit_menu.add_separator()
-        self.edit_menu.add_command(label="Cut", command=lambda: self.menu_action("Cut"))
-        self.edit_menu.add_command(label="Copy", command=lambda: self.menu_action("Copy"))
-        self.edit_menu.add_command(label="Paste", command=lambda: self.menu_action("Paste"))
+        # Add widgets dynamically based on the arrays
+        self.label_vars = []
+        self.entry_vars = []
+        self.checkbox_vars = []
 
-        # Add the menus to the menu bar
-        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
-        self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
+        # Horizontal layout for labels, entries, and checkboxes
+        for i, label_text in enumerate(labels):
+            label_var = tk.StringVar(value=label_text)
+            label = ttk.Label(self.scrollable_frame, textvariable=label_var)
+            label.grid(row=0, column=i, padx=10, pady=5)
+            self.label_vars.append(label_var)
 
-    # Function to handle menu actions
-    def menu_action(self, action_name):
-        print(f"{action_name} selected")
+        for i, entry_default in enumerate(entries):
+            entry_var = tk.StringVar(value=entry_default)
+            entry = ttk.Entry(self.scrollable_frame, textvariable=entry_var)
+            entry.grid(row=1, column=i, padx=10, pady=5)
+            self.entry_vars.append(entry_var)
 
-   
-# Create the main window
-root = ttk.Window(themename="superhero")
-root.title("Custom Menu Bar with Color")
+        for i, checkbox_text in enumerate(checkboxes):
+            checkbox_var = tk.BooleanVar()
+            checkbutton = ttk.Checkbutton(self.scrollable_frame, text=checkbox_text, variable=checkbox_var)
+            checkbutton.grid(row=2, column=i, padx=10, pady=5)
+            self.checkbox_vars.append(checkbox_var)
 
-menu_bar = CustomMenuBar(root)
-menu_bar.pack(side=tk.TOP, fill=tk.X)
+    def get_values(self):
+        """
+        Retrieve the current values of the widgets.
+        Returns a dictionary with the values of labels, entries, and checkboxes.
+        """
+        label_values = [var.get() for var in self.label_vars]
+        entry_values = [var.get() for var in self.entry_vars]
+        checkbox_values = [var.get() for var in self.checkbox_vars]
 
-# Add a section below to simulate the main content
-main_content = ttk.Frame(root, padding=20)
-main_content.pack(fill=tk.BOTH, expand=True)
+        return {
+            'labels': label_values,
+            'entries': entry_values,
+            'checkboxes': checkbox_values
+        }
 
-# Sample label for main content
-sample_label = ttk.Label(main_content, text="Main Content Goes Here", font=("Helvetica", 18))
-sample_label.pack(pady=20)
+# Main application window
+root = tk.Tk()
+root.title("Horizontal Scrollable Frame Example")
 
-# Start the main loop
+# Define some example data arrays
+labels = [f"Label {i+1}" for i in range(10)]
+entries = [f"Entry {i+1}" for i in range(10)]
+checkboxes = [f"Checkbox {i+1}" for i in range(10)]
+
+# Create a HorizontalScrollableFrame with the arrays
+scrollable_frame = HorizontalScrollableFrame(root, labels=labels, entries=entries, checkboxes=checkboxes)
+scrollable_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+# Function to display the values of the widgets
+def show_values():
+    values = scrollable_frame.get_values()
+    print("Labels:", values['labels'])
+    print("Entries:", values['entries'])
+    print("Checkboxes:", values['checkboxes'])
+
+# Button to trigger value display
+show_values_button = ttk.Button(root, text="Show Values", command=show_values)
+show_values_button.pack(pady=10)
+
+# Start the main Tkinter event loop
 root.mainloop()

@@ -10,7 +10,6 @@ class RainbowCircleArrayFrame(ParametersFrame):
     def __init__(self, 
                  parent: Misc,
                  array_id: int,
-                 #label: str, 
                  controller_interface: ControllerInterface
                  ) -> "RainbowCircleArrayFrame":
         """"""

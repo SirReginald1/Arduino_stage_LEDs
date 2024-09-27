@@ -84,6 +84,8 @@ class ControllerInterface():
                        "rainbow_circle"]
     """List of all the animation names."""
 
+    NB_ARRAYS = 4
+
     # Send bytes representing the animation code
     # If bytes long then with parameters else just change animation
 
@@ -168,6 +170,34 @@ class ControllerInterface():
         self.param_values_rainbow_circle: Dict[int] = {label : value for label, value in zip(self.init_labels_rainbow_wheel, self.init_values_rainbow_circle)}
         """Parameter values for the rainbow circle animation."""
  
+        self.animation_var_array_dict: Dict[str, List[List[str]]] = {"Rainbow circle" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]],
+                                                                     "Fade" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]],
+                                                                     "Sparle" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]], 
+                                                                     "Fire" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]], 
+                                                                     "Shooting star" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]], 
+                                                                     "Twinkle pixel" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]], 
+                                                                     "Strobe" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]], 
+                                                                     "Zip" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]], 
+                                                                     "Flash to beat" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         [f"array {i}" for i in range(self.NB_ARRAYS)]]}
+
     def change_animation(self, 
                          animation: str, 
                          LED_array_id: int,

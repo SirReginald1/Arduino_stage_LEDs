@@ -96,7 +96,7 @@ class Switch(tk.Frame):
 			variable=ctk.StringVar(value="on"), onvalue=1, offvalue=0,
 			#width=200,
 			#height=100,
-			switch_width=60,
+			switch_width=10,
 			switch_height=25,
 			#corner_radius=10,
 			border_color="orange",
