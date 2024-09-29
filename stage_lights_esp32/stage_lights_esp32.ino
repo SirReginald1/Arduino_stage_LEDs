@@ -43,7 +43,6 @@ CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
 /** The array of structs that contain*/
 animParamRef animParamRefs[NB_ARRAYS];
 
-
 //esp_task_wdt_in
 
 // ############################# Time variables ##############################
