@@ -1,6 +1,10 @@
 //#include "driver/uart.h" // driver used to change the baudrate
+#include "esp_task_wdt.h"
+#include "esp_system.h"
+#include "freertos/queue.h"
 #include <Arduino.h>
 #include <FastLED.h>
+#include <arduinoFFT.h>
 //#include <TimerOne.h>
 #include "Globals.h"
 #include "Animations.h"
@@ -8,10 +12,10 @@
 #include "SD_manager.h"
 #include "Beat_detector.h"
 #include "Microphone.h"
-#include <arduinoFFT.h>
-#include "esp_task_wdt.h"
-#include "esp_system.h"
-#include "freertos/queue.h"
+#ifdef USE_BLUETOOTH
+  #include "Bluetooth.h"
+#endif
+
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
 //#define USE_INTERFACE
@@ -24,6 +28,11 @@
 #define LED_PIN_3 16
 // Setting button pins
 #define BTN_PIN 2
+
+#ifdef USE_BLUETOOTH
+  /* The bluetooth serial object */
+  extern BluetoothSerial SerialBT;
+#endif
 
 // Functioning modes
 /** The value indicating if the animation selection mode is runing. (Is the default startup mode) */
@@ -176,6 +185,12 @@ void loop() {
     ComInterface::readInput();
     FastLED.clear(); // !!!!!!!!!!!!!! Flickering at animation switch probably comes from here !!!!!!!!!!!!!!!!!!!!!!!!!!!
   }
+  #ifdef USE_BLUETOOTH
+    else if(bluetoothOn && SerialBT.available() > 0){
+      Serial.println("Detected bluetooth input!");
+      Serial.println(SerialBT.read());
+    }
+  #endif
   if(appModeMicFFTOnCore1){
     readBeatQueue();
     Animations::runAnimations(led_arrays, animParamRefs);

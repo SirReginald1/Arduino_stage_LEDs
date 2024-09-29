@@ -1,6 +1,8 @@
 #ifndef Globals_h
 #define Globals_h
 
+//#define USE_BLUETOOTH
+
 //######################################################################################################
 //########################################## LED VARIABLES #############################################
 //######################################################################################################
@@ -50,6 +52,6 @@
 
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
-#define USE_INTERFACE // Depricated ?????
+//#define USE_INTERFACE // Depricated ?????
 
 #endif

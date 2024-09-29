@@ -15,8 +15,11 @@
 #include "Globals.h"
 #include "Animations.h"
 #include "SD_manager.h"
+#ifdef USE_BLUETOOTH
+  #include "Bluetooth.h"
+#endif
 
-// ################### Compilation options ####################
+// ################################ CONSTANTS #################################
 #define START_MARKER '<'
 #define END_MARKER '>'
 /** Receving this symbole signals the controler to start somthing.*/
@@ -30,10 +33,14 @@
 #define RECIVE_MODE_ANIM_SELECT 0
 /** The mode number for switching on the microphone and beat detection.*/
 #define RECIVE_MODE_SWITCH_ON_BEAT_DETECT 1
-/** The mode number for the preprepared animation mode.*/
+/** The mode number for the brightness setting mode.*/
 #define RECIVE_MODE_SET_BRIGHTNESS 2
+/** The mode number for the synching animations mode.*/
+#define RECIVE_MODE_SYCH_ANIMATIONS 3
+/** The mode number for the bluetooth togling mode.*/
+#define RECIVE_MODE_TOGGLE_BLUETOOTH 4
 /** The mode number for the preprepared animation mode.*/
-#define RECIVE_MODE_RUN_PREP_ANIM 3
+#define RECIVE_MODE_RUN_PREP_ANIM 5
 
 /** The task handler for the FFT task runing on core 0 */
 extern TaskHandle_t mainCore0Handle;
@@ -124,6 +131,8 @@ class ComInterface{
     static void parseBrightnessData();
 
     static void swithMicFFTMode();
+
+    static void swithBluetoothMode();
 
     static void readInput();
 };
@@ -280,7 +289,7 @@ void ComInterface::recvWithStartEndMarkers() {
     case MODE_CHANGE_FLAG:
       try{
         ComInterface::dataParsingMode = Serial.read()-48; //Serial.parseInt();
-        Serial.read();
+        Serial.read(); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IF PROBLEMS WHEN PARSING COMMAND MIGHT BE THIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       }
       catch(...){
         // Do nothing
@@ -521,9 +530,28 @@ void ComInterface::swithMicFFTMode(){
 }
 
 /**
+  * Function used to parse data when RECIVE_MODE_TOGGLE_BLUETOOTH is receved.
+*/
+#ifdef USE_BLUETOOTH
+  void ComInterface::swithBluetoothMode(){
+    Serial.println("Enter blt switch.");
+    if(!bluetoothOn){
+      StartBluetooth();
+    Serial.println("Blt ON.");
+
+    }
+    else{
+      endBluetooth();
+    Serial.println("Blt OFF.");
+
+    }
+  }
+#endif
+
+/**
   * Function called in main program to wich will read and parse the data present in the input buffer depending on the mode it is given as parameter.
 */
-void ComInterface::readInput(){ 
+void ComInterface::readInput(){
   ComInterface::recvWithStartEndMarkers();
   if (newData == true) {
       strcpy(tempChars, receivedChars);
@@ -542,6 +570,12 @@ void ComInterface::readInput(){
           ComInterface::parseBrightnessData();
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
+        #ifdef USE_BLUETOOTH
+          case RECIVE_MODE_TOGGLE_BLUETOOTH:
+            ComInterface::swithBluetoothMode();
+            ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
+            break;
+        #endif
         case RECIVE_MODE_RUN_PREP_ANIM:
           ComInterface::parsePreprepAnimData();
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;

@@ -15,6 +15,10 @@ class ComInterface{
 
     //static animParamRef animParamRefs[NB_ARRAYS];
 
+    
+    /**The mode used to determin how receved data is parsed. In sync with the curently used functionality.*/
+    static int dataParsingMode;
+
     /*Reads the contense of the serial buffer and sets all the appropriate variables.*/
     static void readInput();
 
