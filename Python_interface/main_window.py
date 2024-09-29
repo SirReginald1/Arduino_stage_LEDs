@@ -29,9 +29,10 @@ class MainWindow(ttk.Window):
         #self.controller_interface = ControllerInterface(baudrate=115200)
         self.controller_interface = app.controller_interface
 
-        self.title("The title")
+        self.title("LED Controle")
         #self.iconbitmap()
         self.geometry(f"{size[0]}x{size[1]}")
+        self.app = app
 
         ##################### Side Panel ######################
         self.side_bar_menu = SlidePanel(self, 1.0, 0.7, self.controller_interface)

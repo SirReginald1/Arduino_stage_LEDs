@@ -66,11 +66,23 @@ class CustomMenuBar(ttk.Frame):
         super().__init__(parent, bootstyle="secondary", padding=(5, 2))  # Colored frame for the menu bar
         #menu_bar.pack(side=tk.TOP, fill=tk.X)
          # Create the "File" menu
-        self.file_menu = self.create_menu_item(self, "File", lambda: self.menu_action("File"))
+        self.file_menu = self.create_dropdown_menu_item(self, "File", self.create_file_menu)
         self.edit_menu = self.create_menu_item(self, "Edit", lambda: self.menu_action("Edit"))
         self.view_menu = self.create_menu_item(self, "View", lambda: self.menu_action("View"))
         self.help_menu = self.create_menu_item(self, "Help", lambda: self.menu_action("Help"))
         self.open_console = self.create_menu_item(self, "Console", parent.side_bar_menu.animate)
+
+        # Create a slider (scale) at the end of the menu bar
+        self.brightness_slider: ttk.Scale = ttk.Scale(self, from_= 0, to = 255, value=255, orient=tk.HORIZONTAL, bootstyle="primary", command=self.update_brightness_label)
+        self.brightness_slider.pack(side=tk.RIGHT, padx=20, pady=5)
+
+        # Create a label to display the slider's value
+        self.slider_value_label: ttk.Label = ttk.Label(self, text="0", bootstyle="secondary", padding=(5, 2))
+        self.slider_value_label.pack(side=tk.RIGHT, padx=10, pady=5)
+
+    # Update the label with the current value of the slider
+    def update_brightness_label(self, value: str) -> None:
+        self.slider_value_label.config(text=value)
 
     # Function to handle menu item clicks
     def menu_action(self, action_name: str) -> None:
@@ -94,6 +106,52 @@ class CustomMenuBar(ttk.Frame):
         label.bind("<Enter>", lambda e: self.on_enter(e, label))  # Change color on hover
         label.bind("<Leave>", lambda e: self.on_leave(e, label))  # Restore color when hover leaves
         return label
+    
+    # Create individual menu items (as labels) with dropdown functionality
+    def create_dropdown_menu_item(self, parent: tk.Misc, text: str, create_menu: Callable) -> tk.Label:
+        label = tk.Label(parent, text=text, bg=self.menu_bg_color, fg=self.menu_fg_color, padx=10, pady=5, font=("Helvetica", 12))
+        label.pack(side=tk.LEFT, padx=5)
+
+        # Bind hover and click events
+        label.bind("<Enter>", lambda e: self.on_enter(e, label))  # Change color on hover
+        label.bind("<Leave>", lambda e: self.on_leave(e, label))  # Restore color when hover leaves
+        label.bind("<Button-1>", lambda e: self.show_menu(label, create_menu()))  # Show the dropdown menu when clicked
+        
+        return label
+    
+    # Show the dropdown menu
+    def show_menu(self, widget: tk.Widget, menu: tk.Menu) -> None:
+        x, y, width, height = widget.bbox()
+        menu.post(widget.winfo_rootx(), widget.winfo_rooty() + height)
+
+    # Create File menu dropdown
+    def create_file_menu(self) -> tk.Menu:
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="New", command=lambda: self.menu_action("New"))
+        menu.add_command(label="Open", command=lambda: self.menu_action("Open"))
+        menu.add_separator()
+        menu.add_command(label="Exit", command=lambda: self.menu_action("Exit"))
+        return menu
+
+    # Create Edit menu dropdown
+    def create_edit_menu(self) -> tk.Menu:
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="Undo", command=lambda: self.menu_action("Undo"))
+        menu.add_command(label="Redo", command=lambda: self.menu_action("Redo"))
+        return menu
+
+    # Create View menu dropdown
+    def create_view_menu(self) -> tk.Menu:
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="Zoom In", command=lambda: self.menu_action("Zoom In"))
+        menu.add_command(label="Zoom Out", command=lambda: self.menu_action("Zoom Out"))
+        return menu
+
+    # Create Help menu dropdown
+    def create_help_menu(self) -> tk.Menu:
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="About", command=lambda: self.menu_action("About"))
+        return menu
 
 
 class CustomMenuBarTest(ttk.Frame):

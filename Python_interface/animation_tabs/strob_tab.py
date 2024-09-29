@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 from tkinter import *
 from controller_interface import ControllerInterface
 from animation_tabs.parameters_frame import ParametersFrame
@@ -55,6 +55,14 @@ class StrobeArrayFrame(ParametersFrame):
         self.time_off = self.txtin_time_off.get()
         self.send_update()
 
-    def send_update(self) -> None:
-        """This function sends the curent values for the parameters to the arduino"""
-        self.arduino_int.change_animation("Strobe", self.LED_array_id, [self.time_on, self.time_off, self.color[0], self.color[1], self.color[2]])
+    def send_update(self, array_idx: Union[int, None] = None) -> None:
+        """This function sends the curent values for the parameters to the controller.
+        
+        ### Args:
+            - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
+            Used for synching multiple arrays using the checkboxes.
+        """
+        if not array_idx:
+            self.controller_interface.change_animation("Strobe", self.LED_array_id, [self.time_on, self.time_off, self.color[0], self.color[1], self.color[2]])
+        else:
+            self.controller_interface.change_animation("Strobe", array_idx, [self.time_on, self.time_off, self.color[0], self.color[1], self.color[2]])
