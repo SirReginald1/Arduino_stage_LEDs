@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <FastLED.h>
 #include "Globals.h"
 #include "Animations.h"
 #include "SD_manager.h"
@@ -30,12 +31,17 @@
 /** The mode number for switching on the microphone and beat detection.*/
 #define RECIVE_MODE_SWITCH_ON_BEAT_DETECT 1
 /** The mode number for the preprepared animation mode.*/
-#define RECIVE_MODE_RUN_PREP_ANIM 2
+#define RECIVE_MODE_SET_BRIGHTNESS 2
+/** The mode number for the preprepared animation mode.*/
+#define RECIVE_MODE_RUN_PREP_ANIM 3
 
 /** The task handler for the FFT task runing on core 0 */
 extern TaskHandle_t mainCore0Handle;
 /** The value indicating if the mic and FFT loop is runing on core0. */
 extern bool appModeMicFFTOnCore1;
+
+/** The LED arrays */
+extern CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
 
 class ComInterface{
   public:
@@ -114,6 +120,8 @@ class ComInterface{
     static void parseAnimationChangeData();
     /**This function deals with parsing data in a default general context.*/
     static void parsePreprepAnimData();
+
+    static void parseBrightnessData();
 
     static void swithMicFFTMode();
 
@@ -272,7 +280,7 @@ void ComInterface::recvWithStartEndMarkers() {
     case MODE_CHANGE_FLAG:
       try{
         ComInterface::dataParsingMode = Serial.read()-48; //Serial.parseInt();
-        //Serial.read();
+        Serial.read();
       }
       catch(...){
         // Do nothing
@@ -424,6 +432,56 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
 }
 
 /**
+  * This function deals with parsing data when setting the brightness.
+*/
+void ComInterface::parseBrightnessData(){
+  //Serial.println("Enter set brightness data parsing."); ///////////////////////////////////////////////////////////////////////////////////
+  /*Value extracted from buffer*/
+  char * strtokIndx;
+  /* The current array being manipulated */
+  int currentArray;
+  /* The brightness value */
+  uint8_t brightness;
+
+  // The first element in the list
+  strtokIndx = strtok(tempChars,",");
+  currentArray = atoi(strtokIndx); // The current array being manipulated
+  //Serial.print("Current array: ");Serial.println(currentArray); ///////////////////////////////////////////////////////////////////////////////////
+
+  // Check that currentArray is acceptable
+  if((currentArray < 0 && currentArray != -2) || currentArray >= NB_ARRAYS){
+    //Serial.println("Invalide array!");
+    currentArray = 0;
+    return;
+  }
+
+  // The second element in the list
+  strtokIndx = strtok(NULL, ",");
+  brightness = (uint8_t)atoi(strtokIndx); // The brightness value
+  //Serial.print("brightness: ");Serial.println(brightness); ///////////////////////////////////////////////////////////////////////////////////
+  if(currentArray == -2){
+    //Serial.print("Setting global brightness to: "); Serial.println(brightness);
+    FastLED.setBrightness(brightness);
+    //FastLED.show();  // Update the strip
+  }
+  else{
+    for(int i=0;i<NUM_LEDS;i++){
+      led_arrays[currentArray][i].r  = scale8(led_arrays[currentArray][i].r, brightness);
+      led_arrays[currentArray][i].g  = scale8(led_arrays[currentArray][i].g, brightness);
+      led_arrays[currentArray][i].b  = scale8(led_arrays[currentArray][i].b, brightness);
+    }
+  }
+  
+  // The second element in the list
+  //strtokIndx = strtok(NULL, ",");
+  //while(strtokIndx != NULL) {
+  //  break;
+  //}
+  // Leave this at end
+  strtokIndx = strtok(NULL, ",");
+}
+
+/**
   * This function deals with parsing data when preprepared animation mode is active.
 */
 void ComInterface::parsePreprepAnimData(){
@@ -479,6 +537,10 @@ void ComInterface::readInput(){
             //ComInterface::parseAnimationChangeData();
             ComInterface::swithMicFFTMode(); // Doesn't switch data parsing modes as Mic animations will use the same as other.
             ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
+          break;
+        case RECIVE_MODE_SET_BRIGHTNESS:
+          ComInterface::parseBrightnessData();
+          ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_RUN_PREP_ANIM:
           ComInterface::parsePreprepAnimData();

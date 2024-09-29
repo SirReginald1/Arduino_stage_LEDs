@@ -274,7 +274,7 @@ class ControllerInterface():
             - str: User message on connection status.
         """
         try:
-            self.controller = Serial(port='COM7', baudrate=self.baudrate, timeout=10)
+            self.controller = Serial(port=self.port, baudrate=self.baudrate, timeout=10)
             return "Connection to arduino established."
         except:
             self.error_fun_call("Failed to connect to controller! Check that that the port is correct!")
