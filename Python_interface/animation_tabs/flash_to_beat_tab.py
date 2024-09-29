@@ -23,8 +23,8 @@ class FlashToBeatFrame(ParametersFrame):
         
         self.freq_bin_low: int = controller_interface.init_values_flash_to_beat[2]
         self.freq_bin_high: int = controller_interface.init_values_flash_to_beat[3]
-        self.time_on: int = controller_interface.init_values_fire[1]
-        #self.intensity: float = controller_interface.init_values_fire[3]
+        self.time_on: int = controller_interface.init_values_flash_to_beat[1]
+        self.color: Tuple[int] = controller_interface.init_values_flash_to_beat[0]
 
         ##################### Widgets ######################
         self.frame_label = Label(self, text="Flash to beat", font=self.label_font2)
