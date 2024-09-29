@@ -186,6 +186,14 @@ class Animations{
     */
     static void setParametersUnsignedLong(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, unsigned long paramValue);
 
+    /**
+     * Sets the toSet array with all the animation variables present in the reference struct.
+     * 
+     * @param animationStruct The parameter struc array to be modified. 
+     * @param reference The index of the reference 
+     */
+    static void synchAnimVarAll(animParamRef animationStruct[NB_ARRAYS], int reference, int toSet);
+
 // #########################################################################
 // ############################ Run animations #############################
 // #########################################################################

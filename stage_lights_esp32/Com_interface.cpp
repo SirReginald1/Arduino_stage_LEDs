@@ -32,8 +32,10 @@
 #define RECIVE_MODE_SWITCH_ON_BEAT_DETECT 1
 /** The mode number for the preprepared animation mode.*/
 #define RECIVE_MODE_SET_BRIGHTNESS 2
+/** The mode number for the synching animations mode.*/
+#define RECIVE_MODE_SYNCH_ANIM 3
 /** The mode number for the preprepared animation mode.*/
-#define RECIVE_MODE_RUN_PREP_ANIM 3
+#define RECIVE_MODE_RUN_PREP_ANIM 4
 
 /** The task handler for the FFT task runing on core 0 */
 extern TaskHandle_t mainCore0Handle;
@@ -482,6 +484,39 @@ void ComInterface::parseBrightnessData(){
 }
 
 /**
+  * This function deals with parsing data for synching aniamtions.
+*/
+void ComInterface::parseSynchAnimData(){
+  extern animParamRef animParamRefs[NB_ARRAYS];
+  /*Value extracted from buffer*/
+  char * strtokIndx1;
+  char * strtokIndx2;
+
+  uint8_t arrayNb;
+
+  int offset;
+
+  // The first element in the list
+  strtokIndx1 = strtok(tempChars,",");
+  //arrayNb = atoi(strtokIndx1);
+
+  strtokIndx2 = strtok(NULL, ",");
+  //offset = atoi(strtokIndx2);
+  
+  while(strtokIndx1 != NULL && strtokIndx2 != NULL) {
+    arrayNb = atoi(strtokIndx1);
+    offset = atoi(strtokIndx2);
+
+
+
+    strtokIndx1 = strtok(NULL, ",");
+    strtokIndx2 = strtok(NULL, ",");
+  }
+  // Leave this at end
+  strtokIndx = strtok(NULL, ",");
+}
+
+/**
   * This function deals with parsing data when preprepared animation mode is active.
 */
 void ComInterface::parsePreprepAnimData(){
@@ -539,6 +574,10 @@ void ComInterface::readInput(){
             ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_SET_BRIGHTNESS:
+          ComInterface::parseBrightnessData();
+          ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
+          break;
+        case RECIVE_MODE_SYNCH_ANIM:
           ComInterface::parseBrightnessData();
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
