@@ -1,6 +1,6 @@
 from typing import Callable
 import tkinter as tk
-from tkinter import Button
+from tkinter import Button, Entry, StringVar
 import ttkbootstrap as ttk
 from tkinter import Misc, Event
 from custom_widgets import SlidePanel
@@ -70,19 +70,30 @@ class CustomMenuBar(ttk.Frame):
         self.edit_menu = self.create_menu_item(self, "Edit", lambda: self.menu_action("Edit"))
         self.view_menu = self.create_menu_item(self, "View", lambda: self.menu_action("View"))
         self.help_menu = self.create_menu_item(self, "Help", lambda: self.menu_action("Help"))
+        self.connection_menu = self.create_dropdown_menu_item(self, "Connection", self.create_connection_menu)
         self.open_console = self.create_menu_item(self, "Console", parent.side_bar_menu.animate)
 
+        self.global_brightness_slider_memory: int = 0
+        """The value used to make the slider only send commands when it switches integer."""
+
         # Create a slider (scale) at the end of the menu bar
-        self.brightness_slider: ttk.Scale = ttk.Scale(self, from_= 0, to = 255, value=255, orient=tk.HORIZONTAL, bootstyle="primary", command=self.update_brightness_label)
+        self.brightness_slider: ttk.Scale = ttk.Scale(self, from_= 0, to = 60, value=255, length=800, orient=tk.HORIZONTAL, bootstyle="primary", command=self.update_brightness)
         self.brightness_slider.pack(side=tk.RIGHT, padx=20, pady=5)
 
         # Create a label to display the slider's value
-        self.slider_value_label: ttk.Label = ttk.Label(self, text="0", bootstyle="secondary", padding=(5, 2))
+        self.slider_value_label: ttk.Label = ttk.Label(self, text="255", bootstyle="secondary", padding=(5, 2))
         self.slider_value_label.pack(side=tk.RIGHT, padx=10, pady=5)
 
     # Update the label with the current value of the slider
-    def update_brightness_label(self, value: str) -> None:
-        self.slider_value_label.config(text=value)
+    def update_brightness(self, value: str) -> None:
+        #print(f"type: {type(value)}, value: {value}")
+        converted_value: int = int(float(value))  
+        if converted_value >= 55:
+            converted_value = min(converted_value*5, 255)
+        if self.global_brightness_slider_memory != converted_value:
+            self.slider_value_label.config(text=converted_value)
+            self.master.controller_interface.send_message(f"@2<-2,{converted_value}>")
+            self.global_brightness_slider_memory = converted_value
 
     # Function to handle menu item clicks
     def menu_action(self, action_name: str) -> None:
@@ -132,6 +143,46 @@ class CustomMenuBar(ttk.Frame):
         menu.add_separator()
         menu.add_command(label="Exit", command=lambda: self.menu_action("Exit"))
         return menu
+    
+    def create_connection_menu(self) -> tk.Menu:
+        """Create connection dropdown menu.
+        
+        ### Returns:
+            - tk.Menu: The connection dropdown menu
+        """
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="Set connection options", command=lambda: self.open_connection_settings_window())
+        menu.add_command(label="Re-connect", command=lambda: self.master.controller_interface.try_to_connect())
+        #menu.add_separator()
+        #menu.add_command(label="Exit", command=lambda: self.menu_action("Exit"))
+        return menu
+
+    # Function to open a new window
+    def open_connection_settings_window(self):
+        new_window = ttk.Toplevel(self.master)  # Create a new top-level window
+        new_window.title("Connection settings")
+        new_window.geometry("600x400")
+
+        lab_port = ttk.Label(new_window, text="Port", font=("Helvetica", 16))
+        lab_port.pack(pady=20)
+        text_in_port = Entry(new_window, textvariable=StringVar(value=str(self.master.controller_interface.port)))
+        text_in_port.pack(pady=20)
+
+        # Add some content to the new window
+        lab_baudrate = ttk.Label(new_window, text="Baudrate", font=("Helvetica", 16))
+        lab_baudrate.pack(pady=20)
+        text_in_baudrate = Entry(new_window, textvariable=StringVar(value=str(self.master.controller_interface.baudrate)))
+        text_in_baudrate.pack(pady=20)
+
+        def close_window() -> None:
+            self.master.controller_interface.port = text_in_port.get()
+            self.master.controller_interface.baudrate = int(text_in_baudrate.get())
+            #print(f"The interface port: {self.master.controller_interface.port}")
+            #print(f"The interface baudrate: {self.master.controller_interface.baudrate}")
+            new_window.destroy()
+
+        close_button = ttk.Button(new_window, text="Set variables", command=close_window)
+        close_button.pack(pady=10)
 
     # Create Edit menu dropdown
     def create_edit_menu(self) -> tk.Menu:
