@@ -515,6 +515,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
           return animationStruct[arrayIdx].flashToBeatParamInt;
           break;
       }
+      return 0;
     }
 
     float* Animations::getParametersFloat(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode){
@@ -523,6 +524,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
           return animationStruct[arrayIdx].fireParamFloat;
           break;
       }
+      return 0;
     }
 
     unsigned long* Animations::getParametersUnsignedLong(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode){
@@ -531,6 +533,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
           return animationStruct[arrayIdx].zipParamUnsignedLong;
           break;
       }
+      return 0;
     }
 
     void Animations::setParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode, int paramIdx, int paramValue){

@@ -32,13 +32,18 @@
 #define RECIVE_MODE_SWITCH_ON_BEAT_DETECT 1
 /** The mode number for the preprepared animation mode.*/
 #define RECIVE_MODE_SET_BRIGHTNESS 2
+/** The mode number for the frequency band setting mode.*/
+#define RECIVE_MODE_SET_FREQ_BAND 4
 /** The mode number for the preprepared animation mode.*/
-#define RECIVE_MODE_RUN_PREP_ANIM 3
+#define RECIVE_MODE_RUN_PREP_ANIM 5
 
 /** The task handler for the FFT task runing on core 0 */
 extern TaskHandle_t mainCore0Handle;
 /** The value indicating if the mic and FFT loop is runing on core0. */
 extern bool appModeMicFFTOnCore1;
+
+/** The notification queue used by core0 to signal core 1 */
+extern QueueHandle_t core0FreqBandQueue;
 
 /** The LED arrays */
 extern CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
@@ -122,6 +127,8 @@ class ComInterface{
     static void parsePreprepAnimData();
 
     static void parseBrightnessData();
+
+    static void parseSetFreqBandData();
 
     static void swithMicFFTMode();
 
@@ -482,6 +489,29 @@ void ComInterface::parseBrightnessData(){
 }
 
 /**
+  * This function deals with parsing data when setting frequency bands.
+*/
+void ComInterface::parseSetFreqBandData(){
+  /*Value extracted from buffer*/
+  char * strtokIndx;
+
+  float value;
+
+  // The first element in the list
+  strtokIndx = strtok(tempChars,",");
+  
+
+  while(strtokIndx != NULL) {
+    value = atof(strtokIndx);
+    xQueueSend(core0FreqBandQueue, &value, 5);
+    strtokIndx = strtok(NULL, ",");
+  }
+  xTaskNotify(mainCore0Handle, MODE_SET_FREQ_BAND, eSetValueWithOverwrite);
+  // Leave this at end
+  strtokIndx = strtok(NULL, ",");
+}
+
+/**
   * This function deals with parsing data when preprepared animation mode is active.
 */
 void ComInterface::parsePreprepAnimData(){
@@ -515,7 +545,26 @@ void ComInterface::parsePreprepAnimData(){
 */
 void ComInterface::swithMicFFTMode(){
   //if(mainCore0Handle == NULL){
-    xTaskNotify(mainCore0Handle, MODE_MIC_FFT_ON, eSetValueWithOverwrite);
+    uint32_t notifValue;
+    /*Value extracted from buffer*/
+    char * strtokIndx;
+    // The first element in the list
+    strtokIndx = strtok(tempChars,",");
+    switch (atoi(strtokIndx)){
+      case 1:
+        notifValue = MODE_ADC_FFT_ON;
+        break;
+      case 2:
+        notifValue = MODE_MIC_FFT_ON;
+        break;
+      case 0:
+        notifValue = MODE_FFT_OFF;
+        break;
+      default:
+        Serial.println("Parameter value not recognized!");
+        break;
+    }
+    xTaskNotify(mainCore0Handle, notifValue, eSetValueWithOverwrite); //MODE_MIC_FFT_ON
     appModeMicFFTOnCore1 = !appModeMicFFTOnCore1;
   //}
 }
@@ -540,6 +589,10 @@ void ComInterface::readInput(){
           break;
         case RECIVE_MODE_SET_BRIGHTNESS:
           ComInterface::parseBrightnessData();
+          ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
+          break;
+        case RECIVE_MODE_SET_FREQ_BAND:
+          ComInterface::parseSetFreqBandData();
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_RUN_PREP_ANIM:

@@ -7,7 +7,7 @@
 #include "Com_interface.h"
 #include "SD_manager.h"
 #include "Beat_detector.h"
-#include "Microphone.h"
+#include "Audio.h"
 #include <arduinoFFT.h>
 #include "esp_task_wdt.h"
 #include "esp_system.h"
@@ -92,16 +92,114 @@ void software_interrupt(){
 }
 */
 /** Variables used for preprepared animations */ 
-float* timings;
-int timingsLength = 0;
+//float* timings;
+//int timingsLength = 0;
 
 /** The task handler for the FFT task runing on core 0 */
 TaskHandle_t mainCore0Handle;
 /** The notification queue used by core0 to signal core 1 */
 QueueHandle_t core1NotifQueue;
+/** The notification queue used by core0 to signal core 1 */
+QueueHandle_t core0FreqBandQueue;
 /** Value indicating what audio feature hase been detected. If none detected will be set to NO_AUDIO_FEATURE_DETECTED. */
 extern u_int16_t FFTAudioFeatureDetected;
 
+
+void mainCore0(void* parameter){
+  // Variable to store the notification value.
+  uint32_t notificationValue;
+  /** The value indicating if the microphone reading and FFT task should run */
+  bool appModeFFTOn = false;
+  
+  /** Used by core 0 as a pointer to send signal to core 1 if an audio feature is detected */
+  u_int16_t detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED;
+
+  double core0FreqBands[NB_FREQ_BANDS][2] = {0};
+  core0FreqBands[0][0] = (double)80;
+  core0FreqBands[0][1] = (double)180;
+
+  //unsigned long long core0FreqIntensity[NB_FREQ_BANDS] = {0};
+  //core0FreqIntensity[0] = 5000000000;
+
+  float core0FreqIntensity[NB_FREQ_BANDS] = {0};
+  core0FreqIntensity[0] = 0.20;
+
+  float readFrequBandVal;
+
+
+  /* The timestamp of the last call for that frequency band */
+  unsigned long core0FreqBandsActivationTimes[NB_FREQ_BANDS] = {0};
+
+  unsigned long start; // Variable used for timing print
+  for(;;){
+    // This part of the code deals with chacking if signals are recived from the main loop and processing them accordingly.
+    // This checks to see if there is a notification pending returns true if there was one, if timer exceded send false and move on.
+    if (xTaskNotifyWait(0x00, // Clear no bites in notificationValue before reading
+                        ULONG_MAX, // Clear all the bites in notificationValue after reading it.
+                        &notificationValue, // The variable to check
+                        (TickType_t)1) /*The time in ticks*/ == pdTRUE) {
+      Serial.printf("Notification value: %d\n",notificationValue);
+      switch(notificationValue){
+        case MODE_MIC_FFT_ON:
+          switchFFT(MODE_MIC_FFT_ON);
+          appModeFFTOn = true;
+          Serial.print("FFT_Mic_On");
+          break;
+        case MODE_ADC_FFT_ON:
+          switchFFT(MODE_ADC_FFT_ON);
+          appModeFFTOn = true;
+          //appModeFFTOn = !appModeFFTOn;
+          Serial.print("FFT_ADC_On");
+          break;
+        case MODE_FFT_OFF:
+          switchFFT(MODE_FFT_OFF);
+          appModeFFTOn = false;
+          Serial.print("FFT_Off:");
+          break;
+        case MODE_SET_FREQ_BAND:
+          int frequBand;
+          if(xQueueReceive(core0FreqBandQueue, &readFrequBandVal, (TickType_t) 0) == pdTRUE){
+            int idx = 0;
+            frequBand = readFrequBandVal;
+            while(xQueueReceive(core0FreqBandQueue, &readFrequBandVal, (TickType_t) 0) == pdTRUE && idx < 2){
+              core0FreqBands[frequBand][idx] = (double)readFrequBandVal;
+              idx++;
+            }
+            core0FreqIntensity[frequBand] = readFrequBandVal;
+          }
+          Serial.print("low: ");Serial.println(core0FreqBands[frequBand][0]);
+          Serial.print("high: ");Serial.println(core0FreqBands[frequBand][1]);
+          Serial.print("int: ");Serial.println(core0FreqIntensity[frequBand]);
+          break;
+        default:
+          Serial.print("Core 0 notif switch default");
+      }
+    }
+
+  
+    if(appModeFFTOn){
+      //Serial.println("In FFT loop");
+      //start = millis();
+      getFFT(); // Takes about 20 ms to execute
+      //Serial.printf("low: %d, high: %d, int: %f",core0FreqBands[0][0], core0FreqBands[0][1], core0FreqIntensity[0]);
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////
+      if(detectBand(core0FreqBands[0], core0FreqIntensity[0], 50, core0FreqBandsActivationTimes[0])){
+        // Send notification to the main core 1 through the queue
+
+        //Serial.println(core0FreqBandsActivationTimes[0]);
+        detectedAudioFeature = KICK_DETECTED;
+        xQueueSend(core1NotifQueue, &detectedAudioFeature, 0);
+        Serial.println("Core 0 kick!");
+        //detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED; // Probably don't need this
+      }
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////
+      
+    }
+
+    // Delay this task
+    //vTaskDelay(pdMS_TO_TICKS(500));  // 500ms delay
+  }
+}
 
 void setup() {
   // #########################################################
@@ -144,6 +242,8 @@ void setup() {
   }
   core1NotifQueue = xQueueCreate(10, // Queue length
                             sizeof(u_int16_t));
+  core0FreqBandQueue = xQueueCreate(10, // Queue length
+  sizeof(float));
   // #########################################################
   // ######################### LED ###########################
   // #########################################################
@@ -166,7 +266,7 @@ void setup() {
   // ################## Set variables ########################
   // #########################################################
   // Load preprepared animation timings array from SD card
-  timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
+  //timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
 }
 
 void loop() {
@@ -186,53 +286,3 @@ void loop() {
   }
 }
 
-void mainCore0(void* parameter){
-  // Variable to store the notification value.
-  uint32_t notificationValue;
-  /** The value indicating if the microphone reading and FFT task should run */
-  bool appModeMicFFTOn = false;
-
-  /** Used by core 0 as a pointer to send signal to core 1 if an audio feature is detected */
-  u_int16_t detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED;
-
-  unsigned long start; // Variable used for timing print
-  for(;;){
-    // This part of the code deals with chacking if signals are recived from the main loop and processing them accordingly.
-    // This checks to see if there is a notification pending returns true if there was one, if timer exceded send false and move on.
-    if (xTaskNotifyWait(0x00, // Clear no bites in notificationValue before reading
-                        ULONG_MAX, // Clear all the bites in notificationValue after reading it.
-                        &notificationValue, // The variable to check
-                        (TickType_t)1) /*The time in ticks*/ == pdTRUE) {
-      switch(notificationValue){
-        case MODE_MIC_FFT_ON:
-          appModeMicFFTOn = !appModeMicFFTOn;
-          Serial.print("FFTOn:");
-          Serial.println(appModeMicFFTOn);
-          break;
-        default:
-          Serial.print("Core 0 notif switch default");
-      }
-    }
-
-  
-    if(appModeMicFFTOn){
-      //Serial.println("In FFT loop");
-      //start = millis();
-      getFFT(); // Takes about 20 ms to execute
-      
-      ////////////////////////////////////////////////////////////////////////////////////////////////////////
-      if(detectKick(5)){
-        // Send notification to the main core 1 through the queue
-        detectedAudioFeature = KICK_DETECTED;
-        xQueueSend(core1NotifQueue, &detectedAudioFeature, 0);
-        //Serial.println("Core 0 kick!");
-        //detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED; // Probably don't need this
-      }
-      ////////////////////////////////////////////////////////////////////////////////////////////////////////
-      
-    }
-
-    // Delay this task
-    //vTaskDelay(pdMS_TO_TICKS(500));  // 500ms delay
-  }
-}

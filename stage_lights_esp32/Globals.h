@@ -19,7 +19,10 @@
 /** Reference numbers for the switch conditions that govern the main application mode switching. */
 #define MODE_SELECT_ANIMATION 1
 #define MODE_PREPREP_ANIMATION 2
-#define MODE_MIC_FFT_ON 3
+#define MODE_ADC_FFT_ON 3
+#define MODE_MIC_FFT_ON 4
+#define MODE_FFT_OFF 5
+#define MODE_SET_FREQ_BAND 6
 
 //######################################################################################################
 //###################################### ANIMATION VARIABLES ###########################################
@@ -42,11 +45,18 @@
 //##################################### BEAT DETECTION VARIABLES #######################################
 //######################################################################################################
 
+// Periferal id codes
+//#define PERIF_CODE_ADC 0
+//#define PERIF_CODE_MIC 1
+
 /** Beat detection audio feature codes */
 #define NO_AUDIO_FEATURE_DETECTED 0
 #define KICK_DETECTED 1
 #define SNAIRE_DETECTED 2
 #define HIGH_HAT_DETECTED 3
+
+/* The number of different frequency bands that can be stored (is arbitrary) */
+#define NB_FREQ_BANDS 10
 
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
