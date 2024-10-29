@@ -26,7 +26,7 @@ float vReal[NB_SAMPLES_MIC] = {0};
 /** The array of imaginary numbers used in the FFT. */
 float vImag[NB_SAMPLES_MIC] = {0};
 /** The array buffer used to read the microphone values. */
-int buffer[NB_SAMPLES_MIC] = {0};
+long buffer[NB_SAMPLES_MIC] = {0};
 /** The number of bites writen to the buffer variable affter a call to the I2C read function. */
 //size_t bytesIn = 0;
 
@@ -53,14 +53,14 @@ void switchFFT(uint8_t periferalCode) {
   switch (periferalCode){
     case MODE_ADC_FFT_ON:
       Audio::switchAudioInput(MODE_ADC_FFT_ON);
-      Serial.printf("After switch to adc port nb %d",Audio::currentPort);
+      Serial.printf("After switch to adc port nb %d\n",Audio::currentPort);
       newSamples = NB_SAMPLES_ADC;
       newSamplingFrequency = SAMPLING_FREQUENCY_ADC;
       FFT = ArduinoFFT<float>(vReal, vImag, newSamples, newSamplingFrequency);
       break;
     case MODE_MIC_FFT_ON:
       Audio::switchAudioInput(MODE_MIC_FFT_ON);
-      Serial.printf("After switch to mic port nb %d",Audio::currentPort);
+      Serial.printf("After switch to mic port nb %d\n",Audio::currentPort);
       newSamples = NB_SAMPLES_MIC;
       newSamplingFrequency = SAMPLING_FREQUENCY_MIC;
       FFT = ArduinoFFT<float>(vReal, vImag, newSamples, newSamplingFrequency);
@@ -73,11 +73,11 @@ void switchFFT(uint8_t periferalCode) {
   }
 }
 
-float low_pass_filter(int current_value, float previous_value, float alpha) {
+float low_pass_filter(long current_value, float previous_value, float alpha) {
     return alpha * (float)current_value + (1 - alpha) * previous_value;
 }
 
-float filter_adc_value(int adc_value) {
+float filter_adc_value(long adc_value) {
     static float filtered_value = 0;
     float alpha = 0.1;  // Smoothing factor (between 0 and 1)
     filtered_value = low_pass_filter(adc_value, filtered_value, alpha);
@@ -86,22 +86,35 @@ float filter_adc_value(int adc_value) {
 }
 
 void getFFT() {
-  Audio::readAudio<int>(buffer);
+
+  float max = 1.0, min = 0.0; // For normalisation
+
+  Audio::readAudio<long>(buffer); // !!!!!!!!!!!!!!!!!!!! test uint16 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   for (int i = 0; i < samples; i++) {
     //vReal[i] = filter_adc_value(buffer[i]);  // Copy microphone samples into the real part of FFT input
-    vReal[i] = ((float)buffer[i])/((float)INT_MAX);
-    //Serial.printf(">b: %d\n",buffer[i]);
+    vReal[i] = (float)(buffer[i]);///((float)INT_MAX);
+    //vReal[i] = ((float)(constrain(buffer[i],-10000000,100000000)));
+    //if(max < abs(vReal[i])){
+    //  max = vReal[i];
+    //}
+    //else if(min > abs(vReal[i])){
+    //  min = vReal[i];
+    //}
+
+    //Serial.printf(">b: %ld\n",buffer[i]);
     //Serial.printf(">v: %f\n",vReal[i]);
     vImag[i] = 0.0;  // Imaginary part is zero for FFT input
     //Serial.println(vReal[i]);
   }
   //for(int i=0;i<samples;i++){
-  //  Serial.println(vReal[i]);
+  //  vReal[i] = (vReal[i] - min) / max;
+  //  //Serial.printf(">v: %f\n",vReal[i]);
   //}
+  //Serial.printf(">m: %f\n",max);
   FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
   FFT.complexToMagnitude(); /* Compute magnitudes */
-  //for(int i=0;i<samples;i++){
+  //for(int i=5;i<samples-5;i++){
   //  Serial.printf(">f: %f\n", vReal[i]);
   //}
 }
@@ -154,9 +167,12 @@ int frequencyToBin(double frequency) {
 
 // Helper function to check frequency range in the FFT output
 bool checkFrequencyRange(int bin_start, int bin_end, float threshold) {
+  float mp = FFT.majorPeak();
+  //Serial.printf(">t: %f\n", threshold);
   for (int i = bin_start; i <= bin_end; i++) {
-    Serial.println(vReal[i]);
-    if (vReal[i] > threshold) {
+    //Serial.printf(">f: %f\n", vReal[i]);
+    if (vReal[i]/mp > threshold) {
+      Serial.printf(">f: %f\n", vReal[i]/mp);
       return true;  // Detected
     }
   }
@@ -181,7 +197,7 @@ float GetMaxFrequencyRange(int bin_start, int bin_end) {
   * @param minPausBetweenCalls The minimum amount of time to wait between calls.
   * @param lastCall Time sinse last call for that bandwidth.
 */
-bool detectBand(double band[2], float intensity, unsigned long minPausBetweenCalls, unsigned long &lastCall) {
+bool detectBand(float* band, float intensity, unsigned long minPausBetweenCalls, unsigned long &lastCall) {
   unsigned long current_time = millis();
   if((lastCall - current_time) < minPausBetweenCalls){
     return false;

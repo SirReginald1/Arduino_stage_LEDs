@@ -104,7 +104,7 @@ QueueHandle_t core0FreqBandQueue;
 /** Value indicating what audio feature hase been detected. If none detected will be set to NO_AUDIO_FEATURE_DETECTED. */
 extern u_int16_t FFTAudioFeatureDetected;
 
-
+/* The function run by core0 used for beat detection. */
 void mainCore0(void* parameter){
   // Variable to store the notification value.
   uint32_t notificationValue;
@@ -114,17 +114,22 @@ void mainCore0(void* parameter){
   /** Used by core 0 as a pointer to send signal to core 1 if an audio feature is detected */
   u_int16_t detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED;
 
-  double core0FreqBands[NB_FREQ_BANDS][2] = {0};
-  core0FreqBands[0][0] = (double)80;
-  core0FreqBands[0][1] = (double)180;
+  /* The 2D array in wich the start and end of each frequency band is stored. */
+  float core0FreqBands[NB_FREQ_BANDS][2] = {0};
+  core0FreqBands[0][0] = 80.0;
+  core0FreqBands[0][1] = 200.0;
 
-  //unsigned long long core0FreqIntensity[NB_FREQ_BANDS] = {0};
-  //core0FreqIntensity[0] = 5000000000;
-
+  /* The array in which the intensity of each frequency band is stored */
   float core0FreqIntensity[NB_FREQ_BANDS] = {0};
-  core0FreqIntensity[0] = 0.20;
-
+  core0FreqIntensity[0] = 300000.0;//210000000.0;//5000000000;
+  /* The variable used to transfer the value from the notification queue to the core0FreqBands array.*/
   float readFrequBandVal;
+
+  float readFrequIntenseVal;
+  //float core0FreqIntensity[NB_FREQ_BANDS] = {0};
+  //core0FreqIntensity[0] = 0.20;
+  //float readFrequBandVal;
+
 
 
   /* The timestamp of the last call for that frequency band */
@@ -162,10 +167,11 @@ void mainCore0(void* parameter){
             int idx = 0;
             frequBand = readFrequBandVal;
             while(xQueueReceive(core0FreqBandQueue, &readFrequBandVal, (TickType_t) 0) == pdTRUE && idx < 2){
-              core0FreqBands[frequBand][idx] = (double)readFrequBandVal;
+              core0FreqBands[frequBand][idx] = readFrequBandVal;
               idx++;
             }
-            core0FreqIntensity[frequBand] = readFrequBandVal;
+            core0FreqIntensity[frequBand] = (readFrequBandVal);
+            //Serial.printf("Converted freq: %f\n", core0FreqIntensity[frequBand]);
           }
           Serial.print("low: ");Serial.println(core0FreqBands[frequBand][0]);
           Serial.print("high: ");Serial.println(core0FreqBands[frequBand][1]);
@@ -183,13 +189,14 @@ void mainCore0(void* parameter){
       getFFT(); // Takes about 20 ms to execute
       //Serial.printf("low: %d, high: %d, int: %f",core0FreqBands[0][0], core0FreqBands[0][1], core0FreqIntensity[0]);
       ////////////////////////////////////////////////////////////////////////////////////////////////////////
-      if(detectBand(core0FreqBands[0], core0FreqIntensity[0], 50, core0FreqBandsActivationTimes[0])){
-        // Send notification to the main core 1 through the queue
 
+      if(detectBand(core0FreqBands[0], core0FreqIntensity[0], 5UL, core0FreqBandsActivationTimes[0])){
+        // Send notification to the main core 1 through the queue
+      //if(detectKick(50)){
         //Serial.println(core0FreqBandsActivationTimes[0]);
         detectedAudioFeature = KICK_DETECTED;
         xQueueSend(core1NotifQueue, &detectedAudioFeature, 0);
-        Serial.println("Core 0 kick!");
+        //Serial.println("Core 0 kick!");
         //detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED; // Probably don't need this
       }
       ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +250,7 @@ void setup() {
   core1NotifQueue = xQueueCreate(10, // Queue length
                             sizeof(u_int16_t));
   core0FreqBandQueue = xQueueCreate(10, // Queue length
-  sizeof(float));
+  sizeof(float)); // TODO: 
   // #########################################################
   // ######################### LED ###########################
   // #########################################################

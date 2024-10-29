@@ -42,7 +42,7 @@ struct animParamRef{
 
   int nbLeds = NUM_LEDS; // The number of leds in the assigned array
 
-  int animation = 0; // The animation the array is currentlly set to
+  int animation = 3; // The animation the array is currentlly set to
 
   int rainbowCycleParamInt[1] = {0}; // {int delay}
   int rainbowCycleVarInt[1] = {0}; // {point in animation}

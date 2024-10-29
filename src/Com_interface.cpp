@@ -490,6 +490,11 @@ void ComInterface::parseBrightnessData(){
 
 /**
   * This function deals with parsing data when setting frequency bands.
+  * Sends 4 data points via the core0FreqBandQueue in order:
+  * - the index of the frequency band info
+  * - the low bound of the frequency band
+  * - the high bound of the frequency band
+  * - the intencity of the threshold for the frequency band
 */
 void ComInterface::parseSetFreqBandData(){
   /*Value extracted from buffer*/

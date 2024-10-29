@@ -46,7 +46,7 @@ class Audio{
                 .bits_per_sample = i2s_bits_per_sample_t(BITS_PER_SAMPLE_MIC),
                 .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT, //I2S_CHANNEL_FMT_ALL_RIGHT
                 .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S), // If fails to compile try changing this line
-                .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2, //ESP_INTR_FLAG_LEVEL1
+                .intr_alloc_flags = 0,//ESP_INTR_FLAG_LEVEL2, //ESP_INTR_FLAG_LEVEL1
                 .dma_buf_count = 8, //2
                 .dma_buf_len = BUFFER_LEN_MIC,
                 .use_apll = false
@@ -108,17 +108,17 @@ class Audio{
                 Audio::currentBufferLength = BUFFER_LEN_ADC;
                 break;
             case MODE_MIC_FFT_ON:
-                i2s_stop(I2S_PORT_ADC);
+                //i2s_stop(I2S_PORT_ADC);
                 i2s_start(I2S_PORT_MIC);
                 //i2s_mic_install();
-                i2s_setpin_mic();
+                //i2s_setpin_mic();
                 Serial.println("start MIC");
                 Audio::currentPort = I2S_PORT_MIC;
                 Audio::currentBufferLength = BUFFER_LEN_MIC;
                 break;
             case MODE_FFT_OFF:
                 i2s_stop(I2S_PORT_MIC);
-                i2s_stop(I2S_PORT_ADC);
+                //i2s_stop(I2S_PORT_ADC);
                 break;
             default:
                 break;
@@ -132,10 +132,11 @@ class Audio{
         //}
 
         static void setup() {
-            i2s_adc_install();
-            i2s_setpin_adc();
+            //i2s_adc_install();
+            //i2s_setpin_adc();
             i2s_mic_install();
             i2s_setpin_mic();
+            i2s_start(I2S_PORT_MIC);
             //i2s_stop(I2S_PORT_MIC);
             //i2s_stop(I2S_PORT_ADC);
         }

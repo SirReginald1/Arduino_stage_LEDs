@@ -27,7 +27,7 @@ extern void resetBeatDetectionVariables();
 
 float GetMaxFrequencyRange(int bin_start, int bin_end);
 
-extern bool detectBand(double* band, float intensity, unsigned long minPausBetweenCalls, unsigned long &lastCall);
+extern bool detectBand(float* band, float intensity, unsigned long minPausBetweenCalls, unsigned long &lastCall); // double* band
 
 extern bool detectSnare();
 
