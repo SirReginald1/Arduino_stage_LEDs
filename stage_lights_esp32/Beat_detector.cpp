@@ -40,6 +40,7 @@ void getFFT() {
   Microphone::readMic<long>(buffer);
   for (int i = 0; i < samples; i++) {
     vReal[i] = (float)buffer[i];  // Copy microphone samples into the real part of FFT input
+    //Serial.printf(">f: %f\n", vReal[i]);
     vImag[i] = 0.0;  // Imaginary part is zero for FFT input
     //Serial.println(vReal[i]);
   }
