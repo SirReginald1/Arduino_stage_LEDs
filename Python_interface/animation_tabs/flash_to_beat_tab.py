@@ -20,6 +20,9 @@ class FlashToBeatFrame(ParametersFrame):
         self.nb_cols: int = 2
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
+
+        self.animation_label: str = "Flash to beat"
+        """The str value that represents the animation"""
         
         self.freq_bin_low: int = controller_interface.init_values_flash_to_beat[2]
         self.freq_bin_high: int = controller_interface.init_values_flash_to_beat[3]
@@ -50,17 +53,11 @@ class FlashToBeatFrame(ParametersFrame):
         self.btn_color_chooser: Button = Button(self, text="Choos color", command=self.choos_color)
         self.btn_color_chooser.grid(row=3, column=1)
 
-
-    def enter_key_event(self, event: Event) -> None:
-        """The action that is performed when the enter key is pressed.
-        
-        ### Args:
-            - event (Event): The key pess event.
-        """
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
         self.time_on = self.txtin_time_on.get()
         self.freq_bin_low = self.txtin_freq_bin_low.get()
         self.freq_bin_high = self.txtin_freq_bin_high.get()
-        self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -69,7 +66,7 @@ class FlashToBeatFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
+        if array_idx == None:
             self.controller_interface.change_animation("Flash to beat", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.time_on])#, self.freq_bin_low, self.freq_bin_high])
         else:
             self.controller_interface.change_animation("Flash to beat", array_idx, [self.color[0], self.color[1], self.color[2], self.time_on])#, self.freq_bin_low, self.freq_bin_high])

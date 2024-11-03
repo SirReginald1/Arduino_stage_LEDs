@@ -42,14 +42,16 @@ struct animParamRef{
 
   int nbLeds = NUM_LEDS; // The number of leds in the assigned array
 
-  int animation = 0; // The animation the array is currentlly set to
+  int animation = 3; // The animation the array is currentlly set to
+
+  int animationPosition[NB_ANIMATIONS]; // The array containing the animation position for each of the animations.
 
   int rainbowCycleParamInt[1] = {0}; // {int delay}
-  int rainbowCycleVarInt[1] = {0}; // {point in animation}
+  //int rainbowCycleVarInt[1] = {0}; // {point in animation}
   unsigned long rainbowCycleLastActivate = 0;
 
   int fadeInAndOutParamInt[4] = {255, 255, 255, 100}; // {int red, int green, int blue, int speed}
-  int fadeInAndOutFadeAmount = 0;
+  //int fadeInAndOutFadeAmount = 0;
   bool fadeInAndOutFadingIn = true;
   unsigned long fadeInAndOutLastActivate = 0;
 
@@ -64,7 +66,7 @@ struct animParamRef{
   int shootingStarParamInt[7] = {150, 0, 150, 20, 10, 2000, 1}; // {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
   unsigned long shootingStarLastActivate = 0;           // Stores last time LEDs were updated
   unsigned long shootingStarLastStar = 0; // The last time a shooting star started
-  int shootingStarPosCounter = 0;
+  //int shootingStarPosCounter = 0;
 
   int twinklePixelsParamInt[5] = {200, 50, 50, 100, 50}; // {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
   unsigned long twinklePixelsLastActivate = 0;
@@ -75,7 +77,7 @@ struct animParamRef{
 
   int zipParamInt[7] = {2, 10, NUM_LEDS-5, 0, 0, 0, 255}; // {int size, int start, int end, int delay, int R, int G, int B}
   unsigned long zipParamUnsignedLong[1] = {20}; // {unsigned long speed, unsigned long current_time}
-  int zipPosCounter = 0;
+  //int zipPosCounter = 0;
   unsigned long zipLastActivate = 0;
 
   int flashToBeatParamInt[4] = {255,255,255,50}; // {red, green, blue, time_left_on}
@@ -600,14 +602,14 @@ void Animations::rainbowCycle(CRGB* leds, animParamRef& parameters){
   byte *c;
   uint16_t i;
   if(millisecs - parameters.rainbowCycleLastActivate > (unsigned long)parameters.rainbowCycleParamInt[0]){
-    if(parameters.rainbowCycleVarInt[0] >256){
-      parameters.rainbowCycleVarInt[0] = 0;
+    if(parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE] >256){
+      parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE] = 0;
     }
     for(i=0; i < parameters.nbLeds; i++) { // This makes sure all LEDs on strip are updated
-      c = Wheel(((i * 256 / parameters.nbLeds) + /*j*/ parameters.rainbowCycleVarInt[0]) & 255);
+      c = Wheel(((i * 256 / parameters.nbLeds) + /*j*/ parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE]) & 255);
       leds[parameters.nbLeds - 1 - i].setRGB(*c, *(c+1), *(c+2));
     }
-    parameters.rainbowCycleVarInt[0]++;
+    parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE]++;
     parameters.rainbowCycleLastActivate = millisecs;
   }
 }
@@ -621,20 +623,20 @@ void Animations::fadeInAndOut(CRGB* leds, animParamRef& parameters){//, int rand
   // FADE IN
   //for(int i = 0; i <= 255; i++) {
   if(millisecs - parameters.fadeInAndOutLastActivate > parameters.fadeInAndOutParamInt[3]){
-    r = (parameters.fadeInAndOutFadeAmount/256.0)*parameters.fadeInAndOutParamInt[0];
-    g = (parameters.fadeInAndOutFadeAmount/256.0)*parameters.fadeInAndOutParamInt[1];
-    b = (parameters.fadeInAndOutFadeAmount/256.0)*parameters.fadeInAndOutParamInt[2];
+    r = (parameters.animationPosition[ANIM_CODE_FADE]/256.0)*parameters.fadeInAndOutParamInt[0];
+    g = (parameters.animationPosition[ANIM_CODE_FADE]/256.0)*parameters.fadeInAndOutParamInt[1];
+    b = (parameters.animationPosition[ANIM_CODE_FADE]/256.0)*parameters.fadeInAndOutParamInt[2];
     fill_solid(leds, parameters.nbLeds, CRGB(r, g, b));
     if(parameters.fadeInAndOutFadingIn){
-      parameters.fadeInAndOutFadeAmount++;
+      parameters.animationPosition[ANIM_CODE_FADE]++;
     }
     else{
-      parameters.fadeInAndOutFadeAmount--;
+      parameters.animationPosition[ANIM_CODE_FADE]--;
     }
-    if(parameters.fadeInAndOutFadeAmount == 25){
+    if(parameters.animationPosition[ANIM_CODE_FADE] == 25){
       parameters.fadeInAndOutFadingIn = false;
     }
-    else if(parameters.fadeInAndOutFadeAmount == 0){
+    else if(parameters.animationPosition[ANIM_CODE_FADE] == 0){
       parameters.fadeInAndOutFadingIn = true;
     }
     parameters.fadeInAndOutLastActivate = millisecs;
@@ -710,18 +712,18 @@ void Animations::shootingStar(CRGB* leds, animParamRef& parameters){
     if (millisecs - parameters.shootingStarLastStar >= parameters.shootingStarParamInt[5]) {
       parameters.shootingStarLastStar = millisecs;         // Save the last time the LEDs were updated
       //shootingStarCount = 0;
-      parameters.shootingStarPosCounter = 0;                              // Reset the count to 0 after each interval
+      parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] = 0;                              // Reset the count to 0 after each interval
     }
     if (parameters.shootingStarParamInt[6] == -1) {        // Reverse direction option for LEDs
-      if (parameters.shootingStarPosCounter < parameters.nbLeds) {
-        leds[parameters.nbLeds - (parameters.shootingStarPosCounter % (parameters.nbLeds+1))].setRGB(parameters.shootingStarParamInt[0], parameters.shootingStarParamInt[1], parameters.shootingStarParamInt[2]);    // Set LEDs with the color value
-        parameters.shootingStarPosCounter++;
+      if (parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] < parameters.nbLeds) {
+        leds[parameters.nbLeds - (parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] % (parameters.nbLeds+1))].setRGB(parameters.shootingStarParamInt[0], parameters.shootingStarParamInt[1], parameters.shootingStarParamInt[2]);    // Set LEDs with the color value
+        parameters.animationPosition[ANIM_CODE_SHOUTING_STAR]++;
       }
     }
     else {
-      if (parameters.shootingStarPosCounter < parameters.nbLeds) {     // Forward direction option for LEDs
-        leds[parameters.shootingStarPosCounter % (parameters.nbLeds+1)].setRGB(parameters.shootingStarParamInt[0], parameters.shootingStarParamInt[1], parameters.shootingStarParamInt[2]);    // Set LEDs with the color value
-        parameters.shootingStarPosCounter++;
+      if (parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] < parameters.nbLeds) {     // Forward direction option for LEDs
+        leds[parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] % (parameters.nbLeds+1)].setRGB(parameters.shootingStarParamInt[0], parameters.shootingStarParamInt[1], parameters.shootingStarParamInt[2]);    // Set LEDs with the color value
+        parameters.animationPosition[ANIM_CODE_SHOUTING_STAR]++;
       }
     }
     fadeToBlackBy(leds, parameters.nbLeds, parameters.shootingStarParamInt[3]);                 // Fade the tail LEDs to black
@@ -803,17 +805,17 @@ void Animations::zip(CRGB* leds, animParamRef& parameters){
   int startPos, endPos;
   if(millisecs - parameters.zipLastActivate > parameters.zipParamUnsignedLong[0]){
     // This is the start of the strip
-    startPos = parameters.zipPosCounter + parameters.zipParamInt[1];
+    startPos = parameters.animationPosition[ANIM_CODE_ZIP] + parameters.zipParamInt[1];
     if(startPos <= parameters.nbLeds && startPos < parameters.zipParamInt[2]){
       leds[startPos].setRGB(parameters.zipParamInt[4], parameters.zipParamInt[5], parameters.zipParamInt[6]);
     }
     // This is the end of the strip
-    endPos = parameters.zipPosCounter + parameters.zipParamInt[1] - parameters.zipParamInt[0];
+    endPos = parameters.animationPosition[ANIM_CODE_ZIP] + parameters.zipParamInt[1] - parameters.zipParamInt[0];
     if(endPos >= 0 && endPos <= parameters.nbLeds){
       leds[endPos].setRGB(0,0,0);
     }
     //FastLED.show();
-    parameters.zipPosCounter = ++parameters.zipPosCounter % (parameters.zipParamInt[2] - parameters.zipParamInt[1] + parameters.zipParamInt[0]);
+    parameters.animationPosition[ANIM_CODE_ZIP] = ++parameters.animationPosition[ANIM_CODE_ZIP] % (parameters.zipParamInt[2] - parameters.zipParamInt[1] + parameters.zipParamInt[0]);
     parameters.zipLastActivate = millisecs;
   }
 } 

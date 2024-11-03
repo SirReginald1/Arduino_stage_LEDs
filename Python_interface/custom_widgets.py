@@ -15,6 +15,9 @@ class SlidePanel(ctk.CTkFrame):
 		"""The string that is outputed from the arduino."""
 		self.controller_interface = controller_interface
 
+		self.mic_on = False
+		"""Temporary indicates if the mic is turned on"""
+
 		# general attributes 
 		self.start_pos = start_pos + 0.04
 		self.end_pos = end_pos - 0.03
@@ -32,13 +35,23 @@ class SlidePanel(ctk.CTkFrame):
 		self.label2 = ctk.CTkLabel(self, text = 'Label 2')
 		self.label2.pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		self.button1 = ctk.CTkButton(self, text = 'Turn on mic', corner_radius = 0, 
-							   		 command=lambda: controller_interface.send_message("@1<>"))
+							   		 command=lambda: self.switch_mic_btn_action())
 		self.button1.pack(expand = True, fill = 'both', pady = 10)
 		self.console = Console(self,self.controller_interface)
 		self.console.pack(expand = True, fill = 'both', padx = 2, pady = 10)
 
 		#self.create_widgets()
 		
+	def switch_mic_btn_action(self) -> None:
+		message: str = ""
+		if not self.mic_on:
+			message = "@1<2>"
+			self.mic_on = True
+		else:
+			message = "@1<0>"
+			self.mic_on = False
+		self.controller_interface.send_message(message)
+
 	def create_widgets(self):
 		ctk.CTkLabel(self, text = 'Label 1').pack(expand = True, fill = 'both', padx = 2, pady = 10)
 		ctk.CTkLabel(self, text = 'Label 2').pack(expand = True, fill = 'both', padx = 2, pady = 10)

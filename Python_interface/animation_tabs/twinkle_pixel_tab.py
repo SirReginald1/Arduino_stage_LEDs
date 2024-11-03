@@ -21,6 +21,9 @@ class TwinklePixelArrayFrame(ParametersFrame):
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
         
+        self.animation_label: str = "Twinkle pixel"
+        """The str value that represents the animation"""
+
         self.color: int = controller_interface.init_values_twinkle_pixel[0]
         self.color_saturation: int = controller_interface.init_values_twinkle_pixel[1]
         self.pixel_volume: int = controller_interface.init_values_twinkle_pixel[2]
@@ -67,18 +70,13 @@ class TwinklePixelArrayFrame(ParametersFrame):
         #self.btn_color_chooser: Button = Button(self, text="Choos color", command=self.choos_color)
         #self.btn_color_chooser.grid(row=6, column=1)
 
-    def enter_key_event(self, event: Event) -> None:
-        """The action that is performed when the enter key is pressed.
-        
-        ### Args:
-            - event (Event): The key pess event.
-        """
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
         self.color = self.txtin_color.get()
         self.color_saturation = self.txtin_color_saturation.get()
         self.pixel_volume = self.txtin_pixel_volume.get()
         self.fade_amount = self.txtin_fade_amount.get()
         self.delay = self.txtin_delay.get()
-        self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -87,7 +85,7 @@ class TwinklePixelArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
+        if array_idx == None:
             self.controller_interface.change_animation("Twinkle pixel", self.LED_array_id, [self.color, self.color_saturation, self.pixel_volume, self.fade_amount, self.delay])
         else:
             self.controller_interface.change_animation("Twinkle pixel", array_idx, [self.color, self.color_saturation, self.pixel_volume, self.fade_amount, self.delay])

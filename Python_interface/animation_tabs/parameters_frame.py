@@ -28,7 +28,8 @@ class ParametersFrame(Frame):
         self.color: Tuple[int] = None
         self.nb_rows: int = 10
         self.nb_cols: int = 10
-        self.array_selection = CheckboxFrame(parent, self, self.master.master.master.app.NB_ARRAYS)
+        self.array_selection: CheckboxFrame = CheckboxFrame(parent, self, self.master.master.master.app.NB_ARRAYS)
+        """The frame containing the checkboxes for selecting which arrays to update."""
         self.array_selection.pack(side=RIGHT)
         
     def choos_color(self) -> None:
@@ -40,9 +41,24 @@ class ParametersFrame(Frame):
         self.color = res.rgb
         self.send_update()
 
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
+        raise NotImplementedError
+
     def enter_key_event(self, event: Event) -> None:
         """"""
-        raise NotImplementedError
+        """The action that is performed when the enter key is pressed.
+        
+        ### Args:
+            - event (Event): The key pess event.
+        """
+        self.update_parameter_values()
+        for check_boxe in self.array_selection.check_vars:
+            if check_boxe.get() != 0:
+                self.array_selection.send_message_to_arrays()
+                return
+        self.send_update()
+        
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -63,8 +79,8 @@ class CheckboxFrame(ttk.Frame):
                  **kwargs: Any) -> None:
         super().__init__(parent, *args, **kwargs)
         
-        self.check_vars = []  # To store the IntVars for the checkboxes
-        self.using_element = using_element
+        self.check_vars: List[IntVar] = []  # To store the IntVars for the checkboxes
+        self.using_element: ParametersFrame = using_element
         """The element that uses the varibles in check_vars."""
         # Create n+1 checkboxes dynamically
         for i in range(n+1):
@@ -103,10 +119,11 @@ class CheckboxFrame(ttk.Frame):
     def send_message_to_arrays(self) -> None:
         """Function that sends the appropriate update message to the controller."""
         #print(f"Array value: {self.check_vars[0].get()}")
+        self.using_element.update_parameter_values()
         if self.check_vars[0].get() == 1:
             self.using_element.send_update(-2)
         else:
-            for i in range(len(self.check_vars)):
+            for i in range(1,len(self.check_vars)):
                 if self.check_vars[i].get() == 1:
                     self.using_element.send_update(i-1)
 

@@ -103,6 +103,59 @@ QueueHandle_t core1NotifQueue;
 extern u_int16_t FFTAudioFeatureDetected;
 
 
+
+void mainCore0(void* parameter){
+  // Variable to store the notification value.
+  uint32_t notificationValue;
+  /** The value indicating if the microphone reading and FFT task should run */
+  bool appModeMicFFTOn = false;
+
+  /** Used by core 0 as a pointer to send signal to core 1 if an audio feature is detected */
+  u_int16_t detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED;
+
+  unsigned long start; // Variable used for timing print
+  for(;;){
+    // This part of the code deals with chacking if signals are recived from the main loop and processing them accordingly.
+    // This checks to see if there is a notification pending returns true if there was one, if timer exceded send false and move on.
+    if (xTaskNotifyWait(0x00, // Clear no bites in notificationValue before reading
+                        ULONG_MAX, // Clear all the bites in notificationValue after reading it.
+                        &notificationValue, // The variable to check
+                        (TickType_t)1) /*The time in ticks*/ == pdTRUE) {
+      switch(notificationValue){
+        case MODE_MIC_FFT_ON:
+          appModeMicFFTOn = !appModeMicFFTOn;
+          Serial.print("FFTOn:");
+          Serial.println(appModeMicFFTOn);
+          break;
+        default:
+          Serial.print("Core 0 notif switch default");
+      }
+    }
+
+  
+    if(appModeMicFFTOn){
+      //Serial.println("In FFT loop");
+      //start = millis();
+      getFFT(); // Takes about 20 ms to execute
+      
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////
+      if(detectKick(5)){
+        // Send notification to the main core 1 through the queue
+        detectedAudioFeature = KICK_DETECTED;
+        xQueueSend(core1NotifQueue, &detectedAudioFeature, 0);
+        //Serial.println("Core 0 kick!");
+        //detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED; // Probably don't need this
+      }
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////
+      
+    }
+
+    // Delay this task
+    //vTaskDelay(pdMS_TO_TICKS(500));  // 500ms delay
+  }
+}
+
+
 void setup() {
   // #########################################################
   // ###################### HARDWARE #########################
@@ -166,7 +219,7 @@ void setup() {
   // ################## Set variables ########################
   // #########################################################
   // Load preprepared animation timings array from SD card
-  timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
+  //timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
 }
 
 void loop() {
@@ -183,56 +236,5 @@ void loop() {
   }
   else{
     Animations::runAnimations(led_arrays, animParamRefs);
-  }
-}
-
-void mainCore0(void* parameter){
-  // Variable to store the notification value.
-  uint32_t notificationValue;
-  /** The value indicating if the microphone reading and FFT task should run */
-  bool appModeMicFFTOn = false;
-
-  /** Used by core 0 as a pointer to send signal to core 1 if an audio feature is detected */
-  u_int16_t detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED;
-
-  unsigned long start; // Variable used for timing print
-  for(;;){
-    // This part of the code deals with chacking if signals are recived from the main loop and processing them accordingly.
-    // This checks to see if there is a notification pending returns true if there was one, if timer exceded send false and move on.
-    if (xTaskNotifyWait(0x00, // Clear no bites in notificationValue before reading
-                        ULONG_MAX, // Clear all the bites in notificationValue after reading it.
-                        &notificationValue, // The variable to check
-                        (TickType_t)1) /*The time in ticks*/ == pdTRUE) {
-      switch(notificationValue){
-        case MODE_MIC_FFT_ON:
-          appModeMicFFTOn = !appModeMicFFTOn;
-          Serial.print("FFTOn:");
-          Serial.println(appModeMicFFTOn);
-          break;
-        default:
-          Serial.print("Core 0 notif switch default");
-      }
-    }
-
-  
-    if(appModeMicFFTOn){
-      //Serial.println("In FFT loop");
-      //start = millis();
-      getFFT(); // Takes about 20 ms to execute
-      
-      ////////////////////////////////////////////////////////////////////////////////////////////////////////
-      if(detectKick(5)){
-        // Send notification to the main core 1 through the queue
-        detectedAudioFeature = KICK_DETECTED;
-        xQueueSend(core1NotifQueue, &detectedAudioFeature, 0);
-        //Serial.println("Core 0 kick!");
-        //detectedAudioFeature = NO_AUDIO_FEATURE_DETECTED; // Probably don't need this
-      }
-      ////////////////////////////////////////////////////////////////////////////////////////////////////////
-      
-    }
-
-    // Delay this task
-    //vTaskDelay(pdMS_TO_TICKS(500));  // 500ms delay
   }
 }

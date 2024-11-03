@@ -23,6 +23,9 @@ class FireArrayFrame(ParametersFrame):
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
         
+        self.animation_label: str = "Fire"
+        """The str value that represents the animation"""
+
         self.flame_height: int = controller_interface.init_values_fire[0]
         self.sparks: int = controller_interface.init_values_fire[1]
         self.delay: int = controller_interface.init_values_fire[2]
@@ -56,17 +59,12 @@ class FireArrayFrame(ParametersFrame):
         self.txtin_intensity.bind("<Return>", self.enter_key_event)
         self.txtin_intensity.grid(row=4, column=1)
 
-    def enter_key_event(self, event: Event) -> None:
-        """The action that is performed when the enter key is pressed.
-        
-        ### Args:
-            - event (Event): The key pess event.
-        """
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
         self.delay = self.txtin_delay.get()
         self.flame_height = self.txtin_flame_height.get()
         self.sparks = self.txtin_sparks.get()
         self.intensity = self.txtin_intensity.get()
-        self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -75,7 +73,7 @@ class FireArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
+        if array_idx == None:
             self.controller_interface.change_animation("Fire", self.LED_array_id, [self.flame_height, self.sparks, self.delay, self.intensity])
         else:
             self.controller_interface.change_animation("Fire", array_idx, [self.flame_height, self.sparks, self.delay, self.intensity])

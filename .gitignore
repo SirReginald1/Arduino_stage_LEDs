@@ -8,3 +8,7 @@ working.ipynb
 Python_interface/working.ipynb
 Python_interface/Beat_detection/Sound_files/
 Python_interface/Beat_detection/Timing_arrays/
+test/
+lib/
+.pio/
+include/

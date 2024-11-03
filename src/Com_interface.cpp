@@ -125,6 +125,8 @@ class ComInterface{
 
     static void parseBrightnessData();
 
+    static void parseSynchAnimData();
+
     static void swithMicFFTMode();
 
     static void readInput();
@@ -485,35 +487,54 @@ void ComInterface::parseBrightnessData(){
 
 /**
   * This function deals with parsing data for synching aniamtions.
+  * command format: @3<arrayRef, 
+  * -2: 
 */
 void ComInterface::parseSynchAnimData(){
   extern animParamRef animParamRefs[NB_ARRAYS];
   /*Value extracted from buffer*/
-  char * strtokIndx1;
-  char * strtokIndx2;
+  char* strtokIndx1;
+  char* strtokIndx2;
+  char* strtokIndx3;
 
-  uint8_t arrayNb;
+  uint8_t arrayRef, arrayNb; // The reference animation and the array nb reference to change.
 
-  int offset;
+  int offset, animation;
 
-  // The first element in the list
+  // Get the reference array value
   strtokIndx1 = strtok(tempChars,",");
-  //arrayNb = atoi(strtokIndx1);
+  arrayRef = atoi(strtokIndx1);
 
+  strtokIndx1 = strtok(NULL,",");
   strtokIndx2 = strtok(NULL, ",");
-  //offset = atoi(strtokIndx2);
-  
-  while(strtokIndx1 != NULL && strtokIndx2 != NULL) {
-    arrayNb = atoi(strtokIndx1);
-    offset = atoi(strtokIndx2);
+  strtokIndx3 = strtok(NULL, ",");
 
+  while(strtokIndx1 != NULL || strtokIndx2 != NULL || strtokIndx3 != NULL) {
+    try{
+      arrayNb = atoi(strtokIndx1);
+      animation = atoi(strtokIndx2);
+      offset = atoi(strtokIndx3);
+    }
+    catch(...){
+      Serial.print("ERROR in ComInterface::parseSynchAnimData!");
+    }
 
+    animParamRefs[arrayNb].animationPosition[animation] = animParamRefs[arrayRef].animationPosition[animation] + offset;
 
     strtokIndx1 = strtok(NULL, ",");
+    if(strtokIndx1 != NULL){
+      break;  
+    }
     strtokIndx2 = strtok(NULL, ",");
+    if(strtokIndx2 != NULL){
+      break;  
+    }
+    strtokIndx3 = strtok(NULL, ",");
   }
   // Leave this at end
-  strtokIndx = strtok(NULL, ",");
+  //strtokIndx1 = strtok(NULL, ",");
+  //strtokIndx2 = strtok(NULL, ",");
+  //strtokIndx3 = strtok(NULL, ",");
 }
 
 /**
@@ -578,7 +599,7 @@ void ComInterface::readInput(){
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_SYNCH_ANIM:
-          ComInterface::parseBrightnessData();
+          ComInterface::parseSynchAnimData();
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_RUN_PREP_ANIM:

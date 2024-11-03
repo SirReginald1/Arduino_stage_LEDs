@@ -5,49 +5,55 @@
 #include <Arduino.h>
 #include "Globals.h"
 
+/**Struct that contains the number of the animation being run by the array it's attributed to
+ *  as well as all the references to the aniamtion parameters.
+ * */
 struct animParamRef{
 
+  /** This variable is used to idetify the array when using multi-array animations  */
   u_int16_t arrayId;
 
   int nbLeds = NUM_LEDS; // The number of leds in the assigned array
 
-  int animation = 0; // The animation the array is currentlly set to
+  int animation = 3; // The animation the array is currentlly set to
 
-  int rainbowCycleParamInt[1] = {0};
-  int rainbowCycleVarInt[1] = {0};
+  int animationPosition[NB_ANIMATIONS]; // The array containing the animation position for each of the animations.
+
+  int rainbowCycleParamInt[1] = {0}; // {int delay}
+  //int rainbowCycleVarInt[1] = {0}; // {point in animation}
   unsigned long rainbowCycleLastActivate = 0;
 
-  int fadeInAndOutParamInt[4] = {255, 255, 255, 100};
-  int fadeInAndOutFadeAmount = 0;
+  int fadeInAndOutParamInt[4] = {255, 255, 255, 100}; // {int red, int green, int blue, int speed}
+  //int fadeInAndOutFadeAmount = 0;
   bool fadeInAndOutFadingIn = true;
   unsigned long fadeInAndOutLastActivate = 0;
 
-  int sparkleParamInt[5] = {200, 0, 100, 0, 0};
+  int sparkleParamInt[5] = {200, 0, 100, 0}; // {int red, int green, int blue, int delay}
   int sparkleVarInt[1] = {0}; // {int lastPixel}
 
-  int fireParamInt[3] = {50, 50, 25};
-  float fireParamFloat[1] = {1.};
+  int fireParamInt[3] = {50, 50, 25}; // {int flame_height, int sparks, int delay}
+  float fireParamFloat[1] = {1.}; // {float fire_intensity}
   byte* fireHeat = new byte[nbLeds];
   unsigned long fireLastActivate = 0;
 
-  int shootingStarParamInt[7] = {150, 0, 150, 20, 10, 2000, 1};
-  unsigned long shootingStarLastActivate = 0;
+  int shootingStarParamInt[7] = {150, 0, 150, 20, 10, 2000, 1}; // {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
+  unsigned long shootingStarLastActivate = 0;           // Stores last time LEDs were updated
   unsigned long shootingStarLastStar = 0; // The last time a shooting star started
-  int shootingStarPosCounter = 0;
+  //int shootingStarPosCounter = 0;
 
-  int twinklePixelsParamInt[5] = {200, 50, 50, 100, 50};
+  int twinklePixelsParamInt[5] = {200, 50, 50, 100, 50}; // {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
   unsigned long twinklePixelsLastActivate = 0;
 
-  int strobeParamInt[5] = {20, 55, 255, 255, 255};
+  int strobeParamInt[5] = {20, 55, 255, 255, 255}; // {int time_on, int time_off, int R, int G, int B}
   unsigned long strobeLastOn = 0;
   unsigned long strobeLastOff = 0;
 
-  int zipParamInt[7] = {2, 10, NUM_LEDS-5, 0, 0, 0, 255};
-  unsigned long zipParamUnsignedLong[1] = {20};
-  int zipPosCounter = 0;
+  int zipParamInt[7] = {2, 10, NUM_LEDS-5, 0, 0, 0, 255}; // {int size, int start, int end, int delay, int R, int G, int B}
+  unsigned long zipParamUnsignedLong[1] = {20}; // {unsigned long speed, unsigned long current_time}
+  //int zipPosCounter = 0;
   unsigned long zipLastActivate = 0;
 
-  int flashToBeatParamInt[4] = {255,255,255,50};
+  int flashToBeatParamInt[4] = {255,255,255,50}; // {red, green, blue, time_left_on}
   bool flashToBeatIsOn = false;
   unsigned long flashToBeatLastActivate = 0;
 };
