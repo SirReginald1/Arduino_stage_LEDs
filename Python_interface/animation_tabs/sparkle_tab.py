@@ -22,6 +22,9 @@ class SparkleArrayFrame(ParametersFrame):
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
 
+        self.animation_label: str = "Sparkle"
+        """The str value that represents the animation"""
+
         self.color: Tuple[int] = controller_interface.init_values_sparkle[0]
         self.delay_duration: int = controller_interface.init_values_sparkle[1]
         
@@ -39,14 +42,9 @@ class SparkleArrayFrame(ParametersFrame):
         self.btn_color_chooser: Button = Button(self, text="Choos color", command=self.choos_color)
         self.btn_color_chooser.grid(row=2, column=1)
 
-    def enter_key_event(self, event: Event) -> None:
-        """The action that is performed when the enter key is pressed.
-        
-        ### Args:
-            - event (Event): The key pess event.
-        """
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
         self.delay_duration = self.txtin_delay.get()
-        self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -55,9 +53,9 @@ class SparkleArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
-            self.controller_interface.change_animation("Sparle", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.delay_duration])
+        if array_idx == None:
+            self.controller_interface.change_animation("Sparkle", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.delay_duration])
         else:
-            self.controller_interface.change_animation("Sparle", array_idx, [self.color[0], self.color[1], self.color[2], self.delay_duration])
+            self.controller_interface.change_animation("Sparkle", array_idx, [self.color[0], self.color[1], self.color[2], self.delay_duration])
 
 

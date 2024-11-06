@@ -21,6 +21,9 @@ class ShootingStarArrayFrame(ParametersFrame):
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
         
+        self.animation_label: str = "Shooting star"
+        """The str value that represents the animation"""
+
         self.tail_length: int = controller_interface.init_values_shooting_star[1]
         self.delay: int = controller_interface.init_values_shooting_star[2]
         self.interval: int = controller_interface.init_values_shooting_star[3]
@@ -49,7 +52,7 @@ class ShootingStarArrayFrame(ParametersFrame):
         self.txtin_interval.bind("<Return>", self.enter_key_event)
         self.txtin_interval.grid(row=3, column=1)
 
-        self.lab_direction: Label = Label(self, text = "Interval: ", font=self.label_font)
+        self.lab_direction: Label = Label(self, text = "Speed: ", font=self.label_font)
         self.lab_direction.grid(row=4, column=0)
         self.switch_direction = Entry(self, textvariable=StringVar(value=str(self.direction)))
         self.switch_direction.bind("<Return>", self.enter_key_event)
@@ -60,17 +63,12 @@ class ShootingStarArrayFrame(ParametersFrame):
         self.btn_color_chooser: Button = Button(self, text="Choos color", command=self.choos_color)
         self.btn_color_chooser.grid(row=5, column=1)
 
-    def enter_key_event(self, event: Event) -> None:
-        """The action that is performed when the enter key is pressed.
-        
-        ### Args:
-            - event (Event): The key pess event.
-        """
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
         self.delay_duration = self.txtin_delay.get()
         self.tail_length = self.txtin_tail_length.get()
         self.interval = self.txtin_interval.get()
         self.direction = self.switch_direction.get()
-        self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -79,7 +77,7 @@ class ShootingStarArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
+        if array_idx == None:
             self.controller_interface.change_animation("Shooting star", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])
         else:
             self.controller_interface.change_animation("Shooting star", array_idx, [self.color[0], self.color[1], self.color[2], self.tail_length, self.delay, self.interval, self.direction])

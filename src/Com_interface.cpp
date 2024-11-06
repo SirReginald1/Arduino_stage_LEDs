@@ -32,8 +32,10 @@
 #define RECIVE_MODE_SWITCH_ON_BEAT_DETECT 1
 /** The mode number for the preprepared animation mode.*/
 #define RECIVE_MODE_SET_BRIGHTNESS 2
+/** The mode number for the synching animations mode.*/
+#define RECIVE_MODE_SYNCH_ANIM 3
 /** The mode number for the preprepared animation mode.*/
-#define RECIVE_MODE_RUN_PREP_ANIM 3
+#define RECIVE_MODE_RUN_PREP_ANIM 4
 
 /** The task handler for the FFT task runing on core 0 */
 extern TaskHandle_t mainCore0Handle;
@@ -122,6 +124,8 @@ class ComInterface{
     static void parsePreprepAnimData();
 
     static void parseBrightnessData();
+
+    static void parseSynchAnimData();
 
     static void swithMicFFTMode();
 
@@ -482,6 +486,58 @@ void ComInterface::parseBrightnessData(){
 }
 
 /**
+  * This function deals with parsing data for synching aniamtions.
+  * command format: @3<arrayRef, 
+  * -2: 
+*/
+void ComInterface::parseSynchAnimData(){
+  extern animParamRef animParamRefs[NB_ARRAYS];
+  /*Value extracted from buffer*/
+  char* strtokIndx1;
+  char* strtokIndx2;
+  char* strtokIndx3;
+
+  uint8_t arrayRef, arrayNb; // The reference animation and the array nb reference to change.
+
+  int offset, animation;
+
+  // Get the reference array value
+  strtokIndx1 = strtok(tempChars,",");
+  arrayRef = atoi(strtokIndx1);
+
+  strtokIndx1 = strtok(NULL,",");
+  strtokIndx2 = strtok(NULL, ",");
+  strtokIndx3 = strtok(NULL, ",");
+
+  while(strtokIndx1 != NULL || strtokIndx2 != NULL || strtokIndx3 != NULL) {
+    try{
+      arrayNb = atoi(strtokIndx1);
+      animation = atoi(strtokIndx2);
+      offset = atoi(strtokIndx3);
+    }
+    catch(...){
+      Serial.print("ERROR in ComInterface::parseSynchAnimData!");
+    }
+
+    animParamRefs[arrayNb].animationPosition[animation] = animParamRefs[arrayRef].animationPosition[animation] + offset;
+
+    strtokIndx1 = strtok(NULL, ",");
+    if(strtokIndx1 != NULL){
+      break;  
+    }
+    strtokIndx2 = strtok(NULL, ",");
+    if(strtokIndx2 != NULL){
+      break;  
+    }
+    strtokIndx3 = strtok(NULL, ",");
+  }
+  // Leave this at end
+  //strtokIndx1 = strtok(NULL, ",");
+  //strtokIndx2 = strtok(NULL, ",");
+  //strtokIndx3 = strtok(NULL, ",");
+}
+
+/**
   * This function deals with parsing data when preprepared animation mode is active.
 */
 void ComInterface::parsePreprepAnimData(){
@@ -540,6 +596,10 @@ void ComInterface::readInput(){
           break;
         case RECIVE_MODE_SET_BRIGHTNESS:
           ComInterface::parseBrightnessData();
+          ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
+          break;
+        case RECIVE_MODE_SYNCH_ANIM:
+          ComInterface::parseSynchAnimData();
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
         case RECIVE_MODE_RUN_PREP_ANIM:

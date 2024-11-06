@@ -22,6 +22,9 @@ class FadeArrayFrame(ParametersFrame):
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
 
+        self.animation_label: str = "Fade"
+        """The str value that represents the animation"""
+
         self.color: Tuple[int] = controller_interface.init_values_fade[0]
         self.random_colors: int = controller_interface.init_values_fade[1]
         
@@ -62,7 +65,7 @@ class FadeArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
+        if array_idx == None:
             self.controller_interface.change_animation("Fade", self.LED_array_id, [self.color[0], self.color[1], self.color[2], self.random_colors])
         else:
             self.controller_interface.change_animation("Fade", array_idx, [self.color[0], self.color[1], self.color[2], self.random_colors])
