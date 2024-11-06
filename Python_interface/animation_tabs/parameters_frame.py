@@ -52,13 +52,17 @@ class ParametersFrame(Frame):
         ### Args:
             - event (Event): The key pess event.
         """
+        self.set_animations()
+
+    def set_animations(self) -> None:
+        """Updates parameters and sends message to controller.
+        """
         self.update_parameter_values()
         for check_boxe in self.array_selection.check_vars:
             if check_boxe.get() != 0:
                 self.array_selection.send_message_to_arrays()
                 return
         self.send_update()
-        
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.

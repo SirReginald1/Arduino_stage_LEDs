@@ -92,7 +92,7 @@ class LedArrayFrame(Frame):
         content.pack(expand=True)
         exit_button.lift(content)
         wiget_lab_lists = self.master.controller_interface.animation_var_array_dict[animation_label]
-        var_frame.content = VariableFrame(var_frame, wiget_lab_lists[0], wiget_lab_lists[1],wiget_lab_lists[2])
+        var_frame.content: VariableFrame = VariableFrame(var_frame, wiget_lab_lists[0], wiget_lab_lists[1],wiget_lab_lists[2])
         var_frame.content.pack()
 
     # Function to create ten buttons in a grid layout (5 rows, 2 columns) in the left section of each frame
@@ -153,7 +153,7 @@ class VariableFrame(ttk.Frame):
                                                 text="Sync", 
                                                 width = 15,
                                                 bootstyle=PRIMARY, 
-                                                command=lambda self=self: send_sync_message(self))
+                                                command=lambda self=self: self.send_sync_message())
         self.btn_synch.pack()
 
         # Add widgets dynamically based on the arrays
@@ -161,42 +161,49 @@ class VariableFrame(ttk.Frame):
         self.entry_vars: StringVar = []
         self.checkbox_vars: BooleanVar = []
 
-        def send_sync_message(self: Any) -> None:
-            """Sends the synching message to controller."""
-            message = f"@3<{self.master.master.led_array_idx},"
-            for i in range(len(self.label_vars)):
-                if self.checkbox_vars[i].get():
-                    message = f"{message}{i},{self.master.master.master.controller_interface.animation_codes[self.master.master.param_frame.winfo_children()[0].animation_label]},{self.entry_vars[i].get()},"
-            self.master.master.master.controller_interface.send_message(message[:-1] + ">")
         # Horizontal layout for labels, entries, and checkboxes
         #print(labels)
         nb_test = 4
         row = 0
         for i, label_text in enumerate(labels):
-            label_var = StringVar(value=label_text)
-            label = ttk.Label(self.scrollable_frame, textvariable=label_var)
-            label.grid(row=row, column=i%nb_test, padx=10, pady=5)
-            self.label_vars.append(label_var)
-            if i != 0 and i%nb_test == 0:
-                row += 3
+            if i != self.master.master.led_array_idx:
+                label_var = StringVar(value=label_text)
+                label = ttk.Label(self.scrollable_frame, textvariable=label_var)
+                label.grid(row=row, column=i%nb_test, padx=10, pady=5)
+                self.label_vars.append(label_var)
+                if i != 0 and i%nb_test == 0:
+                    row += 3
 
         row = 1
         for i, entry_default in enumerate(entries):
-            entry_var = StringVar(value=entry_default)
-            entry = ttk.Entry(self.scrollable_frame, textvariable=entry_var, width = 10)
-            entry.grid(row=row, column=i%nb_test, padx=10, pady=5)
-            self.entry_vars.append(entry_var)
-            if i != 0 and i%nb_test == 0:
-                row += 3
+            if i != self.master.master.led_array_idx:
+                entry_var = StringVar(value=entry_default)
+                entry = ttk.Entry(self.scrollable_frame, textvariable=entry_var, width = 10)
+                entry.grid(row=row, column=i%nb_test, padx=10, pady=5)
+                self.entry_vars.append(entry_var)
+                if i != 0 and i%nb_test == 0:
+                    row += 3
 
         row = 2
         for i, checkbox_text in enumerate(checkboxes):
-            checkbox_var = BooleanVar()
-            checkbutton = ttk.Checkbutton(self.scrollable_frame, text=checkbox_text, variable=checkbox_var)
-            checkbutton.grid(row=row, column=i%nb_test, padx=10, pady=5)
-            self.checkbox_vars.append(checkbox_var)
-            if i != 0 and i%nb_test == 0:
-                row += 3
+            if i != self.master.master.led_array_idx:
+                checkbox_var = BooleanVar()
+                checkbutton = ttk.Checkbutton(self.scrollable_frame, text=checkbox_text, variable=checkbox_var)
+                checkbutton.grid(row=row, column=i%nb_test, padx=10, pady=5)
+                self.checkbox_vars.append(checkbox_var)
+                if i != 0 and i%nb_test == 0:
+                    row += 3
+
+    def send_sync_message(self) -> None:
+            """Sends the synching message to controller."""
+            buffer = 0 # As entry for the current array is missing add 1 when it is passed
+            message = f"@3<{self.master.master.led_array_idx},"
+            for i in range(len(self.label_vars)):
+                if self.master.master.led_array_idx == i:
+                    buffer = 1
+                if self.checkbox_vars[i].get():
+                    message = f"{message}{i+buffer},{self.master.master.master.controller_interface.animation_codes[self.master.master.param_frame.winfo_children()[0].animation_label]},{self.entry_vars[i].get()},"
+            self.master.master.master.controller_interface.send_message(message[:-1] + ">")
 
     def create_variable_widgets(self, parent: ttk.Frame) -> None:
         """This function builds the appropriate widget selction in the var_frame for animation variable selecticon
