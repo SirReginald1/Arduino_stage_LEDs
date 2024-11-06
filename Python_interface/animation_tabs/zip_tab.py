@@ -22,6 +22,9 @@ class ZipArrayFrame(ParametersFrame):
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
 
+        self.animation_label: str = "Zip"
+        """The str value that represents the animation"""
+
         self.size: int = controller_interface.init_values_zip[0]
         self.start: int = controller_interface.init_values_zip[1]
         self.end: int = controller_interface.init_values_zip[2]
@@ -61,17 +64,12 @@ class ZipArrayFrame(ParametersFrame):
         self.btn_color_chooser: Button = Button(self, text="Choos color", command=self.choos_color)
         self.btn_color_chooser.grid(row=5, column=1)
 
-    def enter_key_event(self, event: Event) -> None:
-        """The action that is performed when the enter key is pressed.
-        
-        ### Args:
-            - event (Event): The key pess event.
-        """
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
         self.size = self.txtin_size.get()
         self.start = self.txtin_start.get()
         self.end = self.txtin_end.get()
         self.delay = self.txtin_delay.get()
-        self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -80,7 +78,7 @@ class ZipArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
+        if array_idx == None:
             self.controller_interface.change_animation("Zip", self.LED_array_id, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])
         else:
             self.controller_interface.change_animation("Zip", array_idx, [self.size, self.start, self.end, self.delay, self.color[0], self.color[1], self.color[2]])

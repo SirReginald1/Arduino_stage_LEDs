@@ -64,7 +64,7 @@ class ControllerInterface():
 
     animation_codes = {"Rainbow circle" : 0,
                        "Fade" : 1,
-                       "Sparle" : 2, 
+                       "Sparkle" : 2, 
                        "Fire" : 3, 
                        "Shooting star" : 4, 
                        "Twinkle pixel" : 5, 
@@ -171,32 +171,38 @@ class ControllerInterface():
         """Parameter values for the rainbow circle animation."""
  
         self.animation_var_array_dict: Dict[str, List[List[str]]] = {"Rainbow circle" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]],
                                                                      "Fade" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]],
-                                                                     "Sparle" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                     "Sparkle" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]], 
                                                                      "Fire" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]], 
                                                                      "Shooting star" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]], 
                                                                      "Twinkle pixel" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]], 
                                                                      "Strobe" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]], 
                                                                      "Zip" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]], 
                                                                      "Flash to beat" : [["PosCounter offset" for i in range(self.NB_ARRAYS)], 
-                                                                                         ["" for i in range(self.NB_ARRAYS)], 
+                                                                                         ["0" for i in range(self.NB_ARRAYS)], 
                                                                                          [f"array {i}" for i in range(self.NB_ARRAYS)]]}
+        """The dictionary is used fill all the widgets in the array synching frames.
+        For each animation it return an array containing:
+        - The top labes
+        - The content of the entry boxes
+        - The label in front of the checkboxes
+        """
 
     def change_animation(self, 
                          animation: str, 

@@ -20,13 +20,16 @@ class RainbowCircleArrayFrame(ParametersFrame):
         self.rowconfigure(tuple(range(self.nb_rows)), weight=1)
         self.columnconfigure(tuple(range(self.nb_cols)), weight=1)
 
+        self.animation_label: str = "Rainbow circle"
+        """The str value that represents the animation"""
+
         self.delay: int = controller_interface.init_values_rainbow_circle[0]
 
         ##################### Widgets ######################
         self.frame_label = Label(self, text="Rainbow cycle", font=self.label_font2)
         self.frame_label.pack(side=TOP, fill=BOTH, anchor=CENTER)
         #self.frame_label.grid(row=0, column=0, columnspan=2)
-
+        
         self.lab_delay: Label = Label(self, text = "Delay (ms): ", font=self.label_font)
         #self.lab_delay.grid(row=1, column=1)
         self.lab_delay.pack(side=LEFT, fill=BOTH, anchor=CENTER)
@@ -35,14 +38,9 @@ class RainbowCircleArrayFrame(ParametersFrame):
         #self.txtin_delay.grid(row=1, column=2)
         self.txtin_delay.pack(side=LEFT, fill=BOTH, anchor=CENTER)
 
-    def enter_key_event(self, event: Event) -> None:
-        """The action that is performed when the enter key is pressed.
-        
-        ### Args:
-            - event (Event): The key pess event.
-        """
+    def update_parameter_values(self) -> None:
+        "Updates all the animation parameter values in the interface those present in the entry boxes."
         self.delay = self.txtin_delay.get()
-        self.send_update()
 
     def send_update(self, array_idx: Union[int, None] = None) -> None:
         """This function sends the curent values for the parameters to the controller.
@@ -51,7 +49,7 @@ class RainbowCircleArrayFrame(ParametersFrame):
             - array_idx (int, None; Optional): The index of the array that will be set to the selected parameters.
             Used for synching multiple arrays using the checkboxes.
         """
-        if not array_idx:
+        if array_idx == None:
             self.controller_interface.change_animation("Rainbow circle", self.LED_array_id, [self.delay])
         else:
             self.controller_interface.change_animation("Rainbow circle", array_idx, [self.delay])

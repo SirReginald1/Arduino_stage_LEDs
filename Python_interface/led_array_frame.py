@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Union, List
+from typing import Dict, Callable, Union, List, Any
 from tkinter import *
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
@@ -16,7 +16,7 @@ class LedArrayFrame(Frame):
 
     animation_parameter_frames: Dict[str, Callable] = {"Rainbow circle" : RainbowCircleArrayFrame,
                                                        "Fade" : FadeArrayFrame,
-                                                       "Sparle" : SparkleArrayFrame, 
+                                                       "Sparkle" : SparkleArrayFrame, 
                                                        "Fire" : FireArrayFrame, 
                                                        "Shooting star" : ShootingStarArrayFrame, 
                                                        "Twinkle pixel" : TwinklePixelArrayFrame, 
@@ -119,6 +119,7 @@ class LedArrayFrame(Frame):
             param_frame.grid_rowconfigure(row, weight=1)
 
 class VariableFrame(ttk.Frame):
+    """The object containing the widgets for synching animation."""
 
     def __init__(self, 
                  parent: Misc, 
@@ -147,19 +148,33 @@ class VariableFrame(ttk.Frame):
         self.canvas.pack(side="top", fill="x", expand=False, anchor=CENTER)
         self.scrollbar.pack(side="bottom", fill="x")
 
-        # Add widgets dynamically based on the arrays
-        self.label_vars = []
-        self.entry_vars = []
-        self.checkbox_vars = []
+        # Send message button
+        self.btn_synch: ttk.Button = ttk.Button(self, 
+                                                text="Sync", 
+                                                width = 15,
+                                                bootstyle=PRIMARY, 
+                                                command=lambda self=self: send_sync_message(self))
+        self.btn_synch.pack()
 
+        # Add widgets dynamically based on the arrays
+        self.label_vars: StringVar = []
+        self.entry_vars: StringVar = []
+        self.checkbox_vars: BooleanVar = []
+
+        def send_sync_message(self: Any) -> None:
+            """Sends the synching message to controller."""
+            message = f"@3<{self.master.master.led_array_idx},"
+            for i in range(len(self.label_vars)):
+                if self.checkbox_vars[i].get():
+                    message = f"{message}{i},{self.master.master.master.controller_interface.animation_codes[self.master.master.param_frame.winfo_children()[0].animation_label]},{self.entry_vars[i].get()},"
+            self.master.master.master.controller_interface.send_message(message[:-1] + ">")
         # Horizontal layout for labels, entries, and checkboxes
-        print(labels)
+        #print(labels)
         nb_test = 4
         row = 0
         for i, label_text in enumerate(labels):
             label_var = StringVar(value=label_text)
             label = ttk.Label(self.scrollable_frame, textvariable=label_var)
-            #print(f"row: {row}, col: {i%nb_test}")
             label.grid(row=row, column=i%nb_test, padx=10, pady=5)
             self.label_vars.append(label_var)
             if i != 0 and i%nb_test == 0:
