@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import Button, Entry, StringVar
 import ttkbootstrap as ttk
 from tkinter import Misc, Event
-from custom_widgets import SlidePanel
+
 
 class MenuBar(tk.Menu):
 
@@ -72,6 +72,7 @@ class CustomMenuBar(ttk.Frame):
         self.help_menu = self.create_menu_item(self, "Help", lambda: self.menu_action("Help"))
         self.connection_menu = self.create_dropdown_menu_item(self, "Connection", self.create_connection_menu)
         self.open_console = self.create_menu_item(self, "Console", parent.side_bar_menu.animate)
+        self.update_all = self.create_menu_item(self, "Update all", lambda: self.master.update_all_animations())
 
         self.global_brightness_slider_memory: int = 0
         """The value used to make the slider only send commands when it switches integer."""
