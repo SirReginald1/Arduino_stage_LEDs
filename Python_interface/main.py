@@ -7,7 +7,7 @@ from controller_interface import ControllerInterface
 
 class App():
 
-    NB_ARRAYS = 4
+    NB_ARRAYS = 8
     """The number of arrays conected to the controller"""
 
     def __init__(self) -> "App":

@@ -22,6 +22,10 @@
 #define LED_PIN_1 18
 #define LED_PIN_2 17
 #define LED_PIN_3 16
+#define LED_PIN_4 21
+#define LED_PIN_5 22
+#define LED_PIN_6 23
+#define LED_PIN_7 25
 // Setting button pins
 #define BTN_PIN 2
 
@@ -206,6 +210,10 @@ void setup() {
   FastLED.addLeds<WS2812B, LED_PIN_1, RGB>(led_arrays[1], NUM_LEDS);
   FastLED.addLeds<WS2812B, LED_PIN_2, RGB>(led_arrays[2], NUM_LEDS);
   FastLED.addLeds<WS2812B, LED_PIN_3, RGB>(led_arrays[3], NUM_LEDS);
+  FastLED.addLeds<WS2812B, LED_PIN_4, RGB>(led_arrays[4], NUM_LEDS);
+  FastLED.addLeds<WS2812B, LED_PIN_5, RGB>(led_arrays[5], NUM_LEDS);
+  FastLED.addLeds<WS2812B, LED_PIN_6, RGB>(led_arrays[6], NUM_LEDS);
+  FastLED.addLeds<WS2812B, LED_PIN_7, RGB>(led_arrays[7], NUM_LEDS);
 
   // Set power limit of LED strip to 5V, 1500mA
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);

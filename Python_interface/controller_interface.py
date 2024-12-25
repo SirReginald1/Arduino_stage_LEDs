@@ -84,7 +84,7 @@ class ControllerInterface():
                        "rainbow_circle"]
     """List of all the animation names."""
 
-    NB_ARRAYS = 4
+    NB_ARRAYS = 8 #TODO: Set this so that it refers to nb_arrays in main.py
 
     # Send bytes representing the animation code
     # If bytes long then with parameters else just change animation
