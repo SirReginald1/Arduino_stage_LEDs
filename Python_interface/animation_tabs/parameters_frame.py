@@ -39,7 +39,7 @@ class ParametersFrame(Frame):
         res = color_chooser.result
         self.btn_color_chooser.configure(bg=res.hex)
         self.color = res.rgb
-        self.send_update()
+        #self.send_update() TODO: Check that this is up to date
 
     def update_parameter_values(self) -> None:
         "Updates all the animation parameter values in the interface those present in the entry boxes."

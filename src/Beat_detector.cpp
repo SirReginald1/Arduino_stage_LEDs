@@ -120,7 +120,7 @@ bool detectSnare() {
   // Snare drum typically has energy in 150 Hz to 400 Hz
   int bin_start = frequencyToBin(200);
   int bin_end = frequencyToBin(220);
-  float threshold = 5000000000;  // Adjust based on experimentation
+  float threshold = 500000000000000;  // Adjust based on experimentation 5000000000
   
   return checkFrequencyRange(bin_start, bin_end, threshold);
 }
@@ -136,7 +136,7 @@ bool detectKick(unsigned long minPausBetweenCalls) {
   }
   lastCall = current_time;
   // Kick drum typically has energy in 40 Hz to 100 Hz. The magic values seem to be 80 to 180 Hz.
-  return checkFrequencyRange(frequencyToBin(80), frequencyToBin(180), 5000000000); // Adjust based on experimentation
+  return checkFrequencyRange(frequencyToBin(80), frequencyToBin(180), 5000000000); // Adjust based on experimentation 80, 180, 5000000000 | 120, 180, 17000000000
 }
 
 // Function to detect hi-hat sound
