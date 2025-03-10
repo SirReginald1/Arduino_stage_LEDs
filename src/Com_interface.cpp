@@ -36,11 +36,16 @@
 #define RECIVE_MODE_SYNCH_ANIM 3
 /** The mode number for the preprepared animation mode.*/
 #define RECIVE_MODE_RUN_PREP_ANIM 4
+/** The mode number for adding received beat signal to beat queue. */
+#define RECIVE_MODE_EXTERN_BEAT_SIGNAl 5
 
 /** The task handler for the FFT task runing on core 0 */
-extern TaskHandle_t mainCore0Handle;
+//extern TaskHandle_t mainCore0Handle;
 /** The value indicating if the mic and FFT loop is runing on core0. */
 extern bool appModeMicFFTOnCore1;
+
+/** The notification queue used to signal core 1 of an event */
+extern QueueHandle_t core1NotifQueue;
 
 /** The LED arrays */
 extern CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
@@ -126,6 +131,8 @@ class ComInterface{
     static void parseBrightnessData();
 
     static void parseSynchAnimData();
+
+    static void parseBeatSignal();
 
     static void swithMicFFTMode();
 
@@ -567,11 +574,30 @@ void ComInterface::parsePreprepAnimData(){
 }
 
 /**
-  * Function used to parse data when MODE_MIC_FFT_ON is receved.
+ * Called when external beat signaling message is received through serial. Will add the received beat type signal to the beat queue.
+ */
+void ComInterface::parseBeatSignal(){
+  /*Value extracted from buffer*/
+  char * strtokIndx;
+  /*The signal received by the via serial*/
+  u_int16_t recievedSignal;
+  // The first element in the list
+  strtokIndx = strtok(tempChars,",");
+  // Loop through all listed signal types and add them to the beat queue
+  while(strtokIndx != NULL){
+    recievedSignal = atoi(strtokIndx);
+    //Serial.printf("Sent message: %d", recievedSignal);
+    xQueueSend(core1NotifQueue, &recievedSignal, 0);
+    strtokIndx = strtok(NULL, ",");
+  }
+}
+
+/**
+  * Function used to parse data when MODE_MIC_FFT_ON is received.
 */
 void ComInterface::swithMicFFTMode(){
   //if(mainCore0Handle == NULL){
-    xTaskNotify(mainCore0Handle, MODE_MIC_FFT_ON, eSetValueWithOverwrite);
+    //xTaskNotify(mainCore0Handle, MODE_MIC_FFT_ON, eSetValueWithOverwrite);
     appModeMicFFTOnCore1 = !appModeMicFFTOnCore1;
   //}
 }
@@ -606,6 +632,9 @@ void ComInterface::readInput(){
           ComInterface::parsePreprepAnimData();
           ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
           break;
+        case RECIVE_MODE_EXTERN_BEAT_SIGNAl:
+          ComInterface::parseBeatSignal();
+          ComInterface::dataParsingMode = RECIVE_MODE_ANIM_SELECT;
       }
       newData = false;
   }

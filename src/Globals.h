@@ -20,6 +20,7 @@
 #define MODE_SELECT_ANIMATION 1
 #define MODE_PREPREP_ANIMATION 2
 #define MODE_MIC_FFT_ON 3
+#define MODE_EXTERN_BEAT_SIG 4
 
 //######################################################################################################
 //###################################### ANIMATION VARIABLES ###########################################
