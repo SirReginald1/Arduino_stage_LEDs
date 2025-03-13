@@ -100,7 +100,7 @@ float* timings;
 int timingsLength = 0;
 
 /** The task handler for the FFT task runing on core 0 */
-TaskHandle_t mainCore0Handle;
+//TaskHandle_t mainCore0Handle;
 /** The notification queue used by core0 to signal core 1 */
 QueueHandle_t core1NotifQueue;
 /** Value indicating what audio feature hase been detected. If none detected will be set to NO_AUDIO_FEATURE_DETECTED. */
@@ -194,11 +194,11 @@ void setup() {
   // #########################################################
   // ###################### Beat detection ###################
   // #########################################################
-  beatDetectionSetup();
-  xTaskCreatePinnedToCore(mainCore0, "mainCore0", 10000, NULL, 1, &mainCore0Handle, 0); // Setting up main code to run on second core.
-  if(mainCore0Handle == NULL){
-    Serial.println("The task on the second core was not created!");
-  }
+  //beatDetectionSetup(); // !!!!!!!!!! Remember to uncoment Com_interface task notification in mic switching data parsing !!!!!!!!!!!!!
+  //xTaskCreatePinnedToCore(mainCore0, "mainCore0", 10000, NULL, 1, &mainCore0Handle, 0); // Setting up main code to run on second core.
+  //if(mainCore0Handle == NULL){
+  //  Serial.println("The task on the second core was not created!");
+  //}
   core1NotifQueue = xQueueCreate(10, // Queue length
                             sizeof(u_int16_t));
   // #########################################################

@@ -53,6 +53,7 @@ void getFFT() {
 */
 void readBeatQueue(){
   while(xQueueReceive(core1NotifQueue, &FFTAudioFeatureDetected, (TickType_t) 0) == pdTRUE){
+    //Serial.printf("Signal read: %d", FFTAudioFeatureDetected);
     switch (FFTAudioFeatureDetected) {
       case NO_AUDIO_FEATURE_DETECTED:
         return;
