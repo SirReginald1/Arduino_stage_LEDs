@@ -32,15 +32,68 @@ extern bool detectedSnaire;
 /** Indicates if a high hat is detected */
 extern bool detectedHighHat;
 
+int avtivatedArrays = 0;
+
+// ###########################################################################################################################
+// #################################################### UTILITY FUNCTIONS ####################################################
+// ###########################################################################################################################
+
+/**
+* Calculates a linear ramp value for a givent position on the ramp.
+*
+* @param pos The possition on the ramp (array).
+* @param floor The minimum value that can be taken by the ramp.
+* @param ceiling The maximum value that can be taken by the ramp.
+* @param nbLeds The number of positions in the ramp (lenght  of array).
+*/
+float ramp(int& pos, int& floor, int& ceiling, const int& nbLeds){
+  return min(max((float)((pos) / nbLeds), (float)floor), (float)ceiling);
+}
+
+/**
+* Sets the linear ramp values for a givent ramp value array.
+*
+* @param rampArray The array to have its values reset.
+* @param floor The minimum value that can be taken by the ramp.
+* @param ceiling The maximum value that can be taken by the ramp.
+* @param nbLeds The number of positions in the ramp (lenght  of array).
+*/
+void setRampValues(float* rampArray, int& floor, int& ceiling, const int& nbLeds){
+  for(int i=0; i<nbLeds; i++){
+    rampArray[i] = ramp(i, floor, ceiling, nbLeds);
+  }
+}
+
+/**
+ * Places particles equaly spaced depending on the number of particles used and places them in the position table.
+ * Function to be called when switching annimations and befor animation playing more generaly.
+ * 
+ * @param particlePosArray The array referencing the position of each used particle.
+ * @param nbParticles The numper of particles to place in the array.
+ * @param nbLeds The number of leds present in the array.
+ */
+void setParticleConverge1DPosArray(int* particlePosArray, int& nbParticles, int nbLeds){
+  int spacing = nbLeds / (nbParticles + 1); // Because there is one more space than there are particles.
+  int position = spacing;
+  for(int i=0; i<nbParticles; i++){
+    particlePosArray[i] = position;
+    position += spacing;
+  }
+}
+
+// ###########################################################################################################################
+// #################################################### PARAMETERS STRUCT ####################################################
+// ###########################################################################################################################
+
 /**Struct that contains the number of the animation being run by the array it's attributed to
  *  as well as all the references to the aniamtion parameters.
  * */
-struct animParamRef{
+struct animParamRef {
 
   /** This variable is used to idetify the array when using multi-array animations  */
-  u_int16_t arrayId;
+  const u_int16_t arrayId;
 
-  int nbLeds = NUM_LEDS; // The number of leds in the assigned array
+  const int nbLeds;// = NUM_LEDS; // The number of leds in the assigned array
 
   int animation = 3; // The animation the array is currentlly set to
 
@@ -60,7 +113,7 @@ struct animParamRef{
 
   int fireParamInt[3] = {50, 50, 25}; // {int flame_height, int sparks, int delay}
   float fireParamFloat[1] = {1.}; // {float fire_intensity}
-  byte* fireHeat = new byte[nbLeds];
+  byte* fireHeat;// = new byte[nbLeds];
   unsigned long fireLastActivate = 0;
 
   int shootingStarParamInt[7] = {150, 0, 150, 20, 10, 2000, 1}; // {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
@@ -75,7 +128,7 @@ struct animParamRef{
   unsigned long strobeLastOn = 0;
   unsigned long strobeLastOff = 0;
 
-  int zipParamInt[7] = {2, 10, NUM_LEDS-5, 0, 0, 0, 255}; // {int size, int start, int end, int delay, int R, int G, int B}
+  int zipParamInt[7] = {2, 10, nbLeds-5, 0, 0, 0, 255}; // {int size, int start, int end, int delay, int R, int G, int B}
   unsigned long zipParamUnsignedLong[1] = {20}; // {unsigned long speed, unsigned long current_time}
   //int zipPosCounter = 0;
   unsigned long zipLastActivate = 0;
@@ -83,6 +136,39 @@ struct animParamRef{
   int flashToBeatParamInt[4] = {255,255,255,50}; // {red, green, blue, time_left_on}
   bool flashToBeatIsOn = false;
   unsigned long flashToBeatLastActivate = 0;
+
+  int particleConverge1DParamInt[6] = {3,0,0,255,0,0}; // {nbParticles, flore, ceiling, red, green, blue}
+  unsigned long particleConverge1DParamUnsignedLong[1] = {20}; // Speed
+  /** The array containing the list of all the particle positions. values of -1 mean the that particle is not in use therefor end loop*/
+  int* particleConverge1DParticlePos;
+  //int particleConverge1DMaxNbParticles;
+  float* particleConverge1DRampValues;
+  //int particleConverge1DStep = 0;
+  unsigned long particleConverge1DLastActivate = 0;
+
+  // Constructor
+  animParamRef(int ledCount = NUM_LEDS, u_int16_t arrayIdentifier = avtivatedArrays): nbLeds(ledCount), arrayId(arrayIdentifier) {
+    // Set ceiling
+    particleConverge1DParamInt[2] = nbLeds;
+    // Allocate memory for fireHeat array
+    fireHeat = new byte[nbLeds]{0};  
+    // Allocate memory for particleConverge1DParticlePos array
+    particleConverge1DParticlePos = new int[nbLeds/2]; // This allows for a maximum of 1 particle every other pixel
+    setParticleConverge1DPosArray(particleConverge1DParticlePos, particleConverge1DParamInt[0], nbLeds);
+    //particleConverge1DMaxNbParticles = nbLeds/2;
+    // Calculate ramp values at construcion
+    particleConverge1DRampValues = new float[nbLeds];
+    setRampValues(particleConverge1DRampValues, particleConverge1DParamInt[0], particleConverge1DParamInt[1],nbLeds);
+    avtivatedArrays ++; // !!!!!!!!!!!!!!!!!!!! Not sure this will work !!!!!!!!!!!!!!!!!
+  }
+
+// Destructor to prevent memory leaks
+  ~animParamRef() {
+    // We only explicitly reference these as they are the only 2 variables that are dynamically allocated.
+    delete[] fireHeat;
+    delete[] particleConverge1DParticlePos;
+    delete[] particleConverge1DRampValues;
+  }
 };
 
 /*
@@ -98,12 +184,12 @@ struct multiAnimArrayVars{
  * 
  * @param nbLeds The number of leds contained in the array.
  */
-animParamRef newAnimParamRef(int nbLeds){
-  animParamRef out;
-  out.nbLeds = nbLeds;
-  out.fireHeat = new byte[nbLeds];
-  return out;
-}
+//animParamRef newAnimParamRef(int nbLeds){
+//  animParamRef out;
+//  out.nbLeds = nbLeds;
+//  out.fireHeat = new byte[nbLeds];
+//  return out;
+//}
 
 /*
 void syncAnimation(animParamRef[NB_ARRAYS]){
@@ -363,6 +449,15 @@ class Animations{
 
     }
 
+
+// #############################################################################################################
+// ######################################## particle converge 1D ###############################################
+// #############################################################################################################
+
+    //static void setParticleConverge1DPosArray(int* particlePosArray, int& nbParticles, int& nbLeds);
+
+    static void particleConverge1D(CRGB* leds, animParamRef& parameters);
+
 // #############################################################################################################
 // ############################################ BEAT ANIMATIONS ################################################
 // #############################################################################################################
@@ -453,7 +548,8 @@ void (*Animations::animations[NB_ANIMATIONS])(CRGB*, animParamRef&) = {&Animatio
                                                                        &Animations::twinklePixels,
                                                                        &Animations::strobe,
                                                                        &Animations::zip,
-                                                                       &Animations::flashToBeat};
+                                                                       &Animations::flashToBeat,
+                                                                       &Animations::particleConverge1D};
 
 
 //Animations::animations[ANIM_CODE_RAINBOWCYCLE] = &Animations::rainbowCycle;
@@ -524,6 +620,9 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_FLASH_TO_BEAT:
           return animationStruct[arrayIdx].flashToBeatParamInt;
           break;
+        case ANIM_CODE_PARTICLE_CONVERGE_1D:
+          return animationStruct[arrayIdx].particleConverge1DParamInt;
+          break;
       }
     }
 
@@ -539,6 +638,9 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
       switch (animationCode) {
         case ANIM_CODE_ZIP:
           return animationStruct[arrayIdx].zipParamUnsignedLong;
+          break;
+        case ANIM_CODE_PARTICLE_CONVERGE_1D:
+          return animationStruct[arrayIdx].particleConverge1DParamUnsignedLong;
           break;
       }
     }
@@ -572,6 +674,33 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_FLASH_TO_BEAT:
           animationStruct[arrayIdx].flashToBeatParamInt[paramIdx] = paramValue;
           break;
+        case ANIM_CODE_PARTICLE_CONVERGE_1D:
+          static int par1Changed = -1;
+          switch (paramIdx){
+            case 0:
+              // Initialize the particle position array when switching parameters if parameter has changed.
+              if(paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[0]){
+                setParticleConverge1DPosArray(animationStruct[arrayIdx].particleConverge1DParticlePos, paramValue, animationStruct[arrayIdx].nbLeds);
+              }
+              break;
+            case 1:
+              // If parameter at pos 1 has chaged save value.
+              if(paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[1]){
+                par1Changed = paramValue;
+              }
+              break;
+            case 2:
+              // Recalculate ramp values if any of the parameters have changed.
+              if((paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[2]) | par1Changed != -1){
+                setRampValues(animationStruct[arrayIdx].particleConverge1DRampValues, par1Changed, paramValue, animationStruct[arrayIdx].nbLeds);
+                par1Changed = -1;
+              }
+              break;
+            default:
+              break;
+          }
+          animationStruct[arrayIdx].particleConverge1DParamInt[paramIdx] = paramValue;
+          break;
       }
     }
 
@@ -587,6 +716,9 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
       switch (animationCode){
         case ANIM_CODE_ZIP:
           animationStruct[arrayIdx].zipParamUnsignedLong[paramIdx] = paramValue;
+          break;
+        case ANIM_CODE_PARTICLE_CONVERGE_1D:
+          animationStruct[arrayIdx].particleConverge1DParamUnsignedLong[0] = paramValue;
           break;
       }
     }
@@ -815,10 +947,45 @@ void Animations::zip(CRGB* leds, animParamRef& parameters){
       leds[endPos].setRGB(0,0,0);
     }
     //FastLED.show();
+    // Only 1 element so the step is the position of the element
     parameters.animationPosition[ANIM_CODE_ZIP] = ++parameters.animationPosition[ANIM_CODE_ZIP] % (parameters.zipParamInt[2] - parameters.zipParamInt[1] + parameters.zipParamInt[0]);
     parameters.zipLastActivate = millisecs;
   }
 } 
+
+// ############################################################################
+// ###################### particleConverge1D animation ########################
+// ############################################################################
+
+void Animations::particleConverge1D(CRGB* leds, animParamRef& parameters){
+  // Only activate if appropriate amount of time has passed (speed)
+  if(millisecs - parameters.particleConverge1DLastActivate > parameters.particleConverge1DParamUnsignedLong[0]){
+    static int idx_particle_pos = 0;
+    // Loop through all active particles (-1 means that particle is not active)
+    while(idx_particle_pos < parameters.particleConverge1DParamInt[0]){
+      static int currentParticlePosition = parameters.particleConverge1DParticlePos[idx_particle_pos];
+      // Check not edge cases (only look right so only check right edge case)
+      //if(currentParticlePosition < parameters.nbLeds){
+        //static int current_pos = parameters.particleConverge1DParticlePos[idx_particle_pos];
+        static int next_pos = currentParticlePosition + 1;
+        static float next_ramp_value = parameters.particleConverge1DRampValues[next_pos];
+        leds[next_pos].r = parameters.particleConverge1DParamInt[2] * next_ramp_value;
+        leds[next_pos].g = parameters.particleConverge1DParamInt[3] * next_ramp_value;
+        leds[next_pos].b = parameters.particleConverge1DParamInt[4] * next_ramp_value;
+        // Cycle through variables
+        parameters.particleConverge1DParticlePos[idx_particle_pos] = (parameters.particleConverge1DParticlePos[idx_particle_pos] + 1) % parameters.nbLeds;
+        //idx_particle_pos = (idx_particle_pos + 1) % parameters.particleConverge1DParamInt[0];
+      //}
+    }
+    fadeToBlackBy(leds, parameters.nbLeds, parameters.particleConverge1DParamInt[3]);
+    parameters.animationPosition[ANIM_CODE_PARTICLE_CONVERGE_1D] = (parameters.animationPosition[ANIM_CODE_PARTICLE_CONVERGE_1D] + 1) % parameters.nbLeds; // !!!!! Check on this to make sure that it enables proper syncinig !!!!
+    parameters.particleConverge1DLastActivate = millisecs;
+  }
+}
+
+// ############################################################################
+// ########################## flashToBeat animation ###########################
+// ############################################################################
 
 void Animations::flashToBeat(CRGB* leds, animParamRef& parameters){
   if(detectedKick){
