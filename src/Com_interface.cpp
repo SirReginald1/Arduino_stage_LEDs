@@ -14,6 +14,7 @@
 #include <FastLED.h>
 #include "Globals.h"
 #include "Animations.h"
+#include "Params.h"
 #include "SD_manager.h"
 
 // ################### Compilation options ####################
@@ -152,11 +153,11 @@ int ComInterface::currentArray = 0;
 //animParamRef ComInterface::animParamRefs[NB_ARRAYS];
 
 // The number of interger parameters that are being used by each array
-int ComInterface::paramCountInt[NB_ARRAYS] = {0};
+//int ComInterface::paramCountInt[NB_ARRAYS] = {0};
 // The number of float parameters that are being used by each array
-float ComInterface::paramCountFloat[NB_ARRAYS] = {0};
+//float ComInterface::paramCountFloat[NB_ARRAYS] = {0};
 // The number of unsigned long parameters that are being used by each array
-unsigned long ComInterface::paramCountUnsignedLong[NB_ARRAYS] = {0};
+//unsigned long ComInterface::paramCountUnsignedLong[NB_ARRAYS] = {0};
 
 /*The buffer in which receved strings stored. Has a terminating character (\0).*/
 char ComInterface::receivedChars[numChars] = {0};
@@ -320,11 +321,13 @@ void ComInterface::recvWithStartEndMarkers() {
 
 /*This function parses the data that hase been receved*/
 void ComInterface::parseAnimationChangeData() {      // split the data into its parts
-  extern animParamRef animParamRefs[NB_ARRAYS];
+  //extern animParamRef animParamRefs[NB_ARRAYS];
+  extern StackAnimParamRef stackAnimParamRefs[NB_ARRAYS];
+  extern AnimParams* heapAnimParamrefs;
   /*Value extracted from buffer*/
   char * strtokIndx;
   /*Counts the number of parameters after the anomation value in current data parsing.*/
-  int param_buffer_count = 0;
+  uint8_t param_buffer_count = 0;
   /*
   * Parameter type value indicator.
   * 0: int
@@ -378,32 +381,46 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
     // If currentArray == -2 also switch all animations to specified animation
     if(currentArray == -2){
       for(int i=0;i<NB_ARRAYS;i++){
-        animParamRefs[i].animation = animation;
+        // Coppy animation position data to heap on animation change
+        if(stackAnimParamRefs[i].hasPosData){
+          heapAnimParamrefs[i].setAdjustParam(animation, 0, stackAnimParamRefs[i].intParams[0]);
+        }
+        //animParamRefs[i].animation = animation;
+        stackAnimParamRefs[i].animation = animation;
       }
     }
 
     // For each subsequent parameter define apropriate type and sets its value in the the appropriate reference table.
     while(strtokIndx != NULL) {
       // Finds the type of the current parameter value
+      Serial.printf("Param count: %d", param_buffer_count);
       type_indicator = findParamType(animation, param_buffer_count);
+      //type_indicator = heapAnimParamrefs[currentArray].animationParameters[animation]->paramPosType[param_buffer_count];
       // This switch casts the parameter to the appropriate type and sets the appropriate possition in the appropriat table with that value.
       switch (type_indicator) {
-        case 1:
+        case PARAM_TYPE_CODE_FLOAT:
           parameter_value_float = atof(strtokIndx);
           for(int i=0;i<NB_ARRAYS;i++){
-            Animations::setParametersFloat(animParamRefs, i, animation, param_buffer_count, parameter_value_float);
+            //Animations::setParametersFloat(animParamRefs, i, animation, param_buffer_count, parameter_value_float);
+            //setParam(heapAnimParamrefs[i], stackAnimParamRefs[i], param_buffer_count, parameter_value_float);
+            stackAnimParamRefs[i].setAdjustParams(param_buffer_count, parameter_value_float);
+            heapAnimParamrefs[i].setAdjustParam(animation, param_buffer_count, parameter_value_float);
           }
           break;
-        case 2:
+        case PARAM_TYPE_CODE_UNSIGNED_LONG:
           parameter_value_unsigned_long  = (unsigned long)atoi(strtokIndx);
           for(int i=0;i<NB_ARRAYS;i++){
-            Animations::setParametersUnsignedLong(animParamRefs, i, animation, param_buffer_count, parameter_value_unsigned_long);
+            //Animations::setParametersUnsignedLong(animParamRefs, i, animation, param_buffer_count, parameter_value_unsigned_long);
+            stackAnimParamRefs[i].setAdjustParams(param_buffer_count, parameter_value_unsigned_long);
+            heapAnimParamrefs[i].setAdjustParam(animation, param_buffer_count, parameter_value_unsigned_long);
           }
           break;
         default:
           parameter_value_int  = atoi(strtokIndx);
           for(int i=0;i<NB_ARRAYS;i++){
-            Animations::setParametersInt(animParamRefs, i, animation, param_buffer_count, parameter_value_int);
+            //Animations::setParametersInt(animParamRefs, i, animation, param_buffer_count, parameter_value_int);
+            stackAnimParamRefs[i].setAdjustParams(param_buffer_count, parameter_value_int);
+            heapAnimParamrefs[i].setAdjustParam(animation, param_buffer_count, parameter_value_int);
           }
       }
       // For each iteration of the loop will tell 
@@ -414,25 +431,34 @@ void ComInterface::parseAnimationChangeData() {      // split the data into its 
   }
   else{
 
-    animParamRefs[currentArray].animation = animation;
+    //animParamRefs[currentArray].animation = animation;
+    stackAnimParamRefs[currentArray].animation = animation;
 
     // For each subsequent parameter define apropriate type and sets its value in the the appropriate reference table.
     while(strtokIndx != NULL) {
       // Finds the type of the current parameter value
+      Serial.printf("Param count: %d", param_buffer_count);
       type_indicator = findParamType(animation, param_buffer_count);
+      //type_indicator = heapAnimParamrefs[currentArray].animationParameters[animation]->paramPosType[param_buffer_count];
       // This switch casts the parameter to the appropriate type and sets the appropriate possition in the appropriat table with that value.
       switch (type_indicator) {
-        case 1:
+        case PARAM_TYPE_CODE_FLOAT:
           parameter_value_float = atof(strtokIndx);
-          Animations::setParametersFloat(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_float);
+          //Animations::setParametersFloat(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_float);
+          stackAnimParamRefs[currentArray].setAdjustParams(param_buffer_count, parameter_value_float);
+          heapAnimParamrefs[currentArray].setAdjustParam(animation, param_buffer_count, parameter_value_float);
           break;
-        case 2:
+        case PARAM_TYPE_CODE_UNSIGNED_LONG:
           parameter_value_unsigned_long  = (unsigned long)atoi(strtokIndx);
-          Animations::setParametersUnsignedLong(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
+          //Animations::setParametersUnsignedLong(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_unsigned_long);
+          stackAnimParamRefs[currentArray].setAdjustParams(param_buffer_count, parameter_value_unsigned_long);
+          heapAnimParamrefs[currentArray].setAdjustParam(animation, param_buffer_count, parameter_value_unsigned_long);
           break;
         default:
           parameter_value_int  = atoi(strtokIndx);
-          Animations::setParametersInt(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_int);
+          //Animations::setParametersInt(animParamRefs, currentArray, animation, param_buffer_count, parameter_value_int);
+          stackAnimParamRefs[currentArray].setAdjustParams(param_buffer_count, parameter_value_int);
+          heapAnimParamrefs[currentArray].setAdjustParam(animation, param_buffer_count, parameter_value_int);
       }
       // For each iteration of the loop will tell 
       param_buffer_count++;
@@ -498,7 +524,9 @@ void ComInterface::parseBrightnessData(){
   * -2: 
 */
 void ComInterface::parseSynchAnimData(){
-  extern animParamRef animParamRefs[NB_ARRAYS];
+  //extern animParamRef animParamRefs[NB_ARRAYS];
+  extern StackAnimParamRef stackAnimParamRefs[NB_ARRAYS];
+  extern AnimParams* heapAnimParamrefs;
   /*Value extracted from buffer*/
   char* strtokIndx1;
   char* strtokIndx2;
@@ -526,8 +554,16 @@ void ComInterface::parseSynchAnimData(){
       Serial.print("ERROR in ComInterface::parseSynchAnimData!");
     }
 
-    animParamRefs[arrayNb].animationPosition[animation] = animParamRefs[arrayRef].animationPosition[animation] + offset;
-
+    //animParamRefs[arrayNb].animationPosition[animation] = animParamRefs[arrayRef].animationPosition[animation] + offset;
+    // Only set stack based arrays if the animation being set is the current one being run
+    if(animation == stackAnimParamRefs[arrayNb].animation && stackAnimParamRefs[arrayNb].hasPosData){
+      stackAnimParamRefs[arrayNb].intParams[0] = stackAnimParamRefs[arrayRef].intParams[0] + offset;
+    }
+    // If not set heap based animation position
+    else if(heapAnimParamrefs[arrayNb].animationParameters[animation]->hasPosData){
+      heapAnimParamrefs[arrayNb].animationParameters[animation]->intParams[0] = heapAnimParamrefs[arrayRef].animationParameters[animation] -> intParams[0] + offset;
+    }
+    
     strtokIndx1 = strtok(NULL, ",");
     if(strtokIndx1 != NULL){
       break;  

@@ -26,8 +26,10 @@
 //###################################### ANIMATION VARIABLES ###########################################
 //######################################################################################################
 
+/* The animation the program defaults to on startup an in case of error. */
+#define DEFAULT_ANIAMTION 3
 /** The number of animations that are implemented */
-#define NB_ANIMATIONS 10
+#define NB_ANIMATIONS 9
 
 /** Codes that represent the placement of the animation function in the animation function array */
 #define ANIM_CODE_RAINBOWCYCLE 0
@@ -39,7 +41,7 @@
 #define ANIM_CODE_STROBE 6
 #define ANIM_CODE_ZIP 7
 #define ANIM_CODE_FLASH_TO_BEAT 8
-#define ANIM_CODE_PARTICLE_CONVERGE_1D 9
+//#define ANIM_CODE_PARTICLE_CONVERGE_1D 9
 
 //######################################################################################################
 //##################################### BEAT DETECTION VARIABLES #######################################

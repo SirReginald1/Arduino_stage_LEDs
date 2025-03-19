@@ -4,6 +4,7 @@
 #include <FastLED.h>
 #include <Arduino.h>
 #include "Globals.h"
+#include "Params.h"
 
 /**Struct that contains the number of the animation being run by the array it's attributed to
  *  as well as all the references to the aniamtion parameters.
@@ -77,7 +78,7 @@ class Animations{
 
     //static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef animParamRefArray[NB_ARRAYS], unsigned long millisecs);
 
-    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef (&animParamRefArray)[NB_ARRAYS]);
+    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], StackAnimParamRef (&animParamRefArray)[NB_ARRAYS]);
 
     static int* getParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode);
 

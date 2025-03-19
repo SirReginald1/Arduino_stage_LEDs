@@ -9,6 +9,7 @@
 #include "Globals.h"
 #include "Com_interface.h"
 #include "Beat_detector.h"
+#include "Params.h"
 
 
 extern float* timings; 
@@ -81,95 +82,39 @@ void setParticleConverge1DPosArray(int* particlePosArray, int& nbParticles, int 
   }
 }
 
-// ###########################################################################################################################
-// #################################################### PARAMETERS STRUCT ####################################################
-// ###########################################################################################################################
-
-/**Struct that contains the number of the animation being run by the array it's attributed to
- *  as well as all the references to the aniamtion parameters.
- * */
-struct animParamRef {
-
-  /** This variable is used to idetify the array when using multi-array animations  */
-  const u_int16_t arrayId;
-
-  const int nbLeds;// = NUM_LEDS; // The number of leds in the assigned array
-
-  int animation = 3; // The animation the array is currentlly set to
-
-  int animationPosition[NB_ANIMATIONS]; // The array containing the animation position for each of the animations.
-
-  int rainbowCycleParamInt[1] = {0}; // {int delay}
-  //int rainbowCycleVarInt[1] = {0}; // {point in animation}
-  unsigned long rainbowCycleLastActivate = 0;
-
-  int fadeInAndOutParamInt[4] = {255, 255, 255, 100}; // {int red, int green, int blue, int speed}
-  //int fadeInAndOutFadeAmount = 0;
-  bool fadeInAndOutFadingIn = true;
-  unsigned long fadeInAndOutLastActivate = 0;
-
-  int sparkleParamInt[5] = {200, 0, 100, 0}; // {int red, int green, int blue, int delay}
-  int sparkleVarInt[1] = {0}; // {int lastPixel}
-
-  int fireParamInt[3] = {50, 50, 25}; // {int flame_height, int sparks, int delay}
-  float fireParamFloat[1] = {1.}; // {float fire_intensity}
-  byte* fireHeat;// = new byte[nbLeds];
-  unsigned long fireLastActivate = 0;
-
-  int shootingStarParamInt[7] = {150, 0, 150, 20, 10, 2000, 1}; // {int R, int G, int B, int tail_length, int delay_duration, int interval, int direction}
-  unsigned long shootingStarLastActivate = 0;           // Stores last time LEDs were updated
-  unsigned long shootingStarLastStar = 0; // The last time a shooting star started
-  //int shootingStarPosCounter = 0;
-
-  int twinklePixelsParamInt[5] = {200, 50, 50, 100, 50}; // {int Color, int ColorSaturation, int PixelVolume, int FadeAmount, int DelayDuration}
-  unsigned long twinklePixelsLastActivate = 0;
-
-  int strobeParamInt[5] = {20, 55, 255, 255, 255}; // {int time_on, int time_off, int R, int G, int B}
-  unsigned long strobeLastOn = 0;
-  unsigned long strobeLastOff = 0;
-
-  int zipParamInt[7] = {2, 10, nbLeds-5, 0, 0, 0, 255}; // {int size, int start, int end, int delay, int R, int G, int B}
-  unsigned long zipParamUnsignedLong[1] = {20}; // {unsigned long speed, unsigned long current_time}
-  //int zipPosCounter = 0;
-  unsigned long zipLastActivate = 0;
-
-  int flashToBeatParamInt[4] = {255,255,255,50}; // {red, green, blue, time_left_on}
-  bool flashToBeatIsOn = false;
-  unsigned long flashToBeatLastActivate = 0;
-
-  int particleConverge1DParamInt[6] = {3,0,0,255,0,0}; // {nbParticles, flore, ceiling, red, green, blue}
-  unsigned long particleConverge1DParamUnsignedLong[1] = {20}; // Speed
+  //int particleConverge1DParamInt[6] = {3,0,0,255,0,0}; // {nbParticles, flore, ceiling, red, green, blue}
+  //unsigned long particleConverge1DParamUnsignedLong[1] = {20}; // Speed
   /** The array containing the list of all the particle positions. values of -1 mean the that particle is not in use therefor end loop*/
-  int* particleConverge1DParticlePos;
+  //int* particleConverge1DParticlePos;
   //int particleConverge1DMaxNbParticles;
-  float* particleConverge1DRampValues;
+  //float* particleConverge1DRampValues;
   //int particleConverge1DStep = 0;
-  unsigned long particleConverge1DLastActivate = 0;
+  //unsigned long particleConverge1DLastActivate = 0;
 
   // Constructor
-  animParamRef(int ledCount = NUM_LEDS, u_int16_t arrayIdentifier = avtivatedArrays): nbLeds(ledCount), arrayId(arrayIdentifier) {
-    // Set ceiling
-    particleConverge1DParamInt[2] = nbLeds;
-    // Allocate memory for fireHeat array
-    fireHeat = new byte[nbLeds]{0};  
-    // Allocate memory for particleConverge1DParticlePos array
-    particleConverge1DParticlePos = new int[nbLeds/2]; // This allows for a maximum of 1 particle every other pixel
-    setParticleConverge1DPosArray(particleConverge1DParticlePos, particleConverge1DParamInt[0], nbLeds);
-    //particleConverge1DMaxNbParticles = nbLeds/2;
-    // Calculate ramp values at construcion
-    particleConverge1DRampValues = new float[nbLeds];
-    setRampValues(particleConverge1DRampValues, particleConverge1DParamInt[0], particleConverge1DParamInt[1],nbLeds);
-    avtivatedArrays ++; // !!!!!!!!!!!!!!!!!!!! Not sure this will work !!!!!!!!!!!!!!!!!
-  }
+  //animParamRef(int ledCount = NUM_LEDS, u_int16_t arrayIdentifier = avtivatedArrays): nbLeds(ledCount), arrayId(arrayIdentifier) {
+  //  // Set ceiling
+  //  particleConverge1DParamInt[2] = nbLeds;
+  //  // Allocate memory for fireHeat array
+  //  fireHeat = new byte[nbLeds]{0};  
+  //  // Allocate memory for particleConverge1DParticlePos array
+  //  particleConverge1DParticlePos = new int[nbLeds/2]; // This allows for a maximum of 1 particle every other pixel
+  //  setParticleConverge1DPosArray(particleConverge1DParticlePos, particleConverge1DParamInt[0], nbLeds);
+  //  //particleConverge1DMaxNbParticles = nbLeds/2;
+  //  // Calculate ramp values at construcion
+  //  particleConverge1DRampValues = new float[nbLeds];
+  //  setRampValues(particleConverge1DRampValues, particleConverge1DParamInt[0], particleConverge1DParamInt[1],nbLeds);
+  //  avtivatedArrays ++; // !!!!!!!!!!!!!!!!!!!! Not sure this will work !!!!!!!!!!!!!!!!!
+  //}
 
 // Destructor to prevent memory leaks
-  ~animParamRef() {
-    // We only explicitly reference these as they are the only 2 variables that are dynamically allocated.
-    delete[] fireHeat;
-    delete[] particleConverge1DParticlePos;
-    delete[] particleConverge1DRampValues;
-  }
-};
+  //~animParamRef() {
+  //  // We only explicitly reference these as they are the only 2 variables that are dynamically allocated.
+  //  delete[] fireHeat;
+  //  delete[] particleConverge1DParticlePos;
+  //  delete[] particleConverge1DRampValues;
+  //}
+
 
 /*
 struct multiAnimArrayVars{
@@ -287,9 +232,9 @@ class Animations{
 // #########################################################################
 
     /** The array containing all the animation functions. */
-    static void (*animations[NB_ANIMATIONS])(CRGB*, animParamRef&);
+    static void (*animations[NB_ANIMATIONS])(CRGB*, StackAnimParamRef&);
 
-    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef (&animParamRefArray)[NB_ARRAYS]);
+    static void runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], StackAnimParamRef (&animParamRefArray)[NB_ARRAYS]);
 
 // #########################################################################
 // ####################### Rainbow Cycle animation #########################
@@ -319,19 +264,19 @@ class Animations{
       return c;
     }
 
-    static void rainbowCycle(CRGB* leds, animParamRef& parameters);
+    static void rainbowCycle(CRGB* leds, StackAnimParamRef& parameters);
 
 // #########################################################################
 // ############################ Fade animation #############################
 // #########################################################################
 
-    static void fadeInAndOut(CRGB* leds, animParamRef& parameters);
+    static void fadeInAndOut(CRGB* leds, StackAnimParamRef& parameters);
 
 //   #########################################################################
 //   ####################### Sparkle animation ###############################
 //   #########################################################################
 
-    static void sparkle(CRGB* leds, animParamRef& parameters);
+    static void sparkle(CRGB* leds, StackAnimParamRef& parameters);
 
 // #########################################################################
 // ############################ Fire animation #############################
@@ -340,7 +285,7 @@ class Animations{
     // FlameHeight - Use larger value for shorter flames, default=50.
     // Sparks - Use larger value for more ignitions and a more active fire (between 0 to 255), default=100.
     // DelayDuration - Use larger value for slower flame speed, default=10.
-    static void Fire(CRGB* leds, animParamRef& parameters);
+    static void Fire(CRGB* leds, StackAnimParamRef& parameters);
 
     static void setPixelHeatColor(CRGB* leds, int Pixel, byte temperature, float intensity) {
       // Rescale heat from 0-255 to 0-191
@@ -373,7 +318,7 @@ class Animations{
      *  delay_duration - A larger value results in slower movement speed.
      *  interval - Time interval between new shooting stars (in milliseconds).
     */
-    static void shootingStar(CRGB* leds, animParamRef& parameters);
+    static void shootingStar(CRGB* leds, StackAnimParamRef& parameters);
 
 // #########################################################################
 // ######################## Twinkle Pixels animation #######################
@@ -406,19 +351,19 @@ class Animations{
       *      TwinklePixels(85, 200, 15, 50, 30);    // Green color with high pixel volume and faster speed
       *      TwinklePixels(255, 0, 100, 120, 0);    // White color with low pixel volume and max speed
     */
-    static void twinklePixels(CRGB* leds, animParamRef& parameters);
+    static void twinklePixels(CRGB* leds, StackAnimParamRef& parameters);
 
 // #########################################################################
 // ########################### Strobe animation ############################
 // #########################################################################
 
-    static void strobe(CRGB* leds, animParamRef& parameters);
+    static void strobe(CRGB* leds, StackAnimParamRef& parameters);
 
 // ############################################################################
 // ############################## Zip animation ###############################
 // ############################################################################
 
-    static void zip(CRGB* leds, animParamRef& parameters);
+    static void zip(CRGB* leds, StackAnimParamRef& parameters);
 
 // #########################################################################
 // ######################## Clear Sequential animation #####################
@@ -456,13 +401,13 @@ class Animations{
 
     //static void setParticleConverge1DPosArray(int* particlePosArray, int& nbParticles, int& nbLeds);
 
-    static void particleConverge1D(CRGB* leds, animParamRef& parameters);
+    static void particleConverge1D(CRGB* leds, StackAnimParamRef& parameters);
 
 // #############################################################################################################
 // ############################################ BEAT ANIMATIONS ################################################
 // #############################################################################################################
 
-    static void flashToBeat(CRGB* leds, animParamRef& parameters);
+    static void flashToBeat(CRGB* leds, StackAnimParamRef& parameters);
 
 // #############################################################################################################
 // ############################################ PREPREP ANIMATIONS #############################################
@@ -540,16 +485,17 @@ class Animations{
 // ############################################### STATIC VARIABLE DEFINITIONS ###############################################
 // ###########################################################################################################################
 
-void (*Animations::animations[NB_ANIMATIONS])(CRGB*, animParamRef&) = {&Animations::rainbowCycle, 
-                                                                       &Animations::fadeInAndOut, 
-                                                                       &Animations::sparkle,
-                                                                       &Animations::Fire,
-                                                                       &Animations::shootingStar,
-                                                                       &Animations::twinklePixels,
-                                                                       &Animations::strobe,
-                                                                       &Animations::zip,
-                                                                       &Animations::flashToBeat,
-                                                                       &Animations::particleConverge1D};
+void (*Animations::animations[NB_ANIMATIONS])(CRGB*, StackAnimParamRef&) = {&Animations::rainbowCycle, 
+                                                                            &Animations::fadeInAndOut, 
+                                                                            &Animations::sparkle,
+                                                                            &Animations::Fire,
+                                                                            &Animations::shootingStar,
+                                                                            &Animations::twinklePixels,
+                                                                            &Animations::strobe,
+                                                                            &Animations::zip,
+                                                                            &Animations::flashToBeat//,
+                                                                       //&Animations::particleConverge1D
+                                                                      };
 
 
 //Animations::animations[ANIM_CODE_RAINBOWCYCLE] = &Animations::rainbowCycle;
@@ -579,7 +525,7 @@ void Animations::stopFlashToBeatArray(){
  * @param ledArrays Array containing all the individual led arrays.
  * @param animParamRefArray The array containing all the parameters structs.
  */
-void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef (&animParamRefArray)[NB_ARRAYS]){
+void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], StackAnimParamRef (&animParamRefArray)[NB_ARRAYS]){
   for(int i=0;i<NB_ARRAYS;i++){
     // Add animParamRef selection for animation synching here
     (*animations[animParamRefArray[i].animation])(ledArrays[i], animParamRefArray[i]);
@@ -590,7 +536,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
 // #########################################################################
 // ##################### Animation Parameter References ####################
 // #########################################################################
-
+/*
     int* Animations::getParametersInt(animParamRef animationStruct[NB_ARRAYS], int arrayIdx, int animationCode){
       switch (animationCode) {
         case ANIM_CODE_RAINBOWCYCLE:
@@ -605,7 +551,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_FIRE:
           return animationStruct[arrayIdx].fireParamInt;
           break;
-        case ANIM_CODE_SHOUTING_STAR:
+        case ANIM_CODE_SHOOTING_STAR:
           return animationStruct[arrayIdx].shootingStarParamInt;
           break;
         case ANIM_CODE_TWINKLE_PIXELS:
@@ -620,9 +566,9 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_FLASH_TO_BEAT:
           return animationStruct[arrayIdx].flashToBeatParamInt;
           break;
-        case ANIM_CODE_PARTICLE_CONVERGE_1D:
-          return animationStruct[arrayIdx].particleConverge1DParamInt;
-          break;
+        //case ANIM_CODE_PARTICLE_CONVERGE_1D:
+        //  return animationStruct[arrayIdx].particleConverge1DParamInt;
+        //  break;
       }
     }
 
@@ -639,9 +585,9 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_ZIP:
           return animationStruct[arrayIdx].zipParamUnsignedLong;
           break;
-        case ANIM_CODE_PARTICLE_CONVERGE_1D:
-          return animationStruct[arrayIdx].particleConverge1DParamUnsignedLong;
-          break;
+        //case ANIM_CODE_PARTICLE_CONVERGE_1D:
+        //  return animationStruct[arrayIdx].particleConverge1DParamUnsignedLong;
+        //  break;
       }
     }
 
@@ -659,7 +605,7 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_FIRE:
           animationStruct[arrayIdx].fireParamInt[paramIdx] = paramValue;
           break;
-        case ANIM_CODE_SHOUTING_STAR:
+        case ANIM_CODE_SHOOTING_STAR:
           animationStruct[arrayIdx].shootingStarParamInt[paramIdx] = paramValue;
           break;
         case ANIM_CODE_TWINKLE_PIXELS:
@@ -674,33 +620,33 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_FLASH_TO_BEAT:
           animationStruct[arrayIdx].flashToBeatParamInt[paramIdx] = paramValue;
           break;
-        case ANIM_CODE_PARTICLE_CONVERGE_1D:
-          static int par1Changed = -1;
-          switch (paramIdx){
-            case 0:
-              // Initialize the particle position array when switching parameters if parameter has changed.
-              if(paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[0]){
-                setParticleConverge1DPosArray(animationStruct[arrayIdx].particleConverge1DParticlePos, paramValue, animationStruct[arrayIdx].nbLeds);
-              }
-              break;
-            case 1:
-              // If parameter at pos 1 has chaged save value.
-              if(paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[1]){
-                par1Changed = paramValue;
-              }
-              break;
-            case 2:
-              // Recalculate ramp values if any of the parameters have changed.
-              if((paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[2]) | par1Changed != -1){
-                setRampValues(animationStruct[arrayIdx].particleConverge1DRampValues, par1Changed, paramValue, animationStruct[arrayIdx].nbLeds);
-                par1Changed = -1;
-              }
-              break;
-            default:
-              break;
-          }
-          animationStruct[arrayIdx].particleConverge1DParamInt[paramIdx] = paramValue;
-          break;
+        //case ANIM_CODE_PARTICLE_CONVERGE_1D:
+        //  static int par1Changed = -1;
+        //  switch (paramIdx){
+        //    case 0:
+        //      // Initialize the particle position array when switching parameters if parameter has changed.
+        //      if(paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[0]){
+        //        setParticleConverge1DPosArray(animationStruct[arrayIdx].particleConverge1DParticlePos, paramValue, animationStruct[arrayIdx].nbLeds);
+        //      }
+        //      break;
+        //    case 1:
+        //      // If parameter at pos 1 has chaged save value.
+        //      if(paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[1]){
+        //        par1Changed = paramValue;
+        //      }
+        //      break;
+        //    case 2:
+        //      // Recalculate ramp values if any of the parameters have changed.
+        //      if((paramValue != animationStruct[arrayIdx].particleConverge1DParamInt[2]) | par1Changed != -1){
+        //        setRampValues(animationStruct[arrayIdx].particleConverge1DRampValues, par1Changed, paramValue, animationStruct[arrayIdx].nbLeds);
+        //        par1Changed = -1;
+        //      }
+        //      break;
+        //    default:
+        //      break;
+        //  }
+        //  animationStruct[arrayIdx].particleConverge1DParamInt[paramIdx] = paramValue;
+        //  break;
       }
     }
 
@@ -717,12 +663,12 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
         case ANIM_CODE_ZIP:
           animationStruct[arrayIdx].zipParamUnsignedLong[paramIdx] = paramValue;
           break;
-        case ANIM_CODE_PARTICLE_CONVERGE_1D:
-          animationStruct[arrayIdx].particleConverge1DParamUnsignedLong[0] = paramValue;
-          break;
+        //case ANIM_CODE_PARTICLE_CONVERGE_1D:
+        //  animationStruct[arrayIdx].particleConverge1DParamUnsignedLong[0] = paramValue;
+        //  break;
       }
     }
-
+*/
 // #########################################################################
 // ####################### Rainbow Cycle animation #########################
 // #########################################################################
@@ -730,19 +676,19 @@ void Animations::runAnimations(CRGB ledArrays[NB_ARRAYS][NUM_LEDS], animParamRef
 /**
   * Rainbow Circle animation that is ment to run with an array of LED arrays. All arrays ars synced.
 */
-void Animations::rainbowCycle(CRGB* leds, animParamRef& parameters){
+void Animations::rainbowCycle(CRGB* leds, StackAnimParamRef& parameters){
   byte *c;
   uint16_t i;
-  if(millisecs - parameters.rainbowCycleLastActivate > (unsigned long)parameters.rainbowCycleParamInt[0]){
-    if(parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE] >256){
-      parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE] = 0;
+  if(millisecs - parameters.timeLastActivate > (unsigned long)parameters.intAdjustParams[0]){
+    if(parameters.intParams[0] > 256){
+      parameters.intParams[0] = 0;
     }
     for(i=0; i < parameters.nbLeds; i++) { // This makes sure all LEDs on strip are updated
-      c = Wheel(((i * 256 / parameters.nbLeds) + /*j*/ parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE]) & 255);
+      c = Wheel(((i * 256 / parameters.nbLeds) + /*j*/ parameters.intParams[0]) & 255);
       leds[parameters.nbLeds - 1 - i].setRGB(*c, *(c+1), *(c+2));
     }
-    parameters.animationPosition[ANIM_CODE_RAINBOWCYCLE]++;
-    parameters.rainbowCycleLastActivate = millisecs;
+    parameters.intParams[0]++;
+    parameters.timeLastActivate = millisecs;
   }
 }
 
@@ -750,28 +696,28 @@ void Animations::rainbowCycle(CRGB* leds, animParamRef& parameters){
 // ############################ Fade animation #############################
 // #########################################################################
 
-void Animations::fadeInAndOut(CRGB* leds, animParamRef& parameters){//, int randomColors){
+void Animations::fadeInAndOut(CRGB* leds, StackAnimParamRef& parameters){//, int randomColors){
   float r, g, b;
   // FADE IN
   //for(int i = 0; i <= 255; i++) {
-  if(millisecs - parameters.fadeInAndOutLastActivate > parameters.fadeInAndOutParamInt[3]){
-    r = (parameters.animationPosition[ANIM_CODE_FADE]/256.0)*parameters.fadeInAndOutParamInt[0];
-    g = (parameters.animationPosition[ANIM_CODE_FADE]/256.0)*parameters.fadeInAndOutParamInt[1];
-    b = (parameters.animationPosition[ANIM_CODE_FADE]/256.0)*parameters.fadeInAndOutParamInt[2];
+  if(millisecs - parameters.timeLastActivate > parameters.uLongAdjustParams[0]){
+    r = (parameters.intParams[0]/256.0)*parameters.intAdjustParams[0];
+    g = (parameters.intParams[0]/256.0)*parameters.intAdjustParams[1];
+    b = (parameters.intParams[0]/256.0)*parameters.intAdjustParams[2];
     fill_solid(leds, parameters.nbLeds, CRGB(r, g, b));
-    if(parameters.fadeInAndOutFadingIn){
-      parameters.animationPosition[ANIM_CODE_FADE]++;
+    if(parameters.boolParams[0]){
+      parameters.intParams[0]++;
     }
     else{
-      parameters.animationPosition[ANIM_CODE_FADE]--;
+      parameters.intParams[0]--;
     }
-    if(parameters.animationPosition[ANIM_CODE_FADE] == 25){
-      parameters.fadeInAndOutFadingIn = false;
+    if(parameters.intParams[0] == 25){
+      parameters.boolParams[0] = false;
     }
-    else if(parameters.animationPosition[ANIM_CODE_FADE] == 0){
-      parameters.fadeInAndOutFadingIn = true;
+    else if(parameters.intParams[0] == 0){
+      parameters.boolParams[0] = true;
     }
-    parameters.fadeInAndOutLastActivate = millisecs;
+    parameters.timeLastActivate = millisecs;
   }
 }
 
@@ -779,11 +725,11 @@ void Animations::fadeInAndOut(CRGB* leds, animParamRef& parameters){//, int rand
 //   ####################### Sparkle animation ###############################
 //   #########################################################################
 
-void Animations::sparkle(CRGB* leds, animParamRef& parameters) {
-  EVERY_N_MILLISECONDS(parameters.sparkleParamInt[3]){
-    leds[parameters.sparkleVarInt[1]].setRGB(0, 0, 0);
-    parameters.sparkleVarInt[1] = random(parameters.nbLeds);
-    leds[parameters.sparkleVarInt[1]].setRGB(parameters.sparkleParamInt[1], parameters.sparkleParamInt[0], parameters.sparkleParamInt[2]);
+void Animations::sparkle(CRGB* leds, StackAnimParamRef& parameters) {
+  EVERY_N_MILLISECONDS(parameters.intAdjustParams[3]){
+    leds[parameters.intParams[0]].setRGB(0, 0, 0);
+    parameters.intParams[0] = random(parameters.nbLeds);
+    leds[parameters.intParams[0]].setRGB(parameters.intAdjustParams[1], parameters.intAdjustParams[0], parameters.intAdjustParams[2]);
   }
 } 
 
@@ -797,33 +743,33 @@ void Animations::sparkle(CRGB* leds, animParamRef& parameters) {
   * Sparks - Use larger value for more ignitions and a more active fire (between 0 to 255), default=100.
   * DelayDuration - Use larger value for slower flame speed, default=10.
 */
-void Animations::Fire(CRGB* leds, animParamRef& parameters) {
+void Animations::Fire(CRGB* leds, StackAnimParamRef& parameters) {
   int cooldown;
   // Cool down each cell a little
-  if(millisecs - parameters.fireLastActivate > parameters.fireParamInt[2]){
+  if(millisecs - parameters.timeLastActivate > parameters.uLongAdjustParams[0]){
     for(int i = 0; i < parameters.nbLeds; i++) {
-      cooldown = random(0, ((parameters.fireParamInt[0] * 10) / parameters.nbLeds) + 2);
-      if(cooldown > parameters.fireHeat[i]) {
-        parameters.fireHeat[i] = 0;
+      cooldown = random(0, ((parameters.intAdjustParams[0] * 10) / parameters.nbLeds) + 2);
+      if(cooldown > parameters.byteParams[i]) {
+        parameters.byteParams[i] = 0;
       }
       else {
-        parameters.fireHeat[i] = parameters.fireHeat[i] - cooldown;
+        parameters.byteParams[i] = parameters.byteParams[i] - cooldown;
       }
     }
     // Heat from each cell drifts up and diffuses slightly
     for(int k = (parameters.nbLeds - 1); k >= 2; k--) {
-      parameters.fireHeat[k] = (parameters.fireHeat[k - 1] + parameters.fireHeat[k - 2] + parameters.fireHeat[k - 2]) / 3;
+      parameters.byteParams[k] = (parameters.byteParams[k - 1] + parameters.byteParams[k - 2] + parameters.byteParams[k - 2]) / 3;
     }
     // Randomly ignite new Sparks near bottom of the flame
-    if(random(255) < parameters.fireParamInt[1]) {
+    if(random(255) < parameters.intAdjustParams[1]) {
       int y = random(7);
-      parameters.fireHeat[y] = parameters.fireHeat[y] + random(160, 255);
+      parameters.byteParams[y] = parameters.byteParams[y] + random(160, 255);
     }
     // Convert heat to LED colors
     for(int j = 0; j < parameters.nbLeds; j++) {
-      setPixelHeatColor(leds, j, parameters.fireHeat[j], parameters.fireParamFloat[0]);
+      setPixelHeatColor(leds, j, parameters.byteParams[j], parameters.floatAdjustParams[0]);
     }
-    parameters.fireLastActivate = millisecs;
+    parameters.timeLastActivate = millisecs;
   }
 }
 
@@ -839,28 +785,28 @@ void Animations::Fire(CRGB* leds, animParamRef& parameters) {
  *  interval - Time interval between new shooting stars (in milliseconds).
  * direction - value which changes the way that the pixels travel (uses -1 for reverse, any other number for forward)
 */
-void Animations::shootingStar(CRGB* leds, animParamRef& parameters){
-  if(millisecs - parameters.shootingStarLastActivate >= parameters.shootingStarParamInt[6]){
-    if (millisecs - parameters.shootingStarLastStar >= parameters.shootingStarParamInt[5]) {
-      parameters.shootingStarLastStar = millisecs;         // Save the last time the LEDs were updated
+void Animations::shootingStar(CRGB* leds, StackAnimParamRef& parameters){
+  if(millisecs - parameters.timeLastActivate >= parameters.uLongAdjustParams[0]){ // Animation speed
+    if (millisecs - parameters.uLongParams[0] >= parameters.uLongAdjustParams[1]) { // Shooting star interval
+      parameters.uLongParams[0] = millisecs;         // Save the last time the LEDs were updated
       //shootingStarCount = 0;
-      parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] = 0;                              // Reset the count to 0 after each interval
+      parameters.intParams[0] = 0;                              // Reset the count to 0 after each interval
     }
-    if (parameters.shootingStarParamInt[6] == -1) {        // Reverse direction option for LEDs
-      if (parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] < parameters.nbLeds) {
-        leds[parameters.nbLeds - (parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] % (parameters.nbLeds+1))].setRGB(parameters.shootingStarParamInt[0], parameters.shootingStarParamInt[1], parameters.shootingStarParamInt[2]);    // Set LEDs with the color value
-        parameters.animationPosition[ANIM_CODE_SHOUTING_STAR]++;
+    if (parameters.intAdjustParams[4] == -1) {        // Reverse direction option for LEDs
+      if (parameters.intParams[0] < parameters.nbLeds) {
+        leds[parameters.nbLeds - (parameters.intParams[0] % (parameters.nbLeds+1))].setRGB(parameters.intAdjustParams[0], parameters.intAdjustParams[1], parameters.intAdjustParams[2]);    // Set LEDs with the color value
+        parameters.intParams[0]++;
       }
     }
     else {
-      if (parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] < parameters.nbLeds) {     // Forward direction option for LEDs
-        leds[parameters.animationPosition[ANIM_CODE_SHOUTING_STAR] % (parameters.nbLeds+1)].setRGB(parameters.shootingStarParamInt[0], parameters.shootingStarParamInt[1], parameters.shootingStarParamInt[2]);    // Set LEDs with the color value
-        parameters.animationPosition[ANIM_CODE_SHOUTING_STAR]++;
+      if (parameters.intParams[0] < parameters.nbLeds) {     // Forward direction option for LEDs
+        leds[parameters.intParams[0] % (parameters.nbLeds+1)].setRGB(parameters.intAdjustParams[0], parameters.intAdjustParams[1], parameters.intAdjustParams[2]);    // Set LEDs with the color value
+        parameters.intParams[0]++;
       }
     }
-    fadeToBlackBy(leds, parameters.nbLeds, parameters.shootingStarParamInt[3]);                 // Fade the tail LEDs to black
+    fadeToBlackBy(leds, parameters.nbLeds, parameters.intAdjustParams[3]);                 // Fade the tail LEDs to black
   }
-  parameters.shootingStarLastActivate = millisecs;
+  parameters.timeLastActivate = millisecs;
 }
 
 // #########################################################################
@@ -894,21 +840,21 @@ void Animations::shootingStar(CRGB* leds, animParamRef& parameters){
   *      TwinklePixels(85, 200, 15, 50, 30);    // Green color with high pixel volume and faster speed
   *      TwinklePixels(255, 0, 100, 120, 0);    // White color with low pixel volume and max speed
 */
-void Animations::twinklePixels(CRGB* leds, animParamRef& parameters) {
-  if(millisecs - parameters.twinklePixelsLastActivate > parameters.twinklePixelsParamInt[4]){
+void Animations::twinklePixels(CRGB* leds, StackAnimParamRef& parameters) {
+  if(millisecs - parameters.timeLastActivate > parameters.uLongAdjustParams[0]){
     for (int i = 0; i < parameters.nbLeds; i++) {
       // Draw twinkling pixels
-      if (random(parameters.twinklePixelsParamInt[2]) < 2) {     // Chance for pixel to twinkle
+      if (random(parameters.intAdjustParams[2]) < 2) {     // Chance for pixel to twinkle
         uint8_t intensity = random(100, 255);     // Configure random intensity
         //CHSV(Color, ColorSaturation, intensity);     // Configure color with max saturation and variable value (intensity)
-        leds[i].setHSV(parameters.twinklePixelsParamInt[0], parameters.twinklePixelsParamInt[1], intensity);    // Set the pixel color
+        leds[i].setHSV(parameters.intAdjustParams[0], parameters.intAdjustParams[1], intensity);    // Set the pixel color
       }
       // Fade LEDs
       if (leds[i].r > 0 || leds[i].g > 0 || leds[i].b > 0) {    // Check if pixel is lit
-        leds[i].fadeToBlackBy(parameters.twinklePixelsParamInt[3]);    // Fade pixel to black
+        leds[i].fadeToBlackBy(parameters.intAdjustParams[3]);    // Fade pixel to black
       }
     }
-    parameters.twinklePixelsLastActivate = millisecs;
+    parameters.timeLastActivate = millisecs;
   }
 }
 
@@ -916,13 +862,13 @@ void Animations::twinklePixels(CRGB* leds, animParamRef& parameters) {
 // ########################### Strobe animation ############################
 // #########################################################################
 
-void Animations::strobe(CRGB* leds, animParamRef& parameters){
-  if(millisecs - parameters.strobeLastOn > parameters.strobeParamInt[0] + parameters.strobeParamInt[1]){
-    parameters.strobeLastOn = millisecs;
-    fill_solid(leds, parameters.nbLeds, CRGB(parameters.strobeParamInt[2], parameters.strobeParamInt[3], parameters.strobeParamInt[4]));
+void Animations::strobe(CRGB* leds, StackAnimParamRef& parameters){
+  if(millisecs - parameters.timeLastActivate > parameters.uLongAdjustParams[0] + parameters.uLongAdjustParams[1]){
+    parameters.timeLastActivate = millisecs;
+    fill_solid(leds, parameters.nbLeds, CRGB(parameters.intAdjustParams[0], parameters.intAdjustParams[2], parameters.intAdjustParams[3]));
   }
-  else if (millisecs - parameters.strobeLastOff > parameters.strobeParamInt[0]) {
-    parameters.strobeLastOff = millisecs;
+  else if (millisecs - parameters.uLongParams[0] > parameters.uLongAdjustParams[0]) {
+    parameters.uLongParams[0] = millisecs;
     FastLED.clear();
   }
 }
@@ -931,25 +877,25 @@ void Animations::strobe(CRGB* leds, animParamRef& parameters){
 // ############################## Zip animation ###############################
 // ############################################################################
 
-void Animations::zip(CRGB* leds, animParamRef& parameters){
+void Animations::zip(CRGB* leds, StackAnimParamRef& parameters){
   //static unsigned long zip_animation_prev_mills = 0;
   //static int zip_animation_pos_counter = 0;
   int startPos, endPos;
-  if(millisecs - parameters.zipLastActivate > parameters.zipParamUnsignedLong[0]){
+  if(millisecs - parameters.timeLastActivate > parameters.uLongAdjustParams[0]){
     // This is the start of the strip
-    startPos = parameters.animationPosition[ANIM_CODE_ZIP] + parameters.zipParamInt[1];
-    if(startPos <= parameters.nbLeds && startPos < parameters.zipParamInt[2]){
-      leds[startPos].setRGB(parameters.zipParamInt[4], parameters.zipParamInt[5], parameters.zipParamInt[6]);
+    startPos = parameters.intParams[0] + parameters.intAdjustParams[1];
+    if(startPos <= parameters.nbLeds && startPos < parameters.intAdjustParams[2]){
+      leds[startPos].setRGB(parameters.intAdjustParams[4], parameters.intAdjustParams[5], parameters.intAdjustParams[6]);
     }
     // This is the end of the strip
-    endPos = parameters.animationPosition[ANIM_CODE_ZIP] + parameters.zipParamInt[1] - parameters.zipParamInt[0];
+    endPos = parameters.intParams[0] + parameters.intAdjustParams[1] - parameters.intAdjustParams[0];
     if(endPos >= 0 && endPos <= parameters.nbLeds){
       leds[endPos].setRGB(0,0,0);
     }
     //FastLED.show();
     // Only 1 element so the step is the position of the element
-    parameters.animationPosition[ANIM_CODE_ZIP] = ++parameters.animationPosition[ANIM_CODE_ZIP] % (parameters.zipParamInt[2] - parameters.zipParamInt[1] + parameters.zipParamInt[0]);
-    parameters.zipLastActivate = millisecs;
+    parameters.intParams[0] = ++parameters.intParams[0] % (parameters.intAdjustParams[2] - parameters.intAdjustParams[1] + parameters.intAdjustParams[0]);
+    parameters.timeLastActivate = millisecs;
   }
 } 
 
@@ -957,44 +903,44 @@ void Animations::zip(CRGB* leds, animParamRef& parameters){
 // ###################### particleConverge1D animation ########################
 // ############################################################################
 
-void Animations::particleConverge1D(CRGB* leds, animParamRef& parameters){
-  // Only activate if appropriate amount of time has passed (speed)
-  if(millisecs - parameters.particleConverge1DLastActivate > parameters.particleConverge1DParamUnsignedLong[0]){
-    static int idx_particle_pos = 0;
-    // Loop through all active particles (-1 means that particle is not active)
-    while(idx_particle_pos < parameters.particleConverge1DParamInt[0]){
-      static int currentParticlePosition = parameters.particleConverge1DParticlePos[idx_particle_pos];
-      // Check not edge cases (only look right so only check right edge case)
-      //if(currentParticlePosition < parameters.nbLeds){
-        //static int current_pos = parameters.particleConverge1DParticlePos[idx_particle_pos];
-        static int next_pos = currentParticlePosition + 1;
-        static float next_ramp_value = parameters.particleConverge1DRampValues[next_pos];
-        leds[next_pos].r = parameters.particleConverge1DParamInt[2] * next_ramp_value;
-        leds[next_pos].g = parameters.particleConverge1DParamInt[3] * next_ramp_value;
-        leds[next_pos].b = parameters.particleConverge1DParamInt[4] * next_ramp_value;
-        // Cycle through variables
-        parameters.particleConverge1DParticlePos[idx_particle_pos] = (parameters.particleConverge1DParticlePos[idx_particle_pos] + 1) % parameters.nbLeds;
-        //idx_particle_pos = (idx_particle_pos + 1) % parameters.particleConverge1DParamInt[0];
-      //}
-    }
-    fadeToBlackBy(leds, parameters.nbLeds, parameters.particleConverge1DParamInt[3]);
-    parameters.animationPosition[ANIM_CODE_PARTICLE_CONVERGE_1D] = (parameters.animationPosition[ANIM_CODE_PARTICLE_CONVERGE_1D] + 1) % parameters.nbLeds; // !!!!! Check on this to make sure that it enables proper syncinig !!!!
-    parameters.particleConverge1DLastActivate = millisecs;
-  }
-}
+//void Animations::particleConverge1D(CRGB* leds, animParamRef& parameters){
+//  // Only activate if appropriate amount of time has passed (speed)
+//  if(millisecs - parameters.particleConverge1DLastActivate > parameters.particleConverge1DParamUnsignedLong[0]){
+//    static int idx_particle_pos = 0;
+//    // Loop through all active particles (-1 means that particle is not active)
+//    while(idx_particle_pos < parameters.particleConverge1DParamInt[0]){
+//      static int currentParticlePosition = parameters.particleConverge1DParticlePos[idx_particle_pos];
+//      // Check not edge cases (only look right so only check right edge case)
+//      //if(currentParticlePosition < parameters.nbLeds){
+//        //static int current_pos = parameters.particleConverge1DParticlePos[idx_particle_pos];
+//        static int next_pos = currentParticlePosition + 1;
+//        static float next_ramp_value = parameters.particleConverge1DRampValues[next_pos];
+//        leds[next_pos].r = parameters.particleConverge1DParamInt[2] * next_ramp_value;
+//        leds[next_pos].g = parameters.particleConverge1DParamInt[3] * next_ramp_value;
+//        leds[next_pos].b = parameters.particleConverge1DParamInt[4] * next_ramp_value;
+//        // Cycle through variables
+//        parameters.particleConverge1DParticlePos[idx_particle_pos] = (parameters.particleConverge1DParticlePos[idx_particle_pos] + 1) % parameters.nbLeds;
+//        //idx_particle_pos = (idx_particle_pos + 1) % parameters.particleConverge1DParamInt[0];
+//      //}
+//    }
+//    fadeToBlackBy(leds, parameters.nbLeds, parameters.particleConverge1DParamInt[3]);
+//    parameters.animationPosition[ANIM_CODE_PARTICLE_CONVERGE_1D] = (parameters.animationPosition[ANIM_CODE_PARTICLE_CONVERGE_1D] + 1) % parameters.nbLeds; // !!!!! Check on this to make sure that it enables proper syncinig !!!!
+//    parameters.particleConverge1DLastActivate = millisecs;
+//  }
+//}
 
 // ############################################################################
 // ########################## flashToBeat animation ###########################
 // ############################################################################
 
-void Animations::flashToBeat(CRGB* leds, animParamRef& parameters){
+void Animations::flashToBeat(CRGB* leds, StackAnimParamRef& parameters){
   if(detectedKick){
     //Serial.print("Beat type: ");Serial.println(beatType);
-    fill_solid(leds, parameters.nbLeds, CRGB(parameters.flashToBeatParamInt[1], parameters.flashToBeatParamInt[0], parameters.flashToBeatParamInt[2]));
+    fill_solid(leds, parameters.nbLeds, CRGB(parameters.intAdjustParams[1], parameters.intAdjustParams[0], parameters.intAdjustParams[2]));
   }
-  if(millisecs - parameters.flashToBeatLastActivate > parameters.flashToBeatParamInt[3]){
+  if(millisecs - parameters.timeLastActivate > parameters.intAdjustParams[3]){
     fill_solid(leds, parameters.nbLeds, CRGB(0, 0, 0));
-    parameters.flashToBeatLastActivate = millis();//millisecs;
+    parameters.timeLastActivate = millisecs;
   }
 }
 

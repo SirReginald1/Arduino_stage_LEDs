@@ -8,10 +8,12 @@
 #include "SD_manager.h"
 #include "Beat_detector.h"
 #include "Microphone.h"
+#include "Params.h"
 #include <arduinoFFT.h>
 #include "esp_task_wdt.h"
 #include "esp_system.h"
 #include "freertos/queue.h"
+#include "esp_heap_caps.h" // Used for getting amount of heap memory
 
 /*Indicated if the program should be run by the real time animation interface or just animation numbers*/
 //#define USE_INTERFACE
@@ -45,7 +47,13 @@ bool appModeMicFFTOnCore1 = false;
 CRGB led_arrays[NB_ARRAYS][NUM_LEDS];
 
 /** The array of structs that contain*/
-animParamRef animParamRefs[NB_ARRAYS];
+//animParamRef animParamRefs[NB_ARRAYS];
+/* The heap allocated parameter reference. */
+AnimParams* heapAnimParamrefs = new AnimParams[NB_ARRAYS];
+/* The stack allocated current animation parameter reference array. */
+StackAnimParamRef stackAnimParamRefs[NB_ARRAYS];
+
+// !!!!!!!!!!!!!!!!!!!!!!!! Fill with starting animation data in setup !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 //esp_task_wdt_in
 
@@ -159,7 +167,6 @@ void mainCore0(void* parameter){
   }
 }
 
-
 void setup() {
   // #########################################################
   // ###################### HARDWARE #########################
@@ -204,7 +211,11 @@ void setup() {
   // #########################################################
   // ######################### LED ###########################
   // #########################################################
-
+  // Initialise stack reference animation parameter values
+  //for(int i;i<NB_ARRAYS;i++){
+  //  copyValueFromHeap(heapAnimParamrefs[i], stackAnimParamRefs[i]);
+  //}
+  setupParameters(heapAnimParamrefs, stackAnimParamRefs);
   // Initialising led arrays
   FastLED.addLeds<WS2812B, LED_PIN_0, RGB>(led_arrays[0], NUM_LEDS);
   FastLED.addLeds<WS2812B, LED_PIN_1, RGB>(led_arrays[1], NUM_LEDS);
@@ -220,9 +231,9 @@ void setup() {
   // Make sure all lights are off
   FastLED.clear();
   // Setup array IDs
-  for(int i=0;i<NB_ARRAYS;i++){
-    animParamRefs[i].arrayId = i;
-  }
+  //for(int i=0;i<NB_ARRAYS;i++){
+  //  animParamRefs[i].arrayId = i;
+  //}
   // #########################################################
   // ################## Set variables ########################
   // #########################################################
@@ -230,19 +241,33 @@ void setup() {
   //timings = SDManager::readTimingBinFile("/Vibe Chemistry & HARLEE - Same Old Song_wav.bin", &timingsLength);
 }
 
+unsigned long timeSinceMemUpdate = 0U;
+
 void loop() {
   millisecs = millis();
-  // ############# LED CODE ##############
+  //// ############# LED CODE ##############
   if(Serial.available() > 0){
     ComInterface::readInput();
     FastLED.clear(); // !!!!!!!!!!!!!! Flickering at animation switch probably comes from here !!!!!!!!!!!!!!!!!!!!!!!!!!!
   }
   if(appModeMicFFTOnCore1){
     readBeatQueue();
-    Animations::runAnimations(led_arrays, animParamRefs);
+    //Animations::runAnimations(led_arrays, animParamRefs);
+    Animations::runAnimations(led_arrays, stackAnimParamRefs);
     resetBeatDetectionVariables();
   }
   else{
-    Animations::runAnimations(led_arrays, animParamRefs);
+    Animations::runAnimations(led_arrays, stackAnimParamRefs);
   }
-}
+  //heapAnimParamrefs->printMaxParamArraySize();
+    //for(int i=0;i<NB_ARRAYS;i++){
+    //  Serial.printf("Array%d array nb: %d\n", i, heapAnimParamrefs[i].arrayId);
+    //}
+  //if(millisecs - timeSinceMemUpdate > 1000){
+    //Serial.printf("Heap free size: %d\n", esp_get_free_heap_size());
+    //Serial.printf("Heap lowest size: %d\n", esp_get_minimum_free_heap_size());
+    //Serial.printf("Stack high water mark %d\n", uxTaskGetStackHighWaterMark(NULL));
+    //heapAnimParamrefs[0].printMaxParamArraySize();
+  //  timeSinceMemUpdate = millisecs;
+  //}
+  }
