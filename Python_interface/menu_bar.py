@@ -73,6 +73,7 @@ class CustomMenuBar(ttk.Frame):
         self.connection_menu = self.create_dropdown_menu_item(self, "Connection", self.create_connection_menu)
         self.open_console = self.create_menu_item(self, "Console", parent.side_bar_menu.animate)
         self.update_all = self.create_menu_item(self, "Update all", lambda: self.master.update_all_animations())
+        self.server = self.create_menu_item(self, "Server", self.open_server_window)
 
         self.global_brightness_slider_memory: int = 0
         """The value used to make the slider only send commands when it switches integer."""
@@ -158,10 +159,12 @@ class CustomMenuBar(ttk.Frame):
         #menu.add_command(label="Exit", command=lambda: self.menu_action("Exit"))
         return menu
 
-    # Function to open a new window
-    def open_connection_settings_window(self):
+    def open_connection_settings_window(self) -> None:
+        """Function used to open the window connect to set Serial baudrate,
+        COM port and start a new connection.
+        """
         new_window = ttk.Toplevel(self.master)  # Create a new top-level window
-        new_window.title("Connection settings")
+        new_window.title("Serial connection settings")
         new_window.geometry("600x400")
 
         lab_port = ttk.Label(new_window, text="Port", font=("Helvetica", 16))
@@ -184,6 +187,51 @@ class CustomMenuBar(ttk.Frame):
 
         close_button = ttk.Button(new_window, text="Set variables", command=close_window)
         close_button.pack(pady=10)
+
+    def open_server_window(self) -> None:
+        """Opens the window used to start, stop and set parameters for the TCP server."""
+        new_window = ttk.Toplevel(self.master)  # Create a new top-level window
+        new_window.title("TCP Server settings")
+        new_window.geometry("600x400")
+
+        lab_address = ttk.Label(new_window, text="Address", font=("Helvetica", 16))
+        lab_address.pack(pady=20)
+        text_in_address = Entry(new_window, textvariable=StringVar(value=str(self.master.app.server.host)))
+        text_in_address.pack(pady=20)
+
+        # Add some content to the new window
+        lab_port = ttk.Label(new_window, text="Port", font=("Helvetica", 16))
+        lab_port.pack(pady=20)
+        text_in_port = Entry(new_window, textvariable=StringVar(value=str(self.master.app.server.port)))
+        text_in_port.pack(pady=20)
+
+        # TODO: Add proper used feedback on button press.
+        def set_address_and_port() -> None:
+            if self.master.app.server.set_address_and_port(text_in_address.get(), int(text_in_port.get())) == 1:
+                print("Can't start server as server is already running")
+            #print(f"The server address: {self.master.app.server.host}")
+            #print(f"The server port: {self.master.app.server.port}")
+            #new_window.destroy()
+
+        #def switch_server_on_off(callable_idx: int) -> int:
+        #    server_on_off_btn_cmd[server_on_off_btn_txt_idx]()
+        #    return (callable_idx + 1) % 2
+
+        set_parameters_button = ttk.Button(new_window, text="Set variables", command=set_address_and_port)
+        set_parameters_button.pack(pady=10)
+        # TODO: Make a single button that toggles server on and off
+        server_on_off_btn_text = ["Open server", "Close server"]
+        #server_on_off_btn_cmd = [self.master.app.server.start,
+        #                          self.master.app.server.stop]
+        #server_on_off_btn_txt_idx = 0
+        server_on_button = ttk.Button(new_window,
+                                          text=server_on_off_btn_text[0],
+                                          command=self.master.app.server.start)
+        server_on_button.pack(pady=10)
+        server_off_button = ttk.Button(new_window,
+                                          text=server_on_off_btn_text[1],
+                                          command=self.master.app.server.stop)
+        server_off_button.pack(pady=10)
 
     # Create Edit menu dropdown
     def create_edit_menu(self) -> tk.Menu:
