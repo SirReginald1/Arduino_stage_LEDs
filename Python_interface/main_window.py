@@ -1,4 +1,3 @@
-#from serial import Serial
 from tkinter import *
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
@@ -21,20 +20,49 @@ class MainWindow(ttk.Window):
     """Array frame label Font. Tuple containing (font_style, font_size)"""
 
     def __init__(self,
-                 app: "App", 
-                 size: Tuple[int], 
-                 nb_of_arrays: int):
-        """"""
+                 app: "App",
+                 size: Tuple[int],
+                 nb_of_arrays: int) -> "MainWindow":
+        """Constructor for the main interface window.
+        
+        ### Args:
+            - app (App): The root application that is using this window.
+            - size (tuple): A tuple of size 2 that indicates the dimensions
+            of the window on startup.
+            - nb_of_arrays (int): The number of independent LED arrays that
+            are to be controlled by the app.
+        """
         super().__init__(themename="superhero")
 
         #self.controller_interface = ControllerInterface(baudrate=115200)
         self.controller_interface: ControllerInterface = app.controller_interface
 
-        self.title("LED Controle")
+        self.title("LED Controller")
         #self.iconbitmap()
         self.geometry(f"{size[0]}x{size[1]}")
         self.app = app
 
+        ##################### Scrolable canvas ################
+        ## === Create Scrollable Canvas ===
+        #self.canvas = Canvas(self)
+        #self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        #self.canvas.configure(yscrollcommand=self.scrollbar.set)
+#
+        #self.scrollbar.pack(side="right", fill="y")
+        #self.canvas.pack(side="left", fill="both", expand=True)
+#
+        ## === Scrollable Frame inside Canvas ===
+        #self.scrollable_frame = ttk.Frame(self.canvas)
+        #self.canvas_frame = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+#
+        ## Update scrollregion when scrollable_frame changes size
+        #self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        #self.canvas.bind("<Configure>", self._resize_canvas)
+#
+        ## Optional: mousewheel support
+        #self.scrollable_frame.bind("<Enter>", self._bind_mousewheel)
+        #self.scrollable_frame.bind("<Leave>", self._unbind_mousewheel)
+#
         ##################### Side Panel ######################
         self.side_bar_menu: SlidePanel = SlidePanel(self, 1.0, 0.7, self.controller_interface)
         #self.side_bar_menu.lift()
@@ -44,8 +72,9 @@ class MainWindow(ttk.Window):
         self.menu_bar.pack(side=TOP, fill=X)
 
         self.array_frames: List[LedArrayFrame] = []
+        """A list that contains the panel menu object for each of the array menu panels."""
 
-        # Create 4 frames, each with 2 sections, and stack them at the top of the window
+        # Create number of frames equal to the number of arrays, each with 2 sections, and stack them at the top of the window
         for i in range(nb_of_arrays):
             self.array_frames.append(LedArrayFrame(self, i, size[1]))
             self.array_frames[i].pack(fill=X, side="top", pady = 10)  # Stack frames at the top
@@ -55,6 +84,19 @@ class MainWindow(ttk.Window):
     #    """"""
     #    self.arduino_interface.send_message(self.txtin_console.get())
     #    self.txtin_console.delete(0,END)
+
+    def _resize_canvas(self, event):
+        self.canvas.itemconfig(self.canvas_frame, width=event.width)
+
+    def _bind_mousewheel(self, event):
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+
+    def _unbind_mousewheel(self, event):
+        self.canvas.unbind_all("<MouseWheel>")
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
 
     def update_all_animations(self) -> None:
         """Updates all parameter values for all animations."""

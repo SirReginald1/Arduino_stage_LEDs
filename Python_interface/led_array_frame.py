@@ -72,7 +72,7 @@ class LedArrayFrame(Frame):
                     "parent" : self.param_frame, 
                     "array_id" : led_array_idx, 
                     "controller_interface" : self.master.controller_interface
-                    } for anim in parent.controller_interface.animation_codes.keys()
+                    } for anim in parent.controller_interface.animation_codes.keys() # added 2 masters and an app !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
         # Populate the left section with 10 buttons in a grid layout
         self.create_buttons(self.param_frame, self.var_frame)

@@ -1,5 +1,6 @@
 from typing import Union, Dict, Tuple, List, Callable
 from serial import Serial, SerialException
+from serial.tools.list_ports import comports
 import sys
 import glob
 from time import time
@@ -242,12 +243,14 @@ class ControllerInterface():
         ### Returns:
             - str: The string being sent from the arduino.
         """
-        if not self.controller: # Checks that interface is connected to a controller
+        #if not self.controller: # Checks that interface is connected to a controller
+        #print(comports())
+        if comports() != []:
             print("No connection to controller. Can't send message.")
             self.error_fun_call("No connection to controller. Can't send message.")
             return "No connection to controller. Can't send message."
         #print(self.controller.readline().decode())
-        if self.controller.in_waiting > 0:
+        if comports() != [] and self.controller.in_waiting > 0:
             try:
                 #message = self.controller.readline().decode()
                 message = self.controller.read_until("@").decode().replace("@","")

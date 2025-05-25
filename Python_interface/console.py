@@ -90,6 +90,12 @@ class Console(Frame):
     def update_console(self) -> None:
         """Updates the console window."""
         message = self.controller_interface.read_str()
+        #server_messages = self.master.master.app.server.get_messages()
+        #if server_messages != []:
+        #    for message in server_messages:
+        #        self.write_to_console(f"[SEVER] {message}\n")
+        #        self.console_output_text_box.yview("moveto", 1.0)
+            
         if message:
             self.detectModeChange(message)
             self.write_to_console(message)
