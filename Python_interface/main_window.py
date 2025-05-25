@@ -33,14 +33,33 @@ class MainWindow(ttk.Window):
             are to be controlled by the app.
         """
         super().__init__(themename="superhero")
-
-        #self.controller_interface = ControllerInterface(baudrate=115200)
+        self.app = app
         self.controller_interface: ControllerInterface = app.controller_interface
-
         self.title("LED Controller")
         #self.iconbitmap()
         self.geometry(f"{size[0]}x{size[1]}")
-        self.app = app
+
+         ##################### Side Panel ######################
+        self.side_bar_menu: SlidePanel = SlidePanel(self,
+                                                    1.0,
+                                                    0.7,
+                                                    self.controller_interface)
+
+        self.menu_bar: CustomMenuBar = CustomMenuBar(self)
+        self.menu_bar.pack(side=TOP,
+                           fill=X)
+
+        self.scrole_canvas = Canvas(self)
+                                        
+        self.scrole_canvas.pack(pady=20, side="left", expand=True)
+
+        self.scrole_bar = ttk.Scrollbar(self.scrole_canvas,
+                                        orient='vertical',
+                                        command=self.scrole_canvas.yview
+                                        )
+        self.scrole_canvas.configure(yscrollcommand=self.scrole_bar.set)
+        self.scrole_bar.pack(side="right",
+                             fill=Y)
 
         ##################### Scrolable canvas ################
         ## === Create Scrollable Canvas ===
@@ -63,21 +82,24 @@ class MainWindow(ttk.Window):
         #self.scrollable_frame.bind("<Enter>", self._bind_mousewheel)
         #self.scrollable_frame.bind("<Leave>", self._unbind_mousewheel)
 #
-        ##################### Side Panel ######################
-        self.side_bar_menu: SlidePanel = SlidePanel(self, 1.0, 0.7, self.controller_interface)
+       
         #self.side_bar_menu.lift()
 
         #menu_bar = MenuBar(root)
-        self.menu_bar: CustomMenuBar = CustomMenuBar(self)
-        self.menu_bar.pack(side=TOP, fill=X)
+        
 
         self.array_frames: List[LedArrayFrame] = []
         """A list that contains the panel menu object for each of the array menu panels."""
 
         # Create number of frames equal to the number of arrays, each with 2 sections, and stack them at the top of the window
         for i in range(nb_of_arrays):
-            self.array_frames.append(LedArrayFrame(self, i, size[1]))
-            self.array_frames[i].pack(fill=X, side="top", pady = 10)  # Stack frames at the top
+            self.array_frames.append(LedArrayFrame(self.scrole_canvas,
+                                                   i,
+                                                   size[1]))
+            self.array_frames[i].pack(fill=X,
+                                      side="top",
+                                      pady = 10
+                                      )  # Stack frames at the top
             self.side_bar_menu.lift(self.array_frames[i])
 
     #def enter_key_press(self, message: str):
@@ -85,18 +107,17 @@ class MainWindow(ttk.Window):
     #    self.arduino_interface.send_message(self.txtin_console.get())
     #    self.txtin_console.delete(0,END)
 
-    def _resize_canvas(self, event):
-        self.canvas.itemconfig(self.canvas_frame, width=event.width)
-
-    def _bind_mousewheel(self, event):
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-
-    def _unbind_mousewheel(self, event):
-        self.canvas.unbind_all("<MouseWheel>")
-
-    def _on_mousewheel(self, event):
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
+    #def _resize_canvas(self, event):
+    #    self.canvas.itemconfig(self.canvas_frame, width=event.width)
+    #
+    #def _bind_mousewheel(self, event):
+    #    self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+    #
+    #def _unbind_mousewheel(self, event):
+    #    self.canvas.unbind_all("<MouseWheel>")
+    #
+    #def _on_mousewheel(self, event):
+    #    self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def update_all_animations(self) -> None:
         """Updates all parameter values for all animations."""

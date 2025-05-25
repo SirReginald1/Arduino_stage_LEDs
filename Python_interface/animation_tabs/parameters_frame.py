@@ -28,7 +28,7 @@ class ParametersFrame(Frame):
         self.color: Tuple[int] = None
         self.nb_rows: int = 10
         self.nb_cols: int = 10
-        self.array_selection: CheckboxFrame = CheckboxFrame(parent, self, self.master.master.master.app.NB_ARRAYS)
+        self.array_selection: CheckboxFrame = CheckboxFrame(parent, self, self.master.master.master.master.app.NB_ARRAYS)
         """The frame containing the checkboxes for selecting which arrays to update."""
         self.array_selection.pack(side=RIGHT)
         

@@ -50,7 +50,12 @@ class LedArrayFrame(Frame):
         self.grid_columnconfigure(3, weight=2)  # Third frame column
         self.grid_columnconfigure(4, weight=1)  # Right spacer column
 
-        self.title_label: ttk.Label = ttk.Label(self, text=f"Array {led_array_idx}", font=parent.array_frame_label_font, anchor="w")
+        self.title_label: ttk.Label = ttk.Label(
+            self,
+            text=f"Array {led_array_idx}",
+            font=parent.master.array_frame_label_font,
+            anchor="w"
+        )
         self.title_label.grid(row=0, column=2)
 
         # Define two sections within each frame using grid
@@ -71,8 +76,8 @@ class LedArrayFrame(Frame):
             anim : {
                     "parent" : self.param_frame, 
                     "array_id" : led_array_idx, 
-                    "controller_interface" : self.master.controller_interface
-                    } for anim in parent.controller_interface.animation_codes.keys() # added 2 masters and an app !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    "controller_interface" : self.master.master.controller_interface
+                    } for anim in parent.master.controller_interface.animation_codes.keys() # added 2 masters and an app !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
         # Populate the left section with 10 buttons in a grid layout
         self.create_buttons(self.param_frame, self.var_frame)
@@ -91,7 +96,7 @@ class LedArrayFrame(Frame):
         #content.grid(row=0, column=0,sticky="nsew")
         content.pack(expand=True)
         exit_button.lift(content)
-        wiget_lab_lists = self.master.controller_interface.animation_var_array_dict[animation_label]
+        wiget_lab_lists = self.master.master.controller_interface.animation_var_array_dict[animation_label]
         var_frame.content: VariableFrame = VariableFrame(var_frame, wiget_lab_lists[0], wiget_lab_lists[1],wiget_lab_lists[2])
         var_frame.content.pack()
 
@@ -104,7 +109,7 @@ class LedArrayFrame(Frame):
             widget.destroy()
 
         # Create 10 buttons in a grid (2 rows, 5 columns)
-        for btn_idx, animation_label in zip(range(len(self.master.controller_interface.animation_codes)), self.master.controller_interface.animation_codes):
+        for btn_idx, animation_label in zip(range(len(self.master.master.controller_interface.animation_codes)), self.master.master.controller_interface.animation_codes):
             button = ttk.Button(param_frame, 
                                 text=f"{animation_label}", 
                                 width = 15,
@@ -197,13 +202,13 @@ class VariableFrame(ttk.Frame):
     def send_sync_message(self) -> None:
             """Sends the synching message to controller."""
             buffer = 0 # As entry for the current array is missing add 1 when it is passed
-            message = f"@3<{self.master.master.led_array_idx},"
+            message = f"@3<{self.master.master.master.led_array_idx},"
             for i in range(len(self.label_vars)):
-                if self.master.master.led_array_idx == i:
+                if self.master.master.master.led_array_idx == i:
                     buffer = 1
                 if self.checkbox_vars[i].get():
-                    message = f"{message}{i+buffer},{self.master.master.master.controller_interface.animation_codes[self.master.master.param_frame.winfo_children()[0].animation_label]},{self.entry_vars[i].get()},"
-            self.master.master.master.controller_interface.send_message(message[:-1] + ">")
+                    message = f"{message}{i+buffer},{self.master.master.master.master.controller_interface.animation_codes[self.master.master.master.param_frame.winfo_children()[0].animation_label]},{self.entry_vars[i].get()},"
+            self.master.master.master.master.controller_interface.send_message(message[:-1] + ">")
 
     def create_variable_widgets(self, parent: ttk.Frame) -> None:
         """This function builds the appropriate widget selction in the var_frame for animation variable selecticon
